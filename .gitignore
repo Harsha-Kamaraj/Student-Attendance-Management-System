@@ -1,0 +1,19 @@
+# Local configuration and secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Django
+/staticfiles/
+/media/
+
+# Tools
+.ruff_cache/
+
+# Editors and operating systems
+.DS_Store
+.vscode/
+.idea/
