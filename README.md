@@ -1,7 +1,7 @@
 # Student-Attendance-Management-System
 Software Engineering Project
 
-A web application for recording, correcting and reporting student attendance, with Admin, Faculty and Student roles. Requirements, use cases, test plan and security requirements are in [`Documents/`](Documents/); the agreed attendance rules are in [`BL-01_Decision_Log.md`](BL-01_Decision_Log.md).
+A web application for recording, correcting and reporting student attendance, with Admin, Faculty and Student roles. Requirements, use cases, test plan and security requirements are in [`Documents/`](Documents/); the agreed attendance rules are in [`Documents/BL-01_Decision_Log.md`](Documents/BL-01_Decision_Log.md).
 
 ## Technology
 
