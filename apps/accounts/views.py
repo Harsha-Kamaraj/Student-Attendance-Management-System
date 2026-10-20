@@ -11,6 +11,7 @@ from apps.audit import services as audit
 from .decorators import role_required
 from .forms import AccountCreateForm, ChangePasswordForm, LoginForm
 from .models import Role, User
+from .permissions import requires
 from .services import provision_account, reset_password
 
 
@@ -63,14 +64,14 @@ def dashboard_student(request):
     return render(request, "dashboard/student.html")
 
 
-@role_required(Role.ADMIN)
+@requires("accounts.manage")
 def account_list(request):
     users = User.objects.order_by("role", "username")
     return render(request, "accounts/account_list.html", {"users": users})
 
 
 @never_cache
-@role_required(Role.ADMIN)
+@requires("accounts.manage")
 def account_create(request):
     form = AccountCreateForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -91,7 +92,7 @@ def account_create(request):
 
 @never_cache
 @require_POST
-@role_required(Role.ADMIN)
+@requires("accounts.manage")
 def account_reset_password(request, pk):
     user = get_object_or_404(User, pk=pk)
     temporary_password = reset_password(user=user, reset_by=request.user)
