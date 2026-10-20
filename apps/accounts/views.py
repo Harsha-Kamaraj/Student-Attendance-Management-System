@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -36,6 +37,18 @@ class PasswordChangeView(auth_views.PasswordChangeView):
         return response
 
 
+@never_cache
+@require_POST
+@login_required
+def logout_view(request):
+    """Invalidate the current session on a CSRF-protected POST (BL-06 / UC-12)."""
+    user = request.user
+    logout(request)  # Django flushes the server-side session and session cookie.
+    audit.record("logout", actor=user, target_type="User", target_id=user.pk)
+    messages.success(request, "You have been logged out.")
+    return redirect("login")
+
+
 DASHBOARDS = {
     Role.ADMIN: "dashboard_admin",
     Role.FACULTY: "dashboard_faculty",
@@ -43,27 +56,32 @@ DASHBOARDS = {
 }
 
 
+@never_cache
 @login_required
 def dashboard(request):
     """Send each user to the dashboard for their role (UC-01 step 5)."""
     return redirect(DASHBOARDS[request.user.role])
 
 
+@never_cache
 @role_required(Role.ADMIN)
 def dashboard_admin(request):
     return render(request, "dashboard/admin.html")
 
 
+@never_cache
 @role_required(Role.FACULTY)
 def dashboard_faculty(request):
     return render(request, "dashboard/faculty.html")
 
 
+@never_cache
 @role_required(Role.STUDENT)
 def dashboard_student(request):
     return render(request, "dashboard/student.html")
 
 
+@never_cache
 @requires("accounts.manage")
 def account_list(request):
     users = User.objects.order_by("role", "username")
