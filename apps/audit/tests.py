@@ -47,4 +47,4 @@ class AuditEntryTests(TestCase):
     def test_entry_survives_deleting_the_actor(self):
         self.admin.delete()
         entry = AuditEntry.objects.get(pk=self.entry.pk)
-        self.assertEqual(entry.actor_username, "admin1")
+        self.assertEqual(entry.actor_username, "ADMIN1")

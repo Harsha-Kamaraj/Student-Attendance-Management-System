@@ -57,7 +57,15 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ for the application and http://127.0.0.1:8000/admin/ for the Django admin.
+Open http://127.0.0.1:8000/login/ and log in with the Admin account you just created. Usernames ignore upper and lower case (they are stored in capitals). The Django admin site is at http://127.0.0.1:8000/admin/.
+
+## Accounts and login
+
+- There is no self-registration. The Admin creates every account at **Dashboard → Create account** (`/users/create/`) by entering a username (roll number or faculty ID), role and email.
+- The system shows a one-time temporary password to the Admin, who passes it to the user. The user must change it at first login.
+- Passwords need at least 8 characters with an upper-case letter, a lower-case letter, a digit and a special character.
+- After 5 wrong passwords in a row, login is blocked for 15 minutes. The Admin can reset a password (`/users/`), which also removes the block.
+- Logins, account creation, password changes and resets are recorded in the audit log.
 
 ## Configuration variables
 

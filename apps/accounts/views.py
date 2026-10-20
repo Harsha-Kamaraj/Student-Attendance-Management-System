@@ -1,0 +1,102 @@
+from django.contrib import messages
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
+
+from apps.audit import services as audit
+
+from .decorators import role_required
+from .forms import AccountCreateForm, ChangePasswordForm, LoginForm
+from .models import Role, User
+from .services import provision_account, reset_password
+
+
+class LoginView(auth_views.LoginView):
+    template_name = "accounts/login.html"
+    authentication_form = LoginForm
+    redirect_authenticated_user = True
+
+
+class PasswordChangeView(auth_views.PasswordChangeView):
+    template_name = "accounts/password_change.html"
+    form_class = ChangePasswordForm
+    success_url = reverse_lazy("dashboard")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = self.request.user
+        user.must_change_password = False
+        user.save(update_fields=["must_change_password"])
+        audit.record("password.change", actor=user, target_type="User", target_id=user.pk)
+        messages.success(self.request, "Your password has been changed.")
+        return response
+
+
+DASHBOARDS = {
+    Role.ADMIN: "dashboard_admin",
+    Role.FACULTY: "dashboard_faculty",
+    Role.STUDENT: "dashboard_student",
+}
+
+
+@login_required
+def dashboard(request):
+    """Send each user to the dashboard for their role (UC-01 step 5)."""
+    return redirect(DASHBOARDS[request.user.role])
+
+
+@role_required(Role.ADMIN)
+def dashboard_admin(request):
+    return render(request, "dashboard/admin.html")
+
+
+@role_required(Role.FACULTY)
+def dashboard_faculty(request):
+    return render(request, "dashboard/faculty.html")
+
+
+@role_required(Role.STUDENT)
+def dashboard_student(request):
+    return render(request, "dashboard/student.html")
+
+
+@role_required(Role.ADMIN)
+def account_list(request):
+    users = User.objects.order_by("role", "username")
+    return render(request, "accounts/account_list.html", {"users": users})
+
+
+@never_cache
+@role_required(Role.ADMIN)
+def account_create(request):
+    form = AccountCreateForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user, temporary_password = provision_account(
+            username=form.cleaned_data["username"],
+            role=form.cleaned_data["role"],
+            email=form.cleaned_data["email"],
+            created_by=request.user,
+        )
+        # Shown once, never stored in readable form (SEC-05, SEC-06).
+        return render(
+            request,
+            "accounts/temporary_password.html",
+            {"account": user, "temporary_password": temporary_password, "created": True},
+        )
+    return render(request, "accounts/account_create.html", {"form": form})
+
+
+@never_cache
+@require_POST
+@role_required(Role.ADMIN)
+def account_reset_password(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    temporary_password = reset_password(user=user, reset_by=request.user)
+    return render(
+        request,
+        "accounts/temporary_password.html",
+        {"account": user, "temporary_password": temporary_password, "created": False},
+    )

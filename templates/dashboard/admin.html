@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Admin dashboard · Student Attendance{% endblock %}
+
+{% block content %}
+  <h1 class="h3">Admin dashboard</h1>
+  <p class="text-body-secondary">Attendance statistics are added in BL-25.</p>
+  <div class="list-group" style="max-width: 28rem">
+    <a class="list-group-item list-group-item-action" href="{% url 'account_create' %}">Create account</a>
+    <a class="list-group-item list-group-item-action" href="{% url 'account_list' %}">Accounts and password resets</a>
+  </div>
+{% endblock %}
