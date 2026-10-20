@@ -12,6 +12,8 @@ class ForcePasswordChangeMiddleware:
         user = request.user
         if user.is_authenticated and user.must_change_password:
             change_url = reverse("password_change")
-            if request.path != change_url and not request.path.startswith("/static/"):
+            # Signing out must be possible even before the temporary password is changed.
+            logout_url = reverse("logout")
+            if request.path not in (change_url, logout_url) and not request.path.startswith("/static/"):
                 return redirect(change_url)
         return self.get_response(request)

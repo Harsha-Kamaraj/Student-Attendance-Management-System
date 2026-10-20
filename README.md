@@ -3,6 +3,13 @@ Software Engineering Project
 
 A web application for recording, correcting and reporting student attendance, with Admin, Faculty and Student roles. Requirements, use cases, test plan and security requirements are in [`Documents/`](Documents/); the agreed attendance rules are in [`Documents/BL-01_Decision_Log.md`](Documents/BL-01_Decision_Log.md).
 
+## Session security (BL-06)
+
+- Signed-in users log out with the CSRF-protected **Log out** button in the navigation bar (`POST /logout/`). Logout invalidates the current Django session and redirects to `/login/`.
+- Sessions expire after **15 minutes of inactivity**. Django refreshes the expiry on active requests (`SESSION_COOKIE_AGE=900` and `SESSION_SAVE_EVERY_REQUEST=True`).
+- Protected pages require a fresh login after logout or session expiration. Dashboard and account list responses use `Cache-Control: no-store` to discourage stale private pages appearing on browser Back.
+- Tests: `python manage.py test apps.accounts.test_sessions`.
+
 ## Technology
 
 | Part | Choice |
