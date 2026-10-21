@@ -10,6 +10,11 @@ class Student(models.Model):
     )
     roll_number = models.CharField(max_length=20, unique=True)
     full_name = models.CharField(max_length=150)
+    # Home class/section; per-subject electives remain controlled by Enrollment.
+    # Nullable for student records created before BL-07.
+    home_section = models.ForeignKey(
+        "Section", on_delete=models.SET_NULL, null=True, blank=True, related_name="home_students"
+    )
 
     def __str__(self):
         return f"{self.roll_number} – {self.full_name}"

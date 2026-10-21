@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Student created · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">Student account created</h1>
+<p>Give these credentials privately to <strong>{{ student.full_name }}</strong>.</p>
+<dl class="row border rounded p-3">
+  <dt class="col-sm-3">Username</dt><dd class="col-sm-9">{{ student.roll_number }}</dd>
+  <dt class="col-sm-3">Temporary password</dt>
+  <dd class="col-sm-9"><code data-testid="temporary-password">{{ temporary_password }}</code></dd>
+</dl>
+<div class="alert alert-warning">This password is shown only once. The student must change it at first login.</div>
+<a class="btn btn-primary" href="{% url 'student_detail' student.pk %}">View student</a>
+{% endblock %}

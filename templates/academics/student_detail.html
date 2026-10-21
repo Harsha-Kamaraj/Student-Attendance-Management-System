@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ student.roll_number }} · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">{{ student.full_name }} ({{ student.roll_number }})</h1>
+<dl class="row">
+  <dt class="col-sm-3">Home class / section</dt><dd class="col-sm-9">{{ student.home_section|default:"Not assigned" }}</dd>
+  <dt class="col-sm-3">Account</dt><dd class="col-sm-9">{% if student.user.is_active %}Active{% else %}Inactive{% endif %}</dd>
+  <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ student.user.email }}</dd>
+</dl>
+{% if user.role == "ADMIN" %}
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-primary" href="{% url 'student_edit' student.pk %}">Edit student</a>
+    {% if student.user.is_active %}
+      <form method="post" action="{% url 'student_deactivate' student.pk %}">{% csrf_token %}
+        <button class="btn btn-warning" type="submit">Deactivate</button>
+      </form>
+    {% else %}
+      <form method="post" action="{% url 'student_reactivate' student.pk %}">{% csrf_token %}
+        <button class="btn btn-success" type="submit">Reactivate</button>
+      </form>
+    {% endif %}
+    <a class="btn btn-outline-danger" href="{% url 'student_delete' student.pk %}">Delete permanently</a>
+  </div>
+{% endif %}
+<h2 class="h5">Subject enrollments</h2>
+<ul class="list-group mb-3">
+  {% for enrollment in enrollments %}
+  <li class="list-group-item">{{ enrollment.assignment.subject }} — {{ enrollment.assignment.section }}</li>
+  {% empty %}<li class="list-group-item">No subject enrollments yet.</li>{% endfor %}
+</ul>
+<a href="{% url 'student_list' %}">Back to students</a>
+{% endblock %}

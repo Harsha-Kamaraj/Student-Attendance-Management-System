@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{% if creating %}Add{% else %}Edit{% endif %} student · Student Attendance{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-7">
+  <h1 class="h3">{% if creating %}Add student{% else %}Edit {{ student.roll_number }}{% endif %}</h1>
+  {% if creating %}
+    <p>An account and a one-time temporary password will be created. Create classes/sections first.</p>
+  {% else %}
+    <p>Roll numbers are login identifiers and cannot be changed here. Course enrollments are managed separately.</p>
+  {% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}
