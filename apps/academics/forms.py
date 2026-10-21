@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from apps.accounts.forms import BootstrapMixin
 from apps.accounts.models import User
 
-from .models import Section, Student
+from .models import Enrollment, Section, Student, TeachingAssignment
 
 
 class StudentFieldsForm(BootstrapMixin, forms.Form):
@@ -57,3 +57,62 @@ class StudentCreateForm(StudentFieldsForm):
 
 class StudentUpdateForm(StudentFieldsForm):
     """Roll numbers are intentionally immutable: they are also login identifiers."""
+
+
+class SectionForm(BootstrapMixin, forms.ModelForm):
+    class Meta:
+        model = Section
+        fields = ["class_name", "name"]
+
+    def clean_class_name(self):
+        value = self.cleaned_data["class_name"].strip()
+        if not value:
+            raise ValidationError("Class is required.")
+        return value
+
+    def clean_name(self):
+        value = self.cleaned_data["name"].strip().upper()
+        if not value:
+            raise ValidationError("Section is required.")
+        return value
+
+    def clean(self):
+        cleaned = super().clean()
+        class_name, name = cleaned.get("class_name"), cleaned.get("name")
+        if (
+            class_name
+            and name
+            and Section.objects.filter(class_name__iexact=class_name, name__iexact=name).exists()
+        ):
+            raise ValidationError("That section already exists in this class.")
+        return cleaned
+
+
+class EnrollmentForm(BootstrapMixin, forms.Form):
+    student = forms.ModelChoiceField(queryset=Student.objects.none())
+    assignment = forms.ModelChoiceField(queryset=TeachingAssignment.objects.none(), label="Subject")
+
+    def __init__(self, *args, section, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["student"].queryset = Student.objects.filter(user__is_active=True).order_by("roll_number")
+        self.fields["assignment"].queryset = (
+            TeachingAssignment.objects.filter(section=section)
+            .select_related("subject")
+            .order_by("subject__code")
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        student, assignment = cleaned.get("student"), cleaned.get("assignment")
+        if student and assignment:
+            existing = (
+                Enrollment.objects.filter(student=student, subject=assignment.subject)
+                .select_related("assignment__section", "assignment__subject")
+                .first()
+            )
+            if existing:
+                raise ValidationError(
+                    f"{student.roll_number} is already enrolled in {assignment.subject.code} "
+                    f"in section {existing.assignment.section}. Remove that enrollment first."
+                )
+        return cleaned

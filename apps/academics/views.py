@@ -11,8 +11,8 @@ from apps.accounts.permissions import get_visible_or_deny, requires, visible_stu
 from apps.accounts.services import provision_account
 from apps.audit import services as audit
 
-from .forms import StudentCreateForm, StudentUpdateForm
-from .models import Student
+from .forms import EnrollmentForm, SectionForm, StudentCreateForm, StudentUpdateForm
+from .models import Enrollment, Section, Student, TeachingAssignment
 
 
 @never_cache
@@ -163,3 +163,106 @@ def student_delete(request, pk):
             "attendance_count": student.attendance_records.count(),
         },
     )
+
+
+@never_cache
+@requires("sections.manage")
+def section_list(request):
+    sections = Section.objects.order_by("class_name", "name")
+    return render(request, "academics/section_list.html", {"sections": sections})
+
+
+@never_cache
+@requires("sections.manage")
+def section_create(request):
+    form = SectionForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
+                section = form.save()
+                audit.record(
+                    "section.create",
+                    actor=request.user,
+                    target_type="Section",
+                    target_id=section.pk,
+                    new_value={"class_name": section.class_name, "name": section.name},
+                )
+        except IntegrityError:
+            form.add_error(None, "That section already exists in this class.")
+        else:
+            messages.success(request, "Class section created.")
+            return redirect("section_detail", pk=section.pk)
+    return render(request, "academics/section_form.html", {"form": form})
+
+
+@never_cache
+@requires("sections.manage")
+def section_detail(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    assignments = TeachingAssignment.objects.filter(section=section).select_related("subject", "faculty")
+    enrollments = (
+        Enrollment.objects.filter(assignment__section=section)
+        .select_related("student__user", "assignment__subject")
+        .order_by("assignment__subject__code", "student__roll_number")
+    )
+    return render(
+        request,
+        "academics/section_detail.html",
+        {"section": section, "assignments": assignments, "enrollments": enrollments},
+    )
+
+
+@never_cache
+@requires("sections.manage")
+def enrollment_create(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    form = EnrollmentForm(request.POST or None, section=section)
+    if request.method == "POST" and form.is_valid():
+        student = form.cleaned_data["student"]
+        assignment = form.cleaned_data["assignment"]
+        try:
+            with transaction.atomic():
+                enrollment = Enrollment.objects.create(student=student, assignment=assignment)
+                audit.record(
+                    "enrollment.create",
+                    actor=request.user,
+                    target_type="Enrollment",
+                    target_id=enrollment.pk,
+                    new_value={
+                        "student": student.roll_number,
+                        "subject": assignment.subject.code,
+                        "section": str(section),
+                    },
+                )
+        except IntegrityError:
+            form.add_error(None, "A conflicting enrollment already exists. Reload the roster.")
+        else:
+            messages.success(request, "Student added to the subject roster.")
+            return redirect("section_detail", pk=pk)
+    return render(request, "academics/enrollment_form.html", {"section": section, "form": form})
+
+
+@never_cache
+@requires("sections.manage")
+@require_POST
+def enrollment_remove(request, pk, enrollment_pk):
+    enrollment = get_object_or_404(
+        Enrollment.objects.select_related("student", "assignment__subject"),
+        pk=enrollment_pk,
+        assignment__section_id=pk,
+    )
+    with transaction.atomic():
+        audit.record(
+            "enrollment.remove",
+            actor=request.user,
+            target_type="Enrollment",
+            target_id=enrollment.pk,
+            old_value={
+                "student": enrollment.student.roll_number,
+                "subject": enrollment.assignment.subject.code,
+                "section_id": pk,
+            },
+        )
+        enrollment.delete()
+    messages.success(request, "Enrollment removed. Previously recorded attendance was not erased.")
+    return redirect("section_detail", pk=pk)
