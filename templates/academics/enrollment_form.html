@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Enroll in {{ section }} · Student Attendance{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-7">
+  <h1 class="h3">Enroll student — {{ section }}</h1>
+  <p>Select an active student and a subject offered in this section. A student cannot be in two
+     sections for the same subject. Subject offerings are configured in BL-11.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Add to roster</button>
+    <a href="{% url 'section_detail' section.pk %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

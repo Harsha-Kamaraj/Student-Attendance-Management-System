@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Classes and sections · Student Attendance{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Classes and sections</h1>
+  <a class="btn btn-primary" href="{% url 'section_create' %}">Create section</a>
+</div>
+<div class="table-responsive"><table class="table table-striped">
+  <thead><tr><th>Class</th><th>Section</th><th>Roster</th></tr></thead>
+  <tbody>
+    {% for section in sections %}
+      <tr><td>{{ section.class_name }}</td><td>{{ section.name }}</td>
+      <td><a href="{% url 'section_detail' section.pk %}">Open roster</a></td></tr>
+    {% empty %}<tr><td colspan="3">No sections. Create one to begin.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ section }} roster · Student Attendance{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">{{ section.class_name }} — Section {{ section.name }}</h1>
+  <a class="btn btn-primary" href="{% url 'enrollment_create' section.pk %}">Enroll student</a>
+</div>
+<h2 class="h5">Subjects offered here</h2>
+<ul class="list-group mb-4">
+  {% for assignment in assignments %}
+    <li class="list-group-item">{{ assignment.subject }}
+      {% if assignment.faculty %} — {{ assignment.faculty.full_name }}{% endif %}
+    </li>
+  {% empty %}
+    <li class="list-group-item">No subject teaching assignments yet. These are configured under BL-11.</li>
+  {% endfor %}
+</ul>
+<h2 class="h5">Subject rosters</h2>
+<div class="table-responsive"><table class="table table-striped">
+  <thead><tr><th>Subject</th><th>Roll</th><th>Student</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    {% for enrollment in enrollments %}
+      <tr><td>{{ enrollment.assignment.subject.code }}</td>
+        <td>{{ enrollment.student.roll_number }}</td>
+        <td><a href="{% url 'student_detail' enrollment.student.pk %}">{{ enrollment.student.full_name }}</a></td>
+        <td>{% if enrollment.student.user.is_active %}Active{% else %}Inactive{% endif %}</td>
+        <td><form method="post" action="{% url 'enrollment_remove' section.pk enrollment.pk %}">
+          {% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+        </form></td>
+      </tr>
+    {% empty %}<tr><td colspan="5">No subject enrollments yet.</td></tr>{% endfor %}
+  </tbody>
+</table></div>
+<p class="text-body-secondary">Removing an enrollment does not erase previously recorded attendance.</p>
+<a href="{% url 'section_list' %}">Back to classes and sections</a>
+{% endblock %}
