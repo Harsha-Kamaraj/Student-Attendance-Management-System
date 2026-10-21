@@ -1,18 +1,33 @@
-"""Student profiles and lifecycle management (BL-07 / UC-02)."""
+"""Students (BL-07 / UC-02), sections and enrollment (BL-10 / UC-05), subjects (BL-09 / UC-04)."""
 
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import Role
-from apps.accounts.permissions import get_visible_or_deny, requires, visible_students
+from apps.accounts.permissions import (
+    can_edit_subject,
+    get_visible_or_deny,
+    has_permission,
+    requires,
+    visible_students,
+)
 from apps.accounts.services import provision_account
+from apps.attendance.models import AttendanceSession
 from apps.audit import services as audit
 
-from .forms import EnrollmentForm, SectionForm, StudentCreateForm, StudentUpdateForm
-from .models import Enrollment, Section, Student, TeachingAssignment
+from .forms import (
+    EnrollmentForm,
+    SectionForm,
+    StudentCreateForm,
+    StudentUpdateForm,
+    SubjectForm,
+    SubjectOfferForm,
+)
+from .models import Enrollment, Section, Student, Subject, TeachingAssignment
 
 
 @never_cache
@@ -266,3 +281,172 @@ def enrollment_remove(request, pk, enrollment_pk):
         enrollment.delete()
     messages.success(request, "Enrollment removed. Previously recorded attendance was not erased.")
     return redirect("section_detail", pk=pk)
+
+
+# --- Subjects (BL-09 / UC-04) -------------------------------------------------------------
+# Admin and Faculty may create and view subjects; Faculty edit only subjects they teach;
+# only the Admin deletes subjects or offers them in sections (BL-05 matrix).
+
+
+def _subject_usage(subject):
+    """Students enrolled and attendance sessions recorded for this subject."""
+    return {
+        "enrollments": Enrollment.objects.filter(subject=subject).count(),
+        "sessions": AttendanceSession.objects.filter(assignment__subject=subject).count(),
+    }
+
+
+@never_cache
+@requires("subjects.create")
+def subject_list(request):
+    subjects = Subject.objects.order_by("code")
+    editable = {s.pk for s in subjects if can_edit_subject(request.user, s)}
+    return render(request, "academics/subject_list.html", {"subjects": subjects, "editable": editable})
+
+
+@never_cache
+@requires("subjects.create")
+def subject_create(request):
+    form = SubjectForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
+                subject = form.save()
+                audit.record(
+                    "subject.create",
+                    actor=request.user,
+                    target_type="Subject",
+                    target_id=subject.pk,
+                    new_value={"code": subject.code, "name": subject.name},
+                )
+        except IntegrityError:
+            form.add_error("code", "A subject with this code already exists.")
+        else:
+            messages.success(request, f"Subject {subject.code} created.")
+            return redirect("subject_detail", pk=subject.pk)
+    return render(request, "academics/subject_form.html", {"form": form, "creating": True})
+
+
+@never_cache
+@requires("subjects.create")
+def subject_detail(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    assignments = (
+        TeachingAssignment.objects.filter(subject=subject)
+        .select_related("section", "faculty")
+        .order_by("section__class_name", "section__name")
+    )
+    return render(
+        request,
+        "academics/subject_detail.html",
+        {
+            "subject": subject,
+            "assignments": assignments,
+            "can_edit": can_edit_subject(request.user, subject),
+            "can_manage": has_permission(request.user, "sections.manage"),
+            "usage": _subject_usage(subject),
+        },
+    )
+
+
+@never_cache
+@requires("subjects.edit")
+def subject_edit(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    if not can_edit_subject(request.user, subject):
+        raise PermissionDenied("subject not taught by this faculty member")
+    previous_name = subject.name
+    form = SubjectForm(request.POST or None, instance=subject)
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            subject = form.save()
+            audit.record(
+                "subject.update",
+                actor=request.user,
+                target_type="Subject",
+                target_id=subject.pk,
+                old_value={"name": previous_name},
+                new_value={"name": subject.name},
+            )
+        messages.success(request, "Subject updated.")
+        return redirect("subject_detail", pk=pk)
+    return render(
+        request, "academics/subject_form.html", {"form": form, "creating": False, "subject": subject}
+    )
+
+
+@never_cache
+@requires("subjects.delete")
+def subject_delete(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    usage = _subject_usage(subject)
+    blocked = usage["enrollments"] or usage["sessions"]
+    if request.method == "POST" and not blocked:
+        with transaction.atomic():
+            audit.record(
+                "subject.delete",
+                actor=request.user,
+                target_type="Subject",
+                target_id=subject.pk,
+                old_value={"code": subject.code, "name": subject.name},
+            )
+            subject.delete()
+        messages.success(request, f"Subject {subject.code} deleted.")
+        return redirect("subject_list")
+    return render(
+        request,
+        "academics/subject_confirm_delete.html",
+        {"subject": subject, "usage": usage, "blocked": blocked},
+    )
+
+
+@never_cache
+@requires("sections.manage")
+def subject_offer(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    form = SubjectOfferForm(request.POST or None, subject=subject)
+    if request.method == "POST" and form.is_valid():
+        section = form.cleaned_data["section"]
+        try:
+            with transaction.atomic():
+                assignment = TeachingAssignment.objects.create(section=section, subject=subject)
+                audit.record(
+                    "subject.offer",
+                    actor=request.user,
+                    target_type="TeachingAssignment",
+                    target_id=assignment.pk,
+                    new_value={"subject": subject.code, "section": str(section)},
+                )
+        except IntegrityError:
+            form.add_error("section", "This subject is already offered in that section.")
+        else:
+            messages.success(request, f"{subject.code} is now offered in {section}. Assign its faculty next.")
+            return redirect("subject_detail", pk=pk)
+    return render(request, "academics/subject_offer.html", {"subject": subject, "form": form})
+
+
+@never_cache
+@requires("sections.manage")
+@require_POST
+def subject_withdraw(request, pk, assignment_pk):
+    assignment = get_object_or_404(
+        TeachingAssignment.objects.select_related("section", "subject"), pk=assignment_pk, subject_id=pk
+    )
+    if assignment.enrollments.exists() or assignment.sessions.exists():
+        messages.error(
+            request,
+            f"{assignment.subject.code} cannot be withdrawn from {assignment.section}: students are enrolled "
+            "or attendance exists. Remove the enrollments first; recorded attendance is never deleted.",
+        )
+        return redirect("subject_detail", pk=pk)
+    with transaction.atomic():
+        audit.record(
+            "subject.withdraw",
+            actor=request.user,
+            target_type="TeachingAssignment",
+            target_id=assignment.pk,
+            old_value={"subject": assignment.subject.code, "section": str(assignment.section)},
+        )
+        assignment.delete()
+    messages.success(request, f"{assignment.subject.code} withdrawn from {assignment.section}.")
+    return redirect("subject_detail", pk=pk)

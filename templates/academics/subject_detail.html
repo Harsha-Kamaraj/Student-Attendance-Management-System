@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.code }} · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">{{ subject.code }} — {{ subject.name }}</h1>
+<p class="text-body-secondary">{{ usage.enrollments }} student enrollment(s) · {{ usage.sessions }} attendance session(s)</p>
+<div class="d-flex flex-wrap gap-2 mb-4">
+  {% if can_edit %}<a class="btn btn-primary" href="{% url 'subject_edit' subject.pk %}">Edit name</a>{% endif %}
+  {% if can_manage %}
+    <a class="btn btn-outline-primary" href="{% url 'subject_offer' subject.pk %}">Offer in a section</a>
+    <a class="btn btn-outline-danger" href="{% url 'subject_delete' subject.pk %}">Delete subject</a>
+  {% endif %}
+</div>
+<h2 class="h5">Sections offering this subject</h2>
+<div class="table-responsive">
+  <table class="table align-middle">
+    <thead><tr><th>Class / section</th><th>Faculty</th><th>Students</th><th></th></tr></thead>
+    <tbody>
+      {% for assignment in assignments %}
+      <tr>
+        <td>{{ assignment.section }}</td>
+        <td>{% if assignment.faculty %}{{ assignment.faculty.full_name }}{% else %}<span class="text-body-secondary">Not assigned yet</span>{% endif %}</td>
+        <td>{{ assignment.enrollments.count }}</td>
+        <td class="text-end">
+          {% if can_manage %}
+          <form method="post" action="{% url 'subject_withdraw' subject.pk assignment.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">Withdraw</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="4">Not offered in any section yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<a href="{% url 'subject_list' %}">Back to subjects</a>
+{% endblock %}

@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from apps.accounts.forms import BootstrapMixin
 from apps.accounts.models import User
 
-from .models import Enrollment, Section, Student, TeachingAssignment
+from .models import Enrollment, Section, Student, Subject, TeachingAssignment
 
 
 class StudentFieldsForm(BootstrapMixin, forms.Form):
@@ -116,3 +116,47 @@ class EnrollmentForm(BootstrapMixin, forms.Form):
                     f"in section {existing.assignment.section}. Remove that enrollment first."
                 )
         return cleaned
+
+
+class SubjectForm(BootstrapMixin, forms.ModelForm):
+    """Create or rename a subject (BL-09). Codes are stored in capitals and cannot change later."""
+
+    class Meta:
+        model = Subject
+        fields = ["code", "name"]
+        labels = {"code": "Subject code", "name": "Subject name"}
+        help_texts = {"code": "Letters, digits and hyphens, e.g. CS101. Cannot be changed later."}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields["code"].disabled = True
+            self.fields["code"].help_text = "Subject codes cannot be changed."
+
+    def clean_code(self):
+        if self.instance.pk:
+            return self.instance.code
+        code = self.cleaned_data["code"].strip().upper()
+        if not re.fullmatch(r"[A-Z0-9-]+", code):
+            raise ValidationError("Use letters, digits and hyphens only.")
+        if Subject.objects.filter(code__iexact=code).exists():
+            raise ValidationError("A subject with this code already exists.")
+        return code
+
+    def clean_name(self):
+        value = self.cleaned_data["name"].strip()
+        if not value:
+            raise ValidationError("Subject name is required.")
+        return value
+
+
+class SubjectOfferForm(BootstrapMixin, forms.Form):
+    """Offer a subject in a section (creates its teaching assignment; faculty is chosen in BL-11)."""
+
+    section = forms.ModelChoiceField(queryset=Section.objects.none(), empty_label="Select a section")
+
+    def __init__(self, *args, subject, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["section"].queryset = Section.objects.exclude(assignments__subject=subject).order_by(
+            "class_name", "name"
+        )

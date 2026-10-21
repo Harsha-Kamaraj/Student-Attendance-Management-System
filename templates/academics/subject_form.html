@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{% if creating %}Add subject{% else %}Edit {{ subject.code }}{% endif %} · Student Attendance{% endblock %}
+{% block content %}
+<div class="row"><div class="col-md-6">
+  <h1 class="h3 mb-3">{% if creating %}Add subject{% else %}Edit {{ subject.code }}{% endif %}</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">{% if creating %}Add subject{% else %}Save changes{% endif %}</button>
+    <a class="btn btn-link" href="{% if creating %}{% url 'subject_list' %}{% else %}{% url 'subject_detail' subject.pk %}{% endif %}">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

@@ -12,7 +12,7 @@
       {% if assignment.faculty %} — {{ assignment.faculty.full_name }}{% endif %}
     </li>
   {% empty %}
-    <li class="list-group-item">No subject teaching assignments yet. These are configured under BL-11.</li>
+    <li class="list-group-item">No subjects offered here yet. Offer one from <a href="{% url 'subject_list' %}">Subjects</a>.</li>
   {% endfor %}
 </ul>
 <h2 class="h5">Subject rosters</h2>

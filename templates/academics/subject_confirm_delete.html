@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Delete {{ subject.code }} · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3 text-danger">Delete {{ subject.code }}?</h1>
+{% if blocked %}
+  <div class="alert alert-warning">
+    {{ subject.code }} cannot be deleted: it has {{ usage.enrollments }} student enrollment(s) and
+    {{ usage.sessions }} attendance session(s).
+    {% if usage.sessions %}Subjects with attendance history are always kept (BL-01 D-05).
+    {% else %}Remove the student enrollments first if the subject was created by mistake.{% endif %}
+  </div>
+  <a href="{% url 'subject_detail' subject.pk %}" class="btn btn-outline-secondary">Back</a>
+{% else %}
+  <div class="alert alert-danger">This permanently deletes the subject and the sections it is offered in.</div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Confirm deletion</button>
+    <a href="{% url 'subject_detail' subject.pk %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+{% endif %}
+{% endblock %}

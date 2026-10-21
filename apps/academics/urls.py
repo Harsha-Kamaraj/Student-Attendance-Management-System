@@ -19,4 +19,15 @@ urlpatterns = [
     path("students/<int:pk>/deactivate/", views.student_deactivate, name="student_deactivate"),
     path("students/<int:pk>/reactivate/", views.student_reactivate, name="student_reactivate"),
     path("students/<int:pk>/delete/", views.student_delete, name="student_delete"),
+    path("subjects/", views.subject_list, name="subject_list"),
+    path("subjects/create/", views.subject_create, name="subject_create"),
+    path("subjects/<int:pk>/", views.subject_detail, name="subject_detail"),
+    path("subjects/<int:pk>/edit/", views.subject_edit, name="subject_edit"),
+    path("subjects/<int:pk>/delete/", views.subject_delete, name="subject_delete"),
+    path("subjects/<int:pk>/offer/", views.subject_offer, name="subject_offer"),
+    path(
+        "subjects/<int:pk>/offerings/<int:assignment_pk>/withdraw/",
+        views.subject_withdraw,
+        name="subject_withdraw",
+    ),
 ]

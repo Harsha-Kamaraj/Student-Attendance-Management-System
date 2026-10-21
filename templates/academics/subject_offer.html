@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Offer {{ subject.code }} · Student Attendance{% endblock %}
+{% block content %}
+<div class="row"><div class="col-md-6">
+  <h1 class="h3 mb-3">Offer {{ subject.code }} in a section</h1>
+  <p class="text-body-secondary">The faculty member who teaches it is chosen afterwards.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Offer subject</button>
+    <a class="btn btn-link" href="{% url 'subject_detail' subject.pk %}">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

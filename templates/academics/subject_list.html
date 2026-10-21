@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Subjects · Student Attendance{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Subjects</h1>
+  <a class="btn btn-primary" href="{% url 'subject_create' %}">Add subject</a>
+</div>
+<div class="table-responsive">
+  <table class="table table-striped align-middle">
+    <thead><tr><th>Code</th><th>Name</th><th></th></tr></thead>
+    <tbody>
+      {% for subject in subjects %}
+      <tr>
+        <td>{{ subject.code }}</td><td>{{ subject.name }}</td>
+        <td class="text-end text-nowrap">
+          <a href="{% url 'subject_detail' subject.pk %}">View</a>
+          {% if subject.pk in editable %} · <a href="{% url 'subject_edit' subject.pk %}">Edit</a>{% endif %}
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="3">No subjects yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
