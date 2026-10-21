@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Teacher for {{ assignment.subject.code }} · Student Attendance{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-7">
+  <h1 class="h3">Teacher — {{ assignment.subject.code }} in {{ assignment.section }}</h1>
+  <p>Only the assigned teacher can mark and correct attendance for this class. Choose "Not assigned"
+     if no teacher is available yet; the Admin can still record missed sessions with a reason.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save teacher</button>
+    <a href="{% url 'section_detail' assignment.section.pk %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

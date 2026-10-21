@@ -7,6 +7,13 @@ urlpatterns = [
     path("sections/create/", views.section_create, name="section_create"),
     path("sections/<int:pk>/", views.section_detail, name="section_detail"),
     path("sections/<int:pk>/enroll/", views.enrollment_create, name="enrollment_create"),
+    path("sections/<int:pk>/classes/add/", views.class_assign, name="class_assign"),
+    path(
+        "sections/<int:pk>/classes/<int:assignment_pk>/teacher/",
+        views.class_teacher,
+        name="class_teacher",
+    ),
+    path("my-classes/", views.my_classes, name="my_classes"),
     path(
         "sections/<int:pk>/enrollments/<int:enrollment_pk>/remove/",
         views.enrollment_remove,

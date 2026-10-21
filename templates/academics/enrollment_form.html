@@ -4,7 +4,7 @@
 <div class="row"><div class="col-lg-7">
   <h1 class="h3">Enroll student — {{ section }}</h1>
   <p>Select an active student and a subject offered in this section. A student cannot be in two
-     sections for the same subject. Subject offerings are configured in BL-11.</p>
+     sections for the same subject. Add subjects to this section first with "Add subject".</p>
   <form method="post" novalidate>
     {% csrf_token %}
     {% include "includes/form_fields.html" %}

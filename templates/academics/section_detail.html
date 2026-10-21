@@ -3,16 +3,22 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3 mb-0">{{ section.class_name }} — Section {{ section.name }}</h1>
-  <a class="btn btn-primary" href="{% url 'enrollment_create' section.pk %}">Enroll student</a>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'class_assign' section.pk %}">Add subject</a>
+    <a class="btn btn-primary" href="{% url 'enrollment_create' section.pk %}">Enroll student</a>
+  </div>
 </div>
 <h2 class="h5">Subjects offered here</h2>
 <ul class="list-group mb-4">
   {% for assignment in assignments %}
-    <li class="list-group-item">{{ assignment.subject }}
-      {% if assignment.faculty %} — {{ assignment.faculty.full_name }}{% endif %}
+    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+      <span>{{ assignment.subject }} —
+        {% if assignment.faculty %}{{ assignment.faculty.full_name }}{% else %}<span class="text-body-secondary">No teacher assigned</span>{% endif %}
+      </span>
+      <a class="btn btn-sm btn-outline-secondary text-nowrap" href="{% url 'class_teacher' section.pk assignment.pk %}">Change teacher</a>
     </li>
   {% empty %}
-    <li class="list-group-item">No subjects offered here yet. Offer one from <a href="{% url 'subject_list' %}">Subjects</a>.</li>
+    <li class="list-group-item">No subjects offered here yet. Use "Add subject".</li>
   {% endfor %}
 </ul>
 <h2 class="h5">Subject rosters</h2>

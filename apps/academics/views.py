@@ -1,19 +1,22 @@
 """Students (BL-07 / UC-02), faculty (BL-08 / UC-03), sections and enrollment (BL-10 / UC-05),
-subjects (BL-09 / UC-04)."""
+subjects (BL-09 / UC-04), teaching assignments (BL-11 / UC-03, UC-05)."""
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
+from apps.accounts.decorators import role_required
 from apps.accounts.models import Role
 from apps.accounts.permissions import (
     can_edit_subject,
     get_visible_or_deny,
     has_permission,
     requires,
+    visible_assignments,
     visible_students,
 )
 from apps.accounts.services import provision_account
@@ -21,6 +24,7 @@ from apps.attendance.models import AttendanceSession
 from apps.audit import services as audit
 
 from .forms import (
+    ClassAssignForm,
     EnrollmentForm,
     FacultyCreateForm,
     FacultyUpdateForm,
@@ -29,6 +33,7 @@ from .forms import (
     StudentUpdateForm,
     SubjectForm,
     SubjectOfferForm,
+    TeacherForm,
 )
 from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssignment
 
@@ -605,3 +610,86 @@ def faculty_delete(request, pk):
         messages.error(request, "A deletion reason is required.")
     recorded = AttendanceSession.objects.filter(recorded_by=member.user).count()
     return render(request, "academics/faculty_confirm_delete.html", {"member": member, "recorded": recorded})
+
+
+# --- Teaching assignments (BL-11 / UC-03 step 5, UC-05 step 4) -----------------------------
+# The Admin decides who teaches each subject in each section. Faculty access to marking and
+# viewing attendance follows these assignments automatically (BL-05 scope rules).
+
+
+def _faculty_code(faculty):
+    return faculty.faculty_id if faculty else None
+
+
+@never_cache
+@requires("sections.manage")
+def class_assign(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    form = ClassAssignForm(request.POST or None, section=section)
+    if request.method == "POST" and form.is_valid():
+        subject, faculty = form.cleaned_data["subject"], form.cleaned_data["faculty"]
+        try:
+            with transaction.atomic():
+                assignment = TeachingAssignment.objects.create(
+                    section=section, subject=subject, faculty=faculty
+                )
+                audit.record(
+                    "assignment.create",
+                    actor=request.user,
+                    target_type="TeachingAssignment",
+                    target_id=assignment.pk,
+                    new_value={
+                        "section": str(section),
+                        "subject": subject.code,
+                        "faculty": faculty.faculty_id,
+                    },
+                )
+        except IntegrityError:
+            form.add_error("subject", "This subject is already offered in this section.")
+        else:
+            messages.success(request, f"{subject.code} added to {section}, taught by {faculty.full_name}.")
+            return redirect("section_detail", pk=pk)
+    return render(request, "academics/class_assign.html", {"section": section, "form": form})
+
+
+@never_cache
+@requires("sections.manage")
+def class_teacher(request, pk, assignment_pk):
+    assignment = get_object_or_404(
+        TeachingAssignment.objects.select_related("section", "subject", "faculty"),
+        pk=assignment_pk,
+        section_id=pk,
+    )
+    form = TeacherForm(request.POST or None, initial={"faculty": assignment.faculty})
+    if request.method == "POST" and form.is_valid():
+        new, old = form.cleaned_data["faculty"], assignment.faculty
+        if new != old:
+            with transaction.atomic():
+                assignment.faculty = new
+                assignment.save(update_fields=["faculty"])
+                audit.record(
+                    "assignment.teacher",
+                    actor=request.user,
+                    target_type="TeachingAssignment",
+                    target_id=assignment.pk,
+                    old_value={"faculty": _faculty_code(old)},
+                    new_value={"faculty": _faculty_code(new)},
+                )
+            if new:
+                messages.success(request, f"{assignment.subject.code} is now taught by {new.full_name}.")
+            else:
+                messages.success(request, f"{assignment.subject.code} has no teacher assigned.")
+        return redirect("section_detail", pk=pk)
+    return render(request, "academics/class_teacher.html", {"assignment": assignment, "form": form})
+
+
+@never_cache
+@role_required(Role.FACULTY)
+def my_classes(request):
+    classes = (
+        visible_assignments(request.user)
+        .select_related("section", "subject")
+        .annotate(student_count=Count("enrollments"))
+        .order_by("section__class_name", "section__name", "subject__code")
+    )
+    return render(request, "academics/my_classes.html", {"classes": classes})

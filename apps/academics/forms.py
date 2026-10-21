@@ -198,3 +198,36 @@ class FacultyCreateForm(FacultyFieldsForm):
 
 class FacultyUpdateForm(FacultyFieldsForm):
     """Faculty IDs are immutable: they are also login identifiers."""
+
+
+def _active_faculty():
+    """Only active faculty can be given classes (BL-11 decision)."""
+    return Faculty.objects.filter(user__is_active=True).order_by("faculty_id")
+
+
+class ClassAssignForm(BootstrapMixin, forms.Form):
+    """Add a subject to a section together with its teacher (BL-11)."""
+
+    subject = forms.ModelChoiceField(queryset=Subject.objects.none(), empty_label="Select a subject")
+    faculty = forms.ModelChoiceField(
+        queryset=Faculty.objects.none(), label="Teacher", empty_label="Select a teacher"
+    )
+
+    def __init__(self, *args, section, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["subject"].queryset = Subject.objects.exclude(assignments__section=section).order_by(
+            "code"
+        )
+        self.fields["faculty"].queryset = _active_faculty()
+
+
+class TeacherForm(BootstrapMixin, forms.Form):
+    """Assign, change or remove the teacher of one class (BL-11)."""
+
+    faculty = forms.ModelChoiceField(
+        queryset=Faculty.objects.none(), label="Teacher", required=False, empty_label="Not assigned"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["faculty"].queryset = _active_faculty()
