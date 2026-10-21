@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ member.faculty_id }} · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">{{ member.full_name }} ({{ member.faculty_id }})</h1>
+<dl class="row">
+  <dt class="col-sm-3">Department</dt><dd class="col-sm-9">{{ member.department }}</dd>
+  <dt class="col-sm-3">Account</dt><dd class="col-sm-9">{% if member.user.is_active %}Active{% else %}Inactive{% endif %}</dd>
+  <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ member.user.email }}</dd>
+</dl>
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a class="btn btn-primary" href="{% url 'faculty_edit' member.pk %}">Edit faculty</a>
+  {% if member.user.is_active %}
+    <form method="post" action="{% url 'faculty_deactivate' member.pk %}">{% csrf_token %}
+      <button class="btn btn-warning" type="submit">Deactivate</button>
+    </form>
+  {% else %}
+    <form method="post" action="{% url 'faculty_reactivate' member.pk %}">{% csrf_token %}
+      <button class="btn btn-success" type="submit">Reactivate</button>
+    </form>
+  {% endif %}
+  <a class="btn btn-outline-danger" href="{% url 'faculty_delete' member.pk %}">Delete permanently</a>
+</div>
+<h2 class="h5">Classes taught</h2>
+<ul class="list-group mb-3">
+  {% for assignment in classes %}
+    <li class="list-group-item">{{ assignment.subject }} — {{ assignment.section }}</li>
+  {% empty %}<li class="list-group-item">No classes assigned.</li>{% endfor %}
+</ul>
+{% if classes %}
+  <p class="text-body-secondary">A faculty member who teaches classes cannot be deactivated or deleted until the classes are reassigned.</p>
+{% endif %}
+<a href="{% url 'faculty_list' %}">Back to faculty</a>
+{% endblock %}

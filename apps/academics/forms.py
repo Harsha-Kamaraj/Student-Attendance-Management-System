@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from apps.accounts.forms import BootstrapMixin
 from apps.accounts.models import User
 
-from .models import Enrollment, Section, Student, Subject, TeachingAssignment
+from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssignment
 
 
 class StudentFieldsForm(BootstrapMixin, forms.Form):
@@ -160,3 +160,41 @@ class SubjectOfferForm(BootstrapMixin, forms.Form):
         self.fields["section"].queryset = Section.objects.exclude(assignments__subject=subject).order_by(
             "class_name", "name"
         )
+
+
+class FacultyFieldsForm(BootstrapMixin, forms.Form):
+    full_name = forms.CharField(max_length=150, label="Full name")
+    department = forms.CharField(max_length=100)
+    email = forms.EmailField(label="Email")
+
+    def clean_full_name(self):
+        value = self.cleaned_data["full_name"].strip()
+        if not value:
+            raise ValidationError("Faculty name is required.")
+        return value
+
+    def clean_department(self):
+        value = self.cleaned_data["department"].strip()
+        if not value:
+            raise ValidationError("Department is required.")
+        return value
+
+
+class FacultyCreateForm(FacultyFieldsForm):
+    faculty_id = forms.CharField(max_length=20, label="Faculty ID")
+    field_order = ["faculty_id", "full_name", "department", "email"]
+
+    def clean_faculty_id(self):
+        code = User.normalize_username(self.cleaned_data["faculty_id"])
+        if not re.fullmatch(r"[A-Z0-9@.+_-]+", code):
+            raise ValidationError("Use letters, numbers or @ . + - _ only.")
+        if (
+            User.objects.filter(username=code).exists()
+            or Faculty.objects.filter(faculty_id__iexact=code).exists()
+        ):
+            raise ValidationError("This faculty ID already exists.")
+        return code
+
+
+class FacultyUpdateForm(FacultyFieldsForm):
+    """Faculty IDs are immutable: they are also login identifiers."""

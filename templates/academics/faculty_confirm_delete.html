@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Delete faculty · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3 text-danger">Permanently delete {{ member.faculty_id }}?</h1>
+<div class="alert alert-danger">
+  This permanently deletes the faculty member's account and profile. The {{ recorded }} attendance session(s)
+  they recorded are kept and keep their faculty ID. The append-only audit history is retained.
+</div>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label" for="reason">Deletion reason (required)</label>
+    <textarea id="reason" name="reason" class="form-control" required maxlength="1000"></textarea>
+  </div>
+  <button type="submit" class="btn btn-danger">Confirm permanent deletion</button>
+  <a href="{% url 'faculty_detail' member.pk %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock %}

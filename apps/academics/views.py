@@ -1,4 +1,5 @@
-"""Students (BL-07 / UC-02), sections and enrollment (BL-10 / UC-05), subjects (BL-09 / UC-04)."""
+"""Students (BL-07 / UC-02), faculty (BL-08 / UC-03), sections and enrollment (BL-10 / UC-05),
+subjects (BL-09 / UC-04)."""
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -21,13 +22,15 @@ from apps.audit import services as audit
 
 from .forms import (
     EnrollmentForm,
+    FacultyCreateForm,
+    FacultyUpdateForm,
     SectionForm,
     StudentCreateForm,
     StudentUpdateForm,
     SubjectForm,
     SubjectOfferForm,
 )
-from .models import Enrollment, Section, Student, Subject, TeachingAssignment
+from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssignment
 
 
 @never_cache
@@ -450,3 +453,155 @@ def subject_withdraw(request, pk, assignment_pk):
         assignment.delete()
     messages.success(request, f"{assignment.subject.code} withdrawn from {assignment.section}.")
     return redirect("subject_detail", pk=pk)
+
+
+# --- Faculty (BL-08 / UC-03) --------------------------------------------------------------
+# Admin only (faculty.manage). A faculty member who still teaches classes cannot be
+# deactivated or deleted until the classes are reassigned (BL-01 D-03, D-04, UC-03 4a).
+
+
+def _blocked_by_assignments(request, faculty, action):
+    classes = list(faculty.assignments.select_related("section", "subject"))
+    if classes:
+        listed = ", ".join(f"{a.subject.code} in {a.section}" for a in classes)
+        messages.error(
+            request, f"Cannot {action} {faculty.faculty_id}: reassign their classes first ({listed})."
+        )
+        return True
+    return False
+
+
+@never_cache
+@requires("faculty.manage")
+def faculty_list(request):
+    members = Faculty.objects.select_related("user").order_by("faculty_id")
+    return render(request, "academics/faculty_list.html", {"members": members})
+
+
+@never_cache
+@requires("faculty.manage")
+def faculty_create(request):
+    form = FacultyCreateForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        data = form.cleaned_data
+        try:
+            with transaction.atomic():
+                account, password = provision_account(
+                    username=data["faculty_id"],
+                    role=Role.FACULTY,
+                    email=data["email"],
+                    created_by=request.user,
+                )
+                member = Faculty.objects.create(
+                    user=account,
+                    faculty_id=data["faculty_id"],
+                    full_name=data["full_name"],
+                    department=data["department"],
+                )
+                audit.record(
+                    "faculty.create",
+                    actor=request.user,
+                    target_type="Faculty",
+                    target_id=member.pk,
+                    new_value={"faculty_id": member.faculty_id, "department": member.department},
+                )
+        except IntegrityError:
+            form.add_error("faculty_id", "This faculty ID already exists.")
+        else:
+            return render(
+                request, "academics/faculty_created.html", {"member": member, "temporary_password": password}
+            )
+    return render(request, "academics/faculty_form.html", {"form": form, "creating": True})
+
+
+@never_cache
+@requires("faculty.manage")
+def faculty_detail(request, pk):
+    member = get_object_or_404(Faculty.objects.select_related("user"), pk=pk)
+    classes = member.assignments.select_related("section", "subject").order_by(
+        "section__class_name", "section__name", "subject__code"
+    )
+    return render(request, "academics/faculty_detail.html", {"member": member, "classes": classes})
+
+
+@never_cache
+@requires("faculty.manage")
+def faculty_edit(request, pk):
+    member = get_object_or_404(Faculty.objects.select_related("user"), pk=pk)
+    initial = {"full_name": member.full_name, "department": member.department, "email": member.user.email}
+    form = FacultyUpdateForm(request.POST or None, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        data = form.cleaned_data
+        previous = {"department": member.department}
+        with transaction.atomic():
+            member.full_name = data["full_name"]
+            member.department = data["department"]
+            member.save(update_fields=["full_name", "department"])
+            member.user.email = data["email"]
+            member.user.save(update_fields=["email"])
+            audit.record(
+                "faculty.update",
+                actor=request.user,
+                target_type="Faculty",
+                target_id=member.pk,
+                old_value=previous,
+                new_value={"department": member.department},
+            )
+        messages.success(request, "Faculty details updated.")
+        return redirect("faculty_detail", pk=pk)
+    return render(request, "academics/faculty_form.html", {"form": form, "creating": False, "member": member})
+
+
+@never_cache
+@requires("faculty.manage")
+@require_POST
+def faculty_deactivate(request, pk):
+    member = get_object_or_404(Faculty.objects.select_related("user"), pk=pk)
+    if member.user.is_active and not _blocked_by_assignments(request, member, "deactivate"):
+        with transaction.atomic():
+            member.user.is_active = False
+            member.user.save(update_fields=["is_active"])
+            audit.record("faculty.deactivate", actor=request.user, target_type="Faculty", target_id=pk)
+        messages.success(request, "Faculty member deactivated. They can no longer log in.")
+    return redirect("faculty_detail", pk=pk)
+
+
+@never_cache
+@requires("faculty.manage")
+@require_POST
+def faculty_reactivate(request, pk):
+    member = get_object_or_404(Faculty.objects.select_related("user"), pk=pk)
+    if not member.user.is_active:
+        with transaction.atomic():
+            member.user.is_active = True
+            member.user.save(update_fields=["is_active"])
+            audit.record("faculty.reactivate", actor=request.user, target_type="Faculty", target_id=pk)
+        messages.success(request, "Faculty member reactivated.")
+    return redirect("faculty_detail", pk=pk)
+
+
+@never_cache
+@requires("faculty.manage")
+def faculty_delete(request, pk):
+    member = get_object_or_404(Faculty.objects.select_related("user"), pk=pk)
+    if _blocked_by_assignments(request, member, "delete"):
+        return redirect("faculty_detail", pk=pk)
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        if reason:
+            with transaction.atomic():
+                audit.record(
+                    "faculty.delete",
+                    actor=request.user,
+                    target_type="Faculty",
+                    target_id=pk,
+                    old_value={"faculty_id": member.faculty_id},
+                    reason=reason,
+                )
+                # Profile and login are removed; sessions they recorded keep their faculty ID (D-04).
+                member.user.delete()
+            messages.success(request, f"{member.faculty_id} deleted. Attendance they recorded is kept.")
+            return redirect("faculty_list")
+        messages.error(request, "A deletion reason is required.")
+    recorded = AttendanceSession.objects.filter(recorded_by=member.user).count()
+    return render(request, "academics/faculty_confirm_delete.html", {"member": member, "recorded": recorded})
