@@ -29,12 +29,13 @@ class LoginForm(BootstrapMixin, AuthenticationForm):
 
 
 class AccountCreateForm(BootstrapMixin, forms.ModelForm):
+    """Admin accounts only. Students and faculty are added with their profiles (BL-07, BL-08)."""
+
     email = forms.EmailField(required=True)
 
     class Meta:
         model = User
-        fields = ["username", "role", "email"]
-        labels = {"username": "Username (roll number or faculty ID)"}
+        fields = ["username", "email"]
         help_texts = {"username": "Letters, digits and @ . + - _ only. Stored in capitals."}
 
     def clean_username(self):

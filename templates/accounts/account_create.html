@@ -1,16 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Create account · Student Attendance{% endblock %}
+{% block title %}Create Admin account · Student Attendance{% endblock %}
 
 {% block content %}
   <div class="row">
     <div class="col-md-6">
-      <h1 class="h3 mb-3">Create account</h1>
+      <h1 class="h3 mb-3">Create Admin account</h1>
       <p class="text-body-secondary">A one-time temporary password is generated. The user must change it at first login.</p>
+      <p class="text-body-secondary">To add a student or faculty member, use
+        <a href="{% url 'student_create' %}">Add student</a> or <a href="{% url 'faculty_create' %}">Add faculty</a>,
+        which also record their roll number or faculty details.</p>
       <form method="post" novalidate>
         {% csrf_token %}
         {% include "includes/form_fields.html" %}
-        <button type="submit" class="btn btn-primary">Create account</button>
+        <button type="submit" class="btn btn-primary">Create Admin account</button>
         <a class="btn btn-link" href="{% url 'account_list' %}">Cancel</a>
       </form>
     </div>

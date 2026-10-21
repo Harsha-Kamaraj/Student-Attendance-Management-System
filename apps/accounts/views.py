@@ -95,7 +95,7 @@ def account_create(request):
     if request.method == "POST" and form.is_valid():
         user, temporary_password = provision_account(
             username=form.cleaned_data["username"],
-            role=form.cleaned_data["role"],
+            role=Role.ADMIN,
             email=form.cleaned_data["email"],
             created_by=request.user,
         )

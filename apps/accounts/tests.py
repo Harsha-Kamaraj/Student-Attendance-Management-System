@@ -238,7 +238,7 @@ class AccountProvisioningTests(TestCase):
         self.client.login(username="ADMIN1", password=PASSWORD)
 
     def create(self, **data):
-        values = {"username": "21cs050", "role": Role.STUDENT, "email": "s50@example.edu"} | data
+        values = {"username": "admin50", "email": "a50@example.edu"} | data
         return self.client.post(reverse("account_create"), values)
 
     def temporary_password(self, response):
@@ -249,8 +249,8 @@ class AccountProvisioningTests(TestCase):
         # BL-01 D-02, AR-01
         response = self.create()
         self.assertEqual(response.status_code, 200)
-        user = User.objects.get(username="21CS050")
-        self.assertEqual(user.role, Role.STUDENT)
+        user = User.objects.get(username="ADMIN50")
+        self.assertEqual(user.role, Role.ADMIN)
         self.assertTrue(user.must_change_password)
         temporary = self.temporary_password(response)
         self.assertTrue(user.check_password(temporary))
@@ -261,13 +261,13 @@ class AccountProvisioningTests(TestCase):
         with mock.patch("apps.accounts.services.generate_temporary_password", return_value="Ab3&<x>Yz9!q"):
             response = self.create()
         self.assertEqual(self.temporary_password(response), "Ab3&<x>Yz9!q")
-        self.assertTrue(User.objects.get(username="21CS050").check_password("Ab3&<x>Yz9!q"))
+        self.assertTrue(User.objects.get(username="ADMIN50").check_password("Ab3&<x>Yz9!q"))
 
     def test_duplicate_username_is_rejected_ignoring_case(self):
         self.create()
-        response = self.create(username="21CS050")
+        response = self.create(username="ADMIN50")
         self.assertContains(response, "An account with this username already exists.")
-        self.assertEqual(User.objects.filter(username="21CS050").count(), 1)
+        self.assertEqual(User.objects.filter(username="ADMIN50").count(), 1)
 
     def test_blank_and_invalid_input_is_rejected(self):
         response = self.create(username="", email="not-an-email")
@@ -281,7 +281,7 @@ class AccountProvisioningTests(TestCase):
         temporary = self.temporary_password(response)
         entry = AuditEntry.objects.get(action="account.create")
         self.assertEqual(entry.actor_username, "ADMIN1")
-        self.assertEqual(entry.new_value, {"username": "21CS050", "role": "STUDENT"})
+        self.assertEqual(entry.new_value, {"username": "ADMIN50", "role": "ADMIN"})
         for logged in AuditEntry.objects.all():
             self.assertNotIn(temporary, str(logged.__dict__))
 
@@ -290,7 +290,16 @@ class AccountProvisioningTests(TestCase):
         self.create()
         self.client.logout()
         self.client.login(username="ADMIN1", password=PASSWORD)
-        self.assertContains(self.client.get(reverse("account_list")), "21CS050")
+        self.assertContains(self.client.get(reverse("account_list")), "ADMIN50")
+
+    def test_page_creates_admin_accounts_only(self):
+        # Students and faculty are added with their profiles (BL-07, BL-08).
+        page = self.client.get(reverse("account_create"))
+        self.assertContains(page, "Create Admin account")
+        self.assertNotContains(page, 'name="role"')
+        self.assertContains(page, reverse("student_create"))
+        self.create(username="sneaky", role=Role.STUDENT)
+        self.assertEqual(User.objects.get(username="SNEAKY").role, Role.ADMIN)
 
     def test_admin_can_reset_a_password(self):
         student = make_user("21CS051", Role.STUDENT, locked_until=timezone.now() + timedelta(minutes=10))
