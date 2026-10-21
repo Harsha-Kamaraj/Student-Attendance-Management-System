@@ -8,6 +8,7 @@ Backlog item: BL-03 (GitHub issue #3) · Sprint 1 · Database: PostgreSQL · Def
 erDiagram
     USER ||--o| STUDENT : "has profile"
     USER ||--o| FACULTY : "has profile"
+    SECTION |o--o{ STUDENT : "home section of"
     SECTION ||--o{ TEACHING_ASSIGNMENT : offers
     SUBJECT ||--o{ TEACHING_ASSIGNMENT : "taught as"
     FACULTY |o--o{ TEACHING_ASSIGNMENT : teaches
@@ -31,6 +32,7 @@ erDiagram
         bigint user_id FK,UK
         string roll_number UK
         string full_name
+        bigint home_section_id FK "optional (BL-07)"
     }
     FACULTY {
         bigint id PK
@@ -98,7 +100,7 @@ erDiagram
 | Table | App | Purpose |
 |---|---|---|
 | `accounts_user` | accounts | Login account and role. Username is the roll number or faculty ID (BL-01 D-02). |
-| `academics_student` | academics | Student profile linked one-to-one to a user. |
+| `academics_student` | academics | Student profile linked one-to-one to a user, with an optional home class/section (added in BL-07). Subject-by-subject membership is in `academics_enrollment`. |
 | `academics_faculty` | academics | Faculty profile linked one-to-one to a user. |
 | `academics_subject` | academics | Subject (course) with a unique code. |
 | `academics_section` | academics | Class and section, e.g. "B.Tech CSE Year 2" + "A". |
@@ -134,6 +136,7 @@ Django also creates its standard tables for permissions, sessions, admin history
 | Faculty member without assignments | Profile and login deleted; sessions they recorded remain and keep their faculty ID. | BL-01 D-04 |
 | Subject or section with attendance | **Blocked.** | BL-01 D-05 |
 | Subject or section without attendance | Its teaching assignments and enrolments are deleted. | FR-05 |
+| Section that is a student's home section | The student's home section is cleared; the student is kept. | BL-07 |
 | Audit entry | **Always blocked.** | SEC-21 |
 
 Deactivation (BL-01 D-03) does not delete anything: it sets `is_active` to false on the user.
