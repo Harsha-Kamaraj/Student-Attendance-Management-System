@@ -1,11 +1,14 @@
 """Atomic attendance creation shared by the HTML workflow and future APIs."""
 
+from collections.abc import Mapping
+from datetime import date
+
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
 from apps.academics.models import Enrollment, Faculty, TeachingAssignment
-from apps.accounts.models import Role
+from apps.accounts.models import Role, User
 from apps.accounts.permissions import can_mark_attendance
 from apps.audit import services as audit
 
@@ -20,13 +23,28 @@ def submit_attendance(*, actor, assignment, day, period, statuses, reason=""):
     Locking the TeachingAssignment prevents two submissions for the same subject/section
     from checking an empty session simultaneously. Database uniqueness is a backup guard.
     """
+    if not getattr(actor, "is_authenticated", False):
+        raise PermissionDenied("An active faculty or Admin account is required.")
+    actor = User.objects.select_for_update().filter(pk=actor.pk).first()
+    if actor is None:
+        raise PermissionDenied("An active faculty or Admin account is required.")
     assignment = TeachingAssignment.objects.select_for_update().get(pk=assignment.pk)
     if not can_mark_attendance(actor, assignment):
         raise PermissionDenied("Class is outside your teaching assignments.")
+    if type(day) is not date:
+        raise ValidationError("Choose a valid attendance date.")
     if day > timezone.localdate():
         raise ValidationError("Attendance cannot be recorded for a future date.")
-    if not 1 <= period <= MAX_PERIODS_PER_DAY:
+    if type(period) is not int or not 1 <= period <= MAX_PERIODS_PER_DAY:
         raise ValidationError("Invalid class period.")
+    if (
+        not isinstance(statuses, Mapping)
+        or any(type(sid) is not int or sid <= 0 for sid in statuses)
+        or any(value not in (Status.PRESENT, Status.ABSENT) for value in statuses.values())
+    ):
+        raise ValidationError("Submit one Present or Absent status for each student using valid student IDs.")
+    if not isinstance(reason, str):
+        raise ValidationError("The attendance reason must be text.")
     if actor.role == Role.ADMIN and not reason.strip():
         raise ValidationError("Admin attendance overrides require a reason.")
 
