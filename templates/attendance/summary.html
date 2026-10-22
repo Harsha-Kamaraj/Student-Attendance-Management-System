@@ -3,17 +3,58 @@
 {% block content %}
 <h1 class="h3">My attendance</h1>
 <p>{{ student.roll_number }} — {{ student.full_name }}</p>
-<div class="card mb-4"><div class="card-body">
-  <h2 class="h5">Overall attendance</h2>
-  <p class="fs-4 mb-0">{{ summary.overall.display }}</p>
-</div></div>
-<h2 class="h5">Attendance by subject</h2>
-<div class="table-responsive">
-  <table class="table table-striped">
-    <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th></tr></thead>
-    <tbody>{% for row in summary.subjects %}<tr><th scope="row">{{ row.subject }}</th><td>{{ row.display }}</td></tr>
-      {% empty %}<tr><td colspan="2">N/A – no classes yet</td></tr>{% endfor %}</tbody>
-  </table>
-</div>
-<p class="text-body-secondary">Overall attendance pools all recorded classes. Percentages are rounded half up to two decimals.</p>
+<form method="get" class="card mb-4">
+  <div class="card-body">
+    <h2 class="h5">Filter attendance</h2>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.subject.id_for_label }}">Subject</label>
+        {{ form.subject }}
+        {% for error in form.subject.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="{{ form.start_date.id_for_label }}">From date</label>
+        {{ form.start_date }}
+        {% for error in form.start_date.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="{{ form.end_date.id_for_label }}">To date</label>
+        {{ form.end_date }}
+        {% for error in form.end_date.errors %}<div class="text-danger">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-2 d-flex align-items-end gap-2">
+        <button class="btn btn-primary" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" href="{% url 'attendance_summary' %}">Clear</a>
+      </div>
+    </div>
+    {% if form.non_field_errors %}<div class="text-danger mt-2">{{ form.non_field_errors }}</div>{% endif %}
+  </div>
+</form>
+{% if summary %}
+  {% if filters_applied and not summary.overall.held %}
+    <div class="alert alert-info" role="status">No attendance records match these filters.</div>
+  {% endif %}
+  <div class="card mb-4"><div class="card-body">
+    <h2 class="h5">Overall attendance</h2>
+    <p class="fs-4 mb-0">{{ summary.overall.display }}</p>
+  </div></div>
+  <h2 class="h5">Attendance by subject</h2>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th></tr></thead>
+      <tbody>
+        {% if filters_applied and not summary.overall.held %}
+          <tr><td colspan="2">No attendance records match these filters.</td></tr>
+        {% else %}
+          {% for row in summary.subjects %}
+            <tr><th scope="row">{{ row.subject }}</th><td>{{ row.display }}</td></tr>
+          {% empty %}
+            <tr><td colspan="2">N/A — no classes yet</td></tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-body-secondary">Overall attendance pools all recorded classes in the selected scope. Percentages are rounded half up to two decimals.</p>
+{% endif %}
 {% endblock %}

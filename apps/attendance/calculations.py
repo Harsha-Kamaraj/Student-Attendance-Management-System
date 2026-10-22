@@ -12,7 +12,7 @@ from django.db.models import Count, Q
 
 from apps.academics.models import Enrollment, Subject
 
-from .models import AttendanceRecord, Status
+from .models import AttendanceRecord, AttendanceThreshold, Status
 
 
 @dataclass(frozen=True)
@@ -35,8 +35,10 @@ class AttendanceTotals:
             return "N/A – no classes yet"
         return f"{self.attended}/{self.held} ({percentage:.2f}%)"
 
-    def is_below_threshold(self, threshold: int = 75) -> bool:
-        """Compare the exact ratio, rather than its rounded display (D-13)."""
+    def is_below_threshold(self, threshold: int | None = None) -> bool:
+        """Compare the exact ratio using the current institution threshold (D-13)."""
+        if threshold is None:
+            threshold = AttendanceThreshold.current_value()
         return self.held > 0 and self.attended * 100 < threshold * self.held
 
 
@@ -51,7 +53,9 @@ class StudentAttendanceSummary:
     overall: AttendanceTotals
 
 
-def student_attendance_summary(student, *, assignments=None) -> StudentAttendanceSummary:
+def student_attendance_summary(
+    student, *, assignments=None, subject_id=None, start_date=None, end_date=None
+) -> StudentAttendanceSummary:
     """Return current subject and pooled totals, optionally within assigned classes.
 
     The caller supplies authorized assignments for a faculty-scoped view. Omitting
@@ -65,6 +69,13 @@ def student_attendance_summary(student, *, assignments=None) -> StudentAttendanc
     if assignments is not None:
         records = records.filter(session__assignment__in=assignments)
         enrollments = enrollments.filter(assignment__in=assignments)
+    if subject_id is not None:
+        records = records.filter(session__assignment__subject_id=subject_id)
+        enrollments = enrollments.filter(subject_id=subject_id)
+    if start_date is not None:
+        records = records.filter(session__date__gte=start_date)
+    if end_date is not None:
+        records = records.filter(session__date__lte=end_date)
 
     counts = {
         row["session__assignment__subject_id"]: (row["attended"], row["held"])
@@ -72,9 +83,12 @@ def student_attendance_summary(student, *, assignments=None) -> StudentAttendanc
         .values("session__assignment__subject_id")
         .annotate(attended=Count("pk", filter=Q(status=Status.PRESENT)), held=Count("pk"))
     }
-    subjects = Subject.objects.filter(Q(pk__in=enrollments.values("subject_id")) | Q(pk__in=counts)).order_by(
-        "code", "pk"
-    )
+    subjects_query = Q(pk__in=counts)
+    # Date-filtered reports show only subjects with records in the selected period.
+    # Without a date filter, enrolled subjects with no records remain visible as N/A.
+    if start_date is None and end_date is None:
+        subjects_query |= Q(pk__in=enrollments.values("subject_id"))
+    subjects = Subject.objects.filter(subjects_query).order_by("code", "pk")
     rows = [
         SubjectAttendance(
             subject=subject,
@@ -90,3 +104,43 @@ def student_attendance_summary(student, *, assignments=None) -> StudentAttendanc
             held=sum(row.held for row in rows),
         ),
     )
+
+
+def attendance_shortage_statistics(*, assignments=None, threshold=None):
+    """Return live shortage counts from persisted records, excluding zero-record cases.
+
+    ``students_below_overall`` counts students whose pooled attendance is below the
+    threshold. ``subject_shortages`` counts student/subject pairs below threshold.
+    When ``assignments`` is provided, only those classes contribute to either count.
+    """
+    threshold = AttendanceThreshold.current_value() if threshold is None else threshold
+    records = AttendanceRecord.objects.all()
+    if assignments is not None:
+        records = records.filter(session__assignment__in=assignments)
+
+    subject_groups = (
+        records.order_by()
+        .values("student_id", "session__assignment__subject_id")
+        .annotate(
+            attended=Count("pk", filter=Q(status=Status.PRESENT)),
+            held=Count("pk"),
+        )
+    )
+    subject_shortages = sum(
+        1 for row in subject_groups
+        if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
+    )
+
+    overall_groups = records.order_by().values("student_id").annotate(
+        attended=Count("pk", filter=Q(status=Status.PRESENT)),
+        held=Count("pk"),
+    )
+    students_below_overall = sum(
+        1 for row in overall_groups
+        if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
+    )
+    return {
+        "threshold": threshold,
+        "subject_shortages": subject_shortages,
+        "students_below_overall": students_below_overall,
+    }

@@ -14,10 +14,11 @@ from apps.academics.models import Enrollment, Student, TeachingAssignment
 from apps.accounts.decorators import role_required
 from apps.accounts.models import Role
 from apps.accounts.permissions import requires, visible_assignments
+from apps.audit import services as audit
 
 from .calculations import student_attendance_summary
-from .forms import AttendanceSelectionForm
-from .models import AttendanceSession, Status
+from .forms import AttendanceSelectionForm, AttendanceSummaryFilterForm, AttendanceThresholdForm
+from .models import AttendanceSession, AttendanceThreshold, Status
 from .services import submit_attendance
 
 logger = logging.getLogger(__name__)
@@ -150,10 +151,59 @@ def attendance_mark(request):
 @never_cache
 @role_required(Role.STUDENT)
 def attendance_summary(request):
-    """Use only the authenticated student's own profile for the live totals."""
+    """Show only the authenticated student's own attendance, with optional filters (BL-15)."""
     student = get_object_or_404(Student, user=request.user)
+    form = AttendanceSummaryFilterForm(request.GET or None, student=student)
+    summary = None
+    if not request.GET:
+        summary = student_attendance_summary(student)
+    elif form.is_valid():
+        data = form.cleaned_data
+        summary = student_attendance_summary(
+            student,
+            subject_id=data["subject"].pk if data["subject"] else None,
+            start_date=data["start_date"],
+            end_date=data["end_date"],
+        )
     return render(
         request,
         "attendance/summary.html",
-        {"student": student, "summary": student_attendance_summary(student)},
+        {
+            "student": student,
+            "form": form,
+            "summary": summary,
+            "filters_applied": bool(request.GET),
+        },
+    )
+
+
+@never_cache
+@requires("threshold.configure")
+def threshold_settings(request):
+    """Admin-only institution-wide attendance threshold configuration (BL-22)."""
+    current = AttendanceThreshold.current_value()
+    form = AttendanceThresholdForm(request.POST or None, initial={"value": current})
+    if request.method == "POST" and form.is_valid():
+        previous = AttendanceThreshold.current_value()
+        setting, _ = AttendanceThreshold.objects.get_or_create(pk=1, defaults={"value": 75})
+        setting.value = form.cleaned_data["value"]
+        setting.save(update_fields=["value", "updated_at"])
+        audit.record(
+            "attendance.threshold.update",
+            actor=request.user,
+            target_type="AttendanceThreshold",
+            target_id=setting.pk,
+            old_value={"value": previous},
+            new_value={"value": setting.value},
+        )
+        messages.success(
+            request,
+            f"Attendance threshold saved as {setting.value}%. Shortage counts update immediately.",
+        )
+        return redirect("threshold_settings")
+    return render(
+        request,
+        "attendance/threshold_settings.html",
+        {"form": form, "threshold": current},
+        status=400 if request.method == "POST" else 200,
     )

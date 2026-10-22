@@ -1,9 +1,24 @@
 {% extends "base.html" %}
-
 {% block title %}Student dashboard · Student Attendance{% endblock %}
-
 {% block content %}
   <h1 class="h3">Student dashboard</h1>
+  {% if summary %}
+    <div class="row g-3 my-2">
+      <div class="col-md-6"><div class="card h-100"><div class="card-body">
+        <h2 class="h6">Overall attendance</h2>
+        <p class="fs-4 mb-0">{{ summary.overall.display }}</p>
+      </div></div></div>
+      <div class="col-md-6"><div class="card h-100"><div class="card-body">
+        <h2 class="h6">Attendance threshold</h2>
+        <p class="fs-4 mb-0">{{ threshold }}%</p>
+        {% if overall_below_threshold %}<p class="text-danger mb-0">Your overall attendance is below the threshold.</p>
+        {% else %}<p class="text-body-secondary mb-0">Your overall attendance is not below the threshold.</p>{% endif %}
+      </div></div></div>
+    </div>
+    <p>Subjects below threshold: {{ subject_shortages }}</p>
+  {% else %}
+    <p>N/A — no student profile is available.</p>
+  {% endif %}
   <p><a href="{% url 'student_list' %}">View my student profile</a></p>
-  <p><a href="{% url 'attendance_summary' %}">View my attendance percentages</a></p>
+  <p><a href="{% url 'attendance_summary' %}">View and filter my attendance</a></p>
 {% endblock %}
