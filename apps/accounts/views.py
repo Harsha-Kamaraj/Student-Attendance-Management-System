@@ -7,6 +7,9 @@ from django.urls import reverse_lazy
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
+from apps.academics.models import Enrollment, Faculty, Section, Student, TeachingAssignment
+from apps.attendance.calculations import attendance_shortage_statistics, student_attendance_summary
+from apps.attendance.models import AttendanceSession, AttendanceThreshold
 from apps.audit import services as audit
 
 from .decorators import role_required
@@ -66,19 +69,49 @@ def dashboard(request):
 @never_cache
 @role_required(Role.ADMIN)
 def dashboard_admin(request):
-    return render(request, "dashboard/admin.html")
+    stats = attendance_shortage_statistics()
+    context = {
+        "student_count": Student.objects.count(),
+        "faculty_count": Faculty.objects.count(),
+        "section_count": Section.objects.count(),
+        "session_count": AttendanceSession.objects.count(),
+        **stats,
+    }
+    return render(request, "dashboard/admin.html", context)
 
 
 @never_cache
 @role_required(Role.FACULTY)
 def dashboard_faculty(request):
-    return render(request, "dashboard/faculty.html")
+    assignments = TeachingAssignment.objects.filter(faculty__user=request.user)
+    stats = attendance_shortage_statistics(assignments=assignments)
+    context = {
+        "class_count": assignments.values("section_id").distinct().count(),
+        "subject_count": assignments.values("subject_id").distinct().count(),
+        "student_count": (
+            Enrollment.objects.filter(assignment__in=assignments).values("student_id").distinct().count()
+        ),
+        "session_count": AttendanceSession.objects.filter(assignment__in=assignments).count(),
+        **stats,
+    }
+    return render(request, "dashboard/faculty.html", context)
 
 
 @never_cache
 @role_required(Role.STUDENT)
 def dashboard_student(request):
-    return render(request, "dashboard/student.html")
+    student = Student.objects.filter(user=request.user).first()
+    summary = student_attendance_summary(student) if student else None
+    threshold = AttendanceThreshold.current_value()
+    context = {
+        "summary": summary,
+        "threshold": threshold,
+        "subject_shortages": sum(1 for row in summary.subjects if row.is_below_threshold(threshold))
+        if summary
+        else 0,
+        "overall_below_threshold": summary.overall.is_below_threshold(threshold) if summary else False,
+    }
+    return render(request, "dashboard/student.html", context)
 
 
 @never_cache
