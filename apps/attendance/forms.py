@@ -6,9 +6,11 @@ from django.utils import timezone
 
 from apps.academics.models import TeachingAssignment
 from apps.accounts.forms import BootstrapMixin
+from apps.accounts.models import Role
 from apps.accounts.permissions import visible_assignments
 
 from .models import MAX_PERIODS_PER_DAY
+from .services import OUTSIDE_WINDOW_MESSAGE, earliest_faculty_date
 
 
 class AttendanceSelectionForm(BootstrapMixin, forms.Form):
@@ -22,6 +24,7 @@ class AttendanceSelectionForm(BootstrapMixin, forms.Form):
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         self.fields["assignment"].queryset = (
             visible_assignments(user)
             .select_related("section", "subject")
@@ -32,4 +35,6 @@ class AttendanceSelectionForm(BootstrapMixin, forms.Form):
         day = self.cleaned_data["date"]
         if day > timezone.localdate():
             raise ValidationError("Attendance cannot be recorded for a future date.")
+        if self.user.role == Role.FACULTY and day < earliest_faculty_date():
+            raise ValidationError(OUTSIDE_WINDOW_MESSAGE)
         return day

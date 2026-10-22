@@ -1,7 +1,7 @@
 """Atomic attendance creation shared by the HTML workflow and future APIs."""
 
 from collections.abc import Mapping
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -12,7 +12,17 @@ from apps.accounts.models import Role, User
 from apps.accounts.permissions import can_mark_attendance
 from apps.audit import services as audit
 
-from .models import MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, Status
+from .models import CORRECTION_WINDOW_DAYS, MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, Status
+
+OUTSIDE_WINDOW_MESSAGE = (
+    f"This date is outside the {CORRECTION_WINDOW_DAYS}-day correction window. "
+    "Contact the Admin, who can record the session with a reason."
+)
+
+
+def earliest_faculty_date():
+    """Oldest session date a faculty member may still record (AR-06, AR-08)."""
+    return timezone.localdate() - timedelta(days=CORRECTION_WINDOW_DAYS)
 
 
 @transaction.atomic
@@ -60,6 +70,9 @@ def submit_attendance(*, actor, assignment, day, period, statuses, reason=""):
             "Attendance is already recorded for this class, date and period with different values. "
             "Use the correction workflow; changes cannot overwrite a saved session."
         )
+
+    if actor.role == Role.FACULTY and day < earliest_faculty_date():
+        raise ValidationError(OUTSIDE_WINDOW_MESSAGE)
 
     student_ids = list(
         Enrollment.objects.filter(assignment=assignment, student__user__is_active=True)

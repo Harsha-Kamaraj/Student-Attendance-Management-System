@@ -6,6 +6,10 @@ from django.db import models
 from apps.academics.models import Student, TeachingAssignment
 
 MAX_PERIODS_PER_DAY = 6
+# Faculty may record a missed session until the 2nd calendar day after its date (IST);
+# older sessions need the Admin with a reason (BL-01 D-09, AR-06, AR-08). BL-17 makes
+# this Admin-configurable (0-30 days).
+CORRECTION_WINDOW_DAYS = 2
 
 
 class AttendanceSession(models.Model):
