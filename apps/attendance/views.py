@@ -1,10 +1,11 @@
 """Attendance marking workflow (BL-12)."""
 
+import logging
 from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError
+from django.db import DatabaseError, IntegrityError
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -14,8 +15,10 @@ from apps.accounts.models import Role
 from apps.accounts.permissions import requires, visible_assignments
 
 from .forms import AttendanceSelectionForm
-from .models import AttendanceSession
+from .models import AttendanceSession, Status
 from .services import submit_attendance
+
+logger = logging.getLogger(__name__)
 
 
 def _deny_other_teachers(user, raw_pk):
@@ -34,8 +37,24 @@ def _deny_other_teachers(user, raw_pk):
 def _posted_statuses(post):
     statuses = {}
     for name, value in post.items():
-        if name.startswith("status_") and name[7:].isdecimal():
-            statuses[int(name[7:])] = value
+        if not name.startswith("status_"):
+            continue
+        raw_id = name[7:]
+        if (
+            not raw_id.isascii()
+            or not raw_id.isdecimal()
+            or len(raw_id) > 19
+            or str(int(raw_id)) != raw_id
+            or not 0 < int(raw_id) <= 9223372036854775807
+        ):
+            raise ValidationError("An attendance status has an invalid student ID. Reload the roster.")
+        student_id = int(raw_id)
+        values = post.getlist(name) if hasattr(post, "getlist") else [value]
+        if len(values) != 1 or student_id in statuses:
+            raise ValidationError("Submit exactly one attendance status for each student.")
+        if value not in Status.values:
+            raise ValidationError("Each student must be marked Present or Absent.")
+        statuses[student_id] = value
     return statuses
 
 
@@ -50,7 +69,13 @@ def attendance_mark(request):
     existing_rows = []
     existing = None
     selected = None
-    submitted = _posted_statuses(request.POST) if request.method == "POST" else {}
+    submitted = {}
+    statuses_error = None
+    if request.method == "POST":
+        try:
+            submitted = _posted_statuses(request.POST)
+        except ValidationError as error:
+            statuses_error = error
 
     if data and form.is_valid():
         selected = form.cleaned_data
@@ -66,6 +91,8 @@ def attendance_mark(request):
 
         if request.method == "POST":
             try:
+                if statuses_error is not None:
+                    raise statuses_error
                 session, created = submit_attendance(
                     actor=request.user,
                     assignment=assignment,
@@ -78,6 +105,11 @@ def attendance_mark(request):
                 form.add_error(None, error)
             except IntegrityError:
                 form.add_error(None, "Concurrent attendance submission detected. Reload the class and retry.")
+            except DatabaseError:
+                logger.exception("Attendance submission failed")
+                form.add_error(
+                    None, "Attendance could not be saved. No changes were saved. Please try again."
+                )
             else:
                 if created:
                     messages.success(request, f"Attendance saved for {session}.")
