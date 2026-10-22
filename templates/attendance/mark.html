@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Mark attendance · Student Attendance{% endblock %}
+
+{% block content %}
+  <h1 class="h3">Mark attendance</h1>
+  <p>Choose a class, date and period. Only assigned classes appear for faculty.</p>
+  <form method="get" class="border rounded p-3 mb-4" novalidate>
+    {% for error in form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endfor %}
+    {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Load roster</button>
+  </form>
+
+  {% if selected %}
+    <h2 class="h5">{{ selected.assignment }} — {{ selected.date }} — Period {{ selected.period }}</h2>
+    {% if existing %}
+      <div class="alert alert-info" role="status">This attendance session is already saved. Corrections use the separate correction workflow.</div>
+      <div class="table-responsive">
+        <table class="table table-sm"><thead><tr><th>Roll number</th><th>Student</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for record in existing_rows %}
+              <tr><td>{{ record.student.roll_number }}</td><td>{{ record.student.full_name }}</td><td>{{ record.get_status_display }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% elif roster_rows %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="assignment" value="{{ selected.assignment.pk }}">
+        <input type="hidden" name="date" value="{{ selected.date|date:'Y-m-d' }}">
+        <input type="hidden" name="period" value="{{ selected.period }}">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead><tr><th>Roll number</th><th>Name</th><th>Present</th><th>Absent</th></tr></thead>
+            <tbody>
+              {% for row in roster_rows %}
+                <tr data-student-row>
+                  <td>{{ row.student.roll_number }}</td><td>{{ row.student.full_name }}</td>
+                  <td><input type="radio" name="status_{{ row.student.pk }}" value="P" {% if row.status == 'P' %}checked{% endif %} aria-label="{{ row.student.roll_number }} Present"></td>
+                  <td><input type="radio" name="status_{{ row.student.pk }}" value="A" {% if row.status == 'A' %}checked{% endif %} aria-label="{{ row.student.roll_number }} Absent"></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if is_admin %}
+          <div class="mb-3"><label for="attendance-reason" class="form-label">Admin override reason (required)</label>
+            <textarea class="form-control" id="attendance-reason" name="reason" required>{{ request.POST.reason }}</textarea>
+          </div>
+        {% endif %}
+        <p class="small text-body-secondary">All students must have a status. No default is applied automatically.</p>
+        <button class="btn btn-outline-secondary" type="button" id="fill-present">Mark remaining as Present</button>
+        <button class="btn btn-primary" type="submit">Save complete attendance</button>
+      </form>
+      <script>
+        document.getElementById("fill-present").addEventListener("click", function () {
+          document.querySelectorAll("[data-student-row]").forEach(function (row) {
+            if (!row.querySelector('input[type="radio"]:checked')) {
+              row.querySelector('input[type="radio"][value="P"]').checked = true;
+            }
+          });
+        });
+      </script>
+    {% else %}
+      <div class="alert alert-warning">This class has no active enrolled students.</div>
+    {% endif %}
+  {% endif %}
+{% endblock %}
