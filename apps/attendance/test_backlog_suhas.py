@@ -37,9 +37,7 @@ class BacklogFeatureTests(TestCase):
             Enrollment.objects.create(student=student, assignment=cls.other_assignment)
 
     def add_record(self, student, assignment, day, status, period=1):
-        session, _ = AttendanceSession.objects.get_or_create(
-            assignment=assignment, date=day, period=period
-        )
+        session, _ = AttendanceSession.objects.get_or_create(assignment=assignment, date=day, period=period)
         return AttendanceRecord.objects.create(session=session, student=student, status=status)
 
     def test_student_report_filters_by_subject_and_inclusive_date_range(self):
@@ -136,9 +134,7 @@ class BacklogFeatureTests(TestCase):
         self.assertContains(student_page, "Your overall attendance is below the threshold.")
 
     def test_attendance_summary_recalculates_after_record_correction(self):
-        record = self.add_record(
-            self.student, self.assignment, datetime.date(2026, 10, 1), Status.ABSENT
-        )
+        record = self.add_record(self.student, self.assignment, datetime.date(2026, 10, 1), Status.ABSENT)
         before = student_attendance_summary(self.student)
         self.assertEqual(before.overall.display, "0/1 (0.00%)")
         record.status = Status.PRESENT

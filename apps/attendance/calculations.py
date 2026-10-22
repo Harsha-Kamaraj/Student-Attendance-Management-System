@@ -127,17 +127,19 @@ def attendance_shortage_statistics(*, assignments=None, threshold=None):
         )
     )
     subject_shortages = sum(
-        1 for row in subject_groups
-        if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
+        1 for row in subject_groups if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
     )
 
-    overall_groups = records.order_by().values("student_id").annotate(
-        attended=Count("pk", filter=Q(status=Status.PRESENT)),
-        held=Count("pk"),
+    overall_groups = (
+        records.order_by()
+        .values("student_id")
+        .annotate(
+            attended=Count("pk", filter=Q(status=Status.PRESENT)),
+            held=Count("pk"),
+        )
     )
     students_below_overall = sum(
-        1 for row in overall_groups
-        if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
+        1 for row in overall_groups if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
     )
     return {
         "threshold": threshold,

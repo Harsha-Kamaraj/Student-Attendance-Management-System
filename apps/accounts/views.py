@@ -89,10 +89,7 @@ def dashboard_faculty(request):
         "class_count": assignments.values("section_id").distinct().count(),
         "subject_count": assignments.values("subject_id").distinct().count(),
         "student_count": (
-            Enrollment.objects.filter(assignment__in=assignments)
-            .values("student_id")
-            .distinct()
-            .count()
+            Enrollment.objects.filter(assignment__in=assignments).values("student_id").distinct().count()
         ),
         "session_count": AttendanceSession.objects.filter(assignment__in=assignments).count(),
         **stats,
@@ -109,9 +106,9 @@ def dashboard_student(request):
     context = {
         "summary": summary,
         "threshold": threshold,
-        "subject_shortages": sum(
-            1 for row in summary.subjects if row.is_below_threshold(threshold)
-        ) if summary else 0,
+        "subject_shortages": sum(1 for row in summary.subjects if row.is_below_threshold(threshold))
+        if summary
+        else 0,
         "overall_below_threshold": summary.overall.is_below_threshold(threshold) if summary else False,
     }
     return render(request, "dashboard/student.html", context)

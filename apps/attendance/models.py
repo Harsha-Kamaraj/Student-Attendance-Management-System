@@ -1,4 +1,3 @@
-
 """Attendance sessions and per-student records."""
 
 from django.conf import settings

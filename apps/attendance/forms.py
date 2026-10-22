@@ -71,7 +71,6 @@ class AttendanceSummaryFilterForm(BootstrapMixin, forms.Form):
         return cleaned
 
 
-
 class AttendanceThresholdForm(BootstrapMixin, forms.Form):
     value = forms.IntegerField(
         label="Minimum attendance percentage",
