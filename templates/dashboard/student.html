@@ -5,5 +5,5 @@
 {% block content %}
   <h1 class="h3">Student dashboard</h1>
   <p><a href="{% url 'student_list' %}">View my student profile</a></p>
-  <p class="text-body-secondary">Your attendance is added in later backlog items (BL-15, BL-25).</p>
+  <p><a href="{% url 'attendance_summary' %}">View my attendance percentages</a></p>
 {% endblock %}

@@ -74,6 +74,10 @@ Open http://127.0.0.1:8000/login/ and log in with the Admin account you just cre
 - After 5 wrong passwords in a row, login is blocked for 15 minutes. The Admin can reset a password (`/users/`), which also removes the block.
 - Logins, account creation, password changes and resets are recorded in the audit log.
 
+## Attendance percentages (BL-14)
+
+Students open **View my attendance percentages** from their dashboard (`/attendance/mine/`). Each subject shows attended/held counts and a percentage rounded half up to two decimals. Overall attendance pools the counts: `10/12 + 8/10 = 18/22 (81.82%)`. Subjects without recorded classes show **N/A – no classes yet**. Totals use current saved records and update automatically after new marks or valid corrections. See [`Documents/BL-14_Percentage_Calculation.md`](Documents/BL-14_Percentage_Calculation.md).
+
 ## Configuration variables
 
 All settings that differ between machines are read from `.env` (or real environment variables).
