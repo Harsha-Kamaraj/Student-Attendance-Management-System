@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from apps.academics.models import Enrollment, Faculty
+from apps.academics.models import Enrollment, Faculty, TeachingAssignment
 from apps.accounts.models import Role
 from apps.accounts.permissions import can_mark_attendance
 from apps.audit import services as audit
@@ -14,11 +14,13 @@ from .models import MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, St
 
 @transaction.atomic
 def submit_attendance(*, actor, assignment, day, period, statuses, reason=""):
-    """Create a *complete* class session; any failure rolls everything back.
+    """Create complete sessions, serialize concurrent writers, and safely retry identical submissions.
 
-    ``statuses`` maps student IDs to P/A. Partial or extra rosters never save.
-    BL-13 adds explicit retry idempotency and concurrent-request serialization.
+    ``statuses`` maps student IDs to P/A. Failed writes roll back the whole session.
+    Locking the TeachingAssignment prevents two submissions for the same subject/section
+    from checking an empty session simultaneously. Database uniqueness is a backup guard.
     """
+    assignment = TeachingAssignment.objects.select_for_update().get(pk=assignment.pk)
     if not can_mark_attendance(actor, assignment):
         raise PermissionDenied("Class is outside your teaching assignments.")
     if day > timezone.localdate():
@@ -27,6 +29,19 @@ def submit_attendance(*, actor, assignment, day, period, statuses, reason=""):
         raise ValidationError("Invalid class period.")
     if actor.role == Role.ADMIN and not reason.strip():
         raise ValidationError("Admin attendance overrides require a reason.")
+
+    # Check for an earlier submission while holding the per-assignment row lock.
+    # Historical rosters may differ from today's, so an identical retry compares
+    # with the *saved* session, not with today's active enrollment list.
+    existing = AttendanceSession.objects.filter(assignment=assignment, date=day, period=period).first()
+    if existing:
+        saved = dict(existing.records.values_list("student_id", "status"))
+        if saved and saved == statuses:
+            return existing, False
+        raise ValidationError(
+            "Attendance is already recorded for this class, date and period with different values. "
+            "Use the correction workflow; changes cannot overwrite a saved session."
+        )
 
     student_ids = list(
         Enrollment.objects.filter(assignment=assignment, student__user__is_active=True)
@@ -39,9 +54,6 @@ def submit_attendance(*, actor, assignment, day, period, statuses, reason=""):
         value not in (Status.PRESENT, Status.ABSENT) for value in statuses.values()
     ):
         raise ValidationError("Mark every enrolled student as Present or Absent before saving.")
-    if AttendanceSession.objects.filter(assignment=assignment, date=day, period=period).exists():
-        raise ValidationError("Attendance is already recorded for this class, date and period.")
-
     faculty_code = ""
     if actor.role == Role.FACULTY:
         faculty_code = Faculty.objects.filter(user=actor).values_list("faculty_id", flat=True).first() or ""
