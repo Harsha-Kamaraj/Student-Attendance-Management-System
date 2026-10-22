@@ -6,14 +6,16 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError, IntegrityError
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 
-from apps.academics.models import Enrollment, TeachingAssignment
+from apps.academics.models import Enrollment, Student, TeachingAssignment
+from apps.accounts.decorators import role_required
 from apps.accounts.models import Role
 from apps.accounts.permissions import requires, visible_assignments
 
+from .calculations import student_attendance_summary
 from .forms import AttendanceSelectionForm
 from .models import AttendanceSession, Status
 from .services import submit_attendance
@@ -142,4 +144,16 @@ def attendance_mark(request):
             "is_admin": request.user.role == Role.ADMIN,
         },
         status=400 if request.method == "POST" else 200,
+    )
+
+
+@never_cache
+@role_required(Role.STUDENT)
+def attendance_summary(request):
+    """Use only the authenticated student's own profile for the live totals."""
+    student = get_object_or_404(Student, user=request.user)
+    return render(
+        request,
+        "attendance/summary.html",
+        {"student": student, "summary": student_attendance_summary(student)},
     )
