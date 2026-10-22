@@ -1,0 +1,113 @@
+"""Attendance marking workflow (BL-12)."""
+
+from urllib.parse import urlencode
+
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.views.decorators.cache import never_cache
+
+from apps.academics.models import Enrollment, TeachingAssignment
+from apps.accounts.models import Role
+from apps.accounts.permissions import requires, visible_assignments
+
+from .forms import AttendanceSelectionForm
+from .models import AttendanceSession
+from .services import submit_attendance
+
+
+def _deny_other_teachers(user, raw_pk):
+    """Don't silently show a form error for an existing class outside the user's scope."""
+    try:
+        pk = int(raw_pk)
+    except (TypeError, ValueError):
+        return
+    if (
+        TeachingAssignment.objects.filter(pk=pk).exists()
+        and not visible_assignments(user).filter(pk=pk).exists()
+    ):
+        raise PermissionDenied("Class is outside your teaching assignments.")
+
+
+def _posted_statuses(post):
+    statuses = {}
+    for name, value in post.items():
+        if name.startswith("status_") and name[7:].isdecimal():
+            statuses[int(name[7:])] = value
+    return statuses
+
+
+@never_cache
+@requires("attendance.mark")
+def attendance_mark(request):
+    data = request.POST if request.method == "POST" else request.GET
+    if data:
+        _deny_other_teachers(request.user, data.get("assignment"))
+    form = AttendanceSelectionForm(data or None, user=request.user)
+    roster_rows = []
+    existing_rows = []
+    existing = None
+    selected = None
+    submitted = _posted_statuses(request.POST) if request.method == "POST" else {}
+
+    if data and form.is_valid():
+        selected = form.cleaned_data
+        assignment = selected["assignment"]
+        roster = (
+            Enrollment.objects.filter(assignment=assignment, student__user__is_active=True)
+            .select_related("student")
+            .order_by("student__roll_number")
+        )
+        roster_rows = [
+            {"student": row.student, "status": submitted.get(row.student_id, "")} for row in roster
+        ]
+
+        if request.method == "POST":
+            try:
+                session, created = submit_attendance(
+                    actor=request.user,
+                    assignment=assignment,
+                    day=selected["date"],
+                    period=selected["period"],
+                    statuses=submitted,
+                    reason=request.POST.get("reason", ""),
+                )
+            except ValidationError as error:
+                form.add_error(None, error)
+            except IntegrityError:
+                form.add_error(None, "Concurrent attendance submission detected. Reload the class and retry.")
+            else:
+                if created:
+                    messages.success(request, f"Attendance saved for {session}.")
+                else:
+                    messages.info(request, "This attendance was already saved. No duplicate was created.")
+                query = urlencode(
+                    {
+                        "assignment": assignment.pk,
+                        "date": selected["date"].isoformat(),
+                        "period": selected["period"],
+                    }
+                )
+                return redirect(f"{reverse('attendance_mark')}?{query}")
+
+        existing = AttendanceSession.objects.filter(
+            assignment=assignment, date=selected["date"], period=selected["period"]
+        ).first()
+        if existing:
+            existing_rows = existing.records.select_related("student").order_by("student__roll_number")
+
+    return render(
+        request,
+        "attendance/mark.html",
+        {
+            "form": form,
+            "selected": selected,
+            "roster_rows": roster_rows,
+            "existing": existing,
+            "existing_rows": existing_rows,
+            "is_admin": request.user.role == Role.ADMIN,
+        },
+        status=400 if request.method == "POST" else 200,
+    )
