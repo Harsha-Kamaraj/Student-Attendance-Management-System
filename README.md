@@ -90,6 +90,16 @@ All settings that differ between machines are read from `.env` (or real environm
 | `ALLOWED_HOSTS` | No (default empty) | Comma-separated host names | `localhost,127.0.0.1` |
 | `SECURE_COOKIES` | No (default `False`) | Send cookies only over HTTPS; `True` in production | `False` |
 
+## Test data
+
+To try the app with realistic fictional data (Admin, 3 faculty, 4 students, 2 sections, 2 subjects, 103 attendance sessions), run on a development database:
+
+```bash
+python manage.py seed_test_data
+```
+
+All accounts use the password `Attend#2026` (for example `ADMIN1`, `F001`, `S001`). The command only runs when `DEBUG=True` and refuses to run twice. The data and the figures it produces are described in [`Documents/Test_Data_Fixture.md`](Documents/Test_Data_Fixture.md).
+
 ## Running tests and checks
 
 ```bash
