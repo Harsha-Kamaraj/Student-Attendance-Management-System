@@ -59,7 +59,7 @@ class FacultyDateWindowTests(TestCase):
 
     def test_faculty_cannot_record_the_day_after_the_window(self):
         # ST_06_4, UC-06 1c
-        with self.assertRaisesMessage(ValidationError, "outside the 2-day correction window"):
+        with self.assertRaisesMessage(ValidationError, "outside the configured correction window"):
             self.submit(self.faculty_user, CORRECTION_WINDOW_DAYS + 1)
         self.assertFalse(AttendanceSession.objects.exists())
 
@@ -79,7 +79,7 @@ class FacultyDateWindowTests(TestCase):
         response = self.client.get(
             reverse("attendance_mark"), {"assignment": self.assignment.pk, "date": old, "period": 1}
         )
-        self.assertContains(response, "outside the 2-day correction window")
+        self.assertContains(response, "outside the configured correction window")
         self.assertContains(response, "Contact the Admin")
         self.assertNotContains(response, "Save complete attendance")
 

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Correction window · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">Faculty correction window</h1>
+<p>The window applies to both corrections and recording missed sessions. The Admin can override it with a reason.</p>
+<form method="post" style="max-width: 36rem">
+  {% csrf_token %}
+  {% include "includes/form_fields.html" with form=form %}
+  <button class="btn btn-primary" type="submit">Save correction window</button>
+</form>
+{% endblock %}

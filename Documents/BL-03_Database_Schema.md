@@ -152,4 +152,6 @@ These are enforced in later backlog items because they depend on the current dat
 
 ## Verification
 
+BL-17 adds `attendance_correctionwindow` through migration `0004_correctionwindow`: one row (`id=1`), `days` constrained to 0–30, and `updated_at`. The migration inserts the default of two calendar days. This policy drives both faculty corrections and creation of missed sessions; Admin policy changes and attendance corrections use the existing append-only audit table. Attendance corrections update the existing record rather than creating a second student/session row.
+
 `python manage.py test` runs 37 tests, including one for each rule above. The migrations were also applied to an empty database, and the audit trigger migration was reversed and re-applied successfully.

@@ -27,7 +27,7 @@
         <table class="table table-sm"><thead><tr><th>Roll number</th><th>Student</th><th>Status</th></tr></thead>
           <tbody>
             {% for record in existing_rows %}
-              <tr><td>{{ record.student.roll_number }}</td><td>{{ record.student.full_name }}</td><td>{{ record.get_status_display }}</td></tr>
+              <tr><td>{{ record.student.roll_number }}</td><td>{{ record.student.full_name }}</td><td>{{ record.get_status_display }} · <a href="{% url 'attendance_correct' record.pk %}">Correct</a> · <a href="{% url 'attendance_changes' record.pk %}">Modification history</a></td></tr>
             {% endfor %}
           </tbody>
         </table>
