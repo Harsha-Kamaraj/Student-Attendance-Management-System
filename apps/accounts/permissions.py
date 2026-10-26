@@ -127,7 +127,7 @@ def can_mark_attendance(user, assignment):
 
 
 def can_correct_attendance(user, record):
-    """Who may correct the record. The correction-window check is added in BL-17."""
+    """Role and assignment scope; the BL-17 service enforces the deadline under locks."""
     if not has_permission(user, "attendance.correct"):
         return False
     return user.role == ADMIN or _faculty_assignments(user).filter(pk=record.session.assignment_id).exists()

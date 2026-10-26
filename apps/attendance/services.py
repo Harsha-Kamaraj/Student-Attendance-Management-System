@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from datetime import date, timedelta
+from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -12,17 +13,19 @@ from apps.accounts.models import Role, User
 from apps.accounts.permissions import can_mark_attendance
 from apps.audit import services as audit
 
-from .models import CORRECTION_WINDOW_DAYS, MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, Status
+from .models import MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, CorrectionWindow, Status
 
 OUTSIDE_WINDOW_MESSAGE = (
-    f"This date is outside the {CORRECTION_WINDOW_DAYS}-day correction window. "
+    "This date is outside the configured correction window. "
     "Contact the Admin, who can record the session with a reason."
 )
 
 
 def earliest_faculty_date():
     """Oldest session date a faculty member may still record (AR-06, AR-08)."""
-    return timezone.localdate() - timedelta(days=CORRECTION_WINDOW_DAYS)
+    return timezone.localdate(timezone=ZoneInfo("Asia/Kolkata")) - timedelta(
+        days=CorrectionWindow.current_days()
+    )
 
 
 @transaction.atomic

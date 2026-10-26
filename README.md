@@ -78,6 +78,12 @@ Open http://127.0.0.1:8000/login/ and log in with the Admin account you just cre
 
 Students open **View my attendance percentages** from their dashboard (`/attendance/mine/`). Each subject shows attended/held counts and a percentage rounded half up to two decimals. Overall attendance pools the counts: `10/12 + 8/10 = 18/22 (81.82%)`. Subjects without recorded classes show **N/A – no classes yet**. Totals use current saved records and update automatically after new marks or valid corrections. See [`Documents/BL-14_Percentage_Calculation.md`](Documents/BL-14_Percentage_Calculation.md).
 
+## Attendance history and corrections (BL-16 to BL-18)
+
+Admin and Faculty open **Attendance history and corrections** from their dashboard to filter saved records, correct a status, or view its modification history. Faculty can correct only assigned classes within the default two-calendar-day window ending at 23:59:59 IST. Admin corrections always require a reason and are logged as overrides. Admin can configure the window from 0–30 days at **Configure faculty correction window**; it also controls recording missed sessions.
+
+Each correction and its editor, timestamp, old/new status and reason are saved atomically. Percentages and dashboards reflect the saved correction immediately. Students see their own updated totals, while staff history remains restricted to Admin and authorized Faculty. Run `python manage.py migrate` before using these pages. See [`Documents/BL-16-18_Implementation.md`](Documents/BL-16-18_Implementation.md).
+
 ## Configuration variables
 
 All settings that differ between machines are read from `.env` (or real environment variables).

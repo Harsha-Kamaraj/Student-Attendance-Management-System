@@ -7,9 +7,7 @@ from apps.academics.models import Student, TeachingAssignment
 
 MAX_PERIODS_PER_DAY = 6
 
-# Faculty may record a missed session until the 2nd calendar day after its date (IST);
-# older sessions need the Admin with a reason (BL-01 D-09, AR-06, AR-08). BL-17 makes
-# this Admin-configurable (0-30 days).
+# Default only: the Admin-configured value is persisted by CorrectionWindow.
 CORRECTION_WINDOW_DAYS = 2
 
 
@@ -117,3 +115,27 @@ class AttendanceThreshold(models.Model):
     def current_value(cls):
         row = cls.objects.first()
         return row.value if row else 75
+
+
+class CorrectionWindow(models.Model):
+    """One institution-wide faculty correction/missed-session window (BL-17)."""
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    days = models.PositiveSmallIntegerField(default=CORRECTION_WINDOW_DAYS)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(pk=1), name="correction_window_singleton"),
+            models.CheckConstraint(
+                condition=models.Q(days__gte=0, days__lte=30), name="correction_window_days_range"
+            ),
+        ]
+
+    def __str__(self):
+        return f"Faculty correction window: {self.days} days"
+
+    @classmethod
+    def current_days(cls):
+        days = cls.objects.filter(pk=1).values_list("days", flat=True).first()
+        return CORRECTION_WINDOW_DAYS if days is None else days

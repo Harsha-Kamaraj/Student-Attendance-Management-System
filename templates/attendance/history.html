@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance history · Student Attendance{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Attendance history</h1>
+    <a href="{% url 'dashboard' %}">Back to dashboard</a>
+  </div>
+  <form method="get" class="card card-body mb-4">
+    <div class="row">
+      {% for field in form %}
+        <div class="col-md-4 mb-3">
+          <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    {% for error in form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endfor %}
+    <div class="d-flex gap-3 align-items-center">
+      <button class="btn btn-primary" type="submit">Apply filters</button>
+      <a href="{% url 'attendance_history' %}">Clear filters</a>
+    </div>
+  </form>
+  {% if page_obj %}
+    <p>{{ page_obj.paginator.count }} attendance record{{ page_obj.paginator.count|pluralize }}.</p>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <caption>Current attendance records, latest class first.</caption>
+        <thead>
+          <tr><th scope="col">Student</th><th scope="col">Class / section</th><th scope="col">Subject</th><th scope="col">Date</th><th scope="col">Period</th><th scope="col">Current status</th><th scope="col">Recorded by</th><th scope="col">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for record in page_obj %}
+            <tr>
+              <td>{{ record.student.roll_number }}<br>{{ record.student.full_name }}{% if not record.student.user.is_active %}<br><span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+              <td>{{ record.session.assignment.section }}</td>
+              <td>{{ record.session.assignment.subject }}</td>
+              <td>{{ record.session.date|date:"d M Y" }}</td>
+              <td>{{ record.session.period }}</td>
+              <td>{{ record.get_status_display }}</td>
+              <td>{% if record.session.recorded_by_code %}{{ record.session.recorded_by_code }}{% elif record.session.recorded_by %}{{ record.session.recorded_by.username }}{% else %}Unavailable{% endif %}{% if record.session.recorded_by and not record.session.recorded_by.is_active %}<br><span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+              <td><a href="{% url 'attendance_correct' record.pk %}">Correct</a><br><a href="{% url 'attendance_changes' record.pk %}">View changes</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-body-secondary">No attendance records match these filters.</p>
+  {% endif %}
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Attendance history pages" class="d-flex gap-3 align-items-center">
+      {% if page_obj.has_previous %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

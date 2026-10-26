@@ -34,6 +34,7 @@ A refused request shows **"Access denied"** (HTTP 403), returns no protected dat
 | Export reports (PDF/CSV) | ✓ | ✓ own classes | — | FR-16, SEC-24 |
 | Search and filter records | ✓ | ✓ own classes | — | FR-15, UC-11 |
 | Configure attendance threshold | ✓ | — | — | SEC-14 |
+| Configure faculty correction window | ✓ with reason | — | — | BL-01 D-09, SEC-23, BL-17 |
 | View below-threshold list | ✓ | ✓ own classes | — | FR-13, AR-14 |
 | Backup and restore | ✓ | — | — | FR-19, SEC-26 |
 | View full audit log | ✓ | — | — | SEC-21 |
@@ -58,7 +59,7 @@ A deactivated account has no permissions and cannot log in (SEC-15). The Django 
 | Open one record by ID from the URL | `get_visible_or_deny(visible_attendance_records(user), AttendanceRecord, pk)` |
 | Check a change before saving | `can_mark_attendance(user, assignment)`, `can_correct_attendance(user, record)`, `can_edit_subject(user, subject)` |
 
-Time-based limits are added by the backlog items that own them: the correction window in BL-17, and the session-date rules in BL-12.
+The correction service enforces the saved BL-17 calendar-day window under database locks. The same setting controls faculty creation of missed sessions. Admin changes to the window require a reason and are audited.
 
 ## Verification
 
