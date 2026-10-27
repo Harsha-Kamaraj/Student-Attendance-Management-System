@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Reports - Student Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <h1 class="h3 mb-0">Attendance Reports</h1>
+  <a href="{% url 'dashboard' %}">Back to dashboard</a>
+</div>
+
+<form method="get" class="card card-body mb-4">
+  <h2 class="h5">Filter report</h2>
+
+  <div class="row">
+    {% for field in form %}
+      <div class="col-md-3 mb-3">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+
+        {% for error in field.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+  {% for error in form.non_field_errors %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endfor %}
+
+  <div class="d-flex flex-wrap gap-3">
+    <button type="submit" class="btn btn-primary">Generate report</button>
+
+    <a href="{% url 'attendance_report' %}" class="btn btn-outline-secondary">
+      Clear filters
+    </a>
+
+    <a href="{% url 'attendance_report_csv' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+       class="btn btn-success">
+      Download CSV
+    </a>
+
+    <a href="{% url 'attendance_report_pdf' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+       class="btn btn-danger">
+      Download PDF
+    </a>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-body-secondary">Attendance records</div>
+        <div class="fs-3">{{ overall.held }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-body-secondary">Present</div>
+        <div class="fs-3">{{ present_count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-body-secondary">Absent</div>
+        <div class="fs-3">{{ absent_count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-body-secondary">Attendance percentage</div>
+        <div class="fs-3">
+          {% if overall.percentage != None %}
+            {{ overall.percentage }}%
+          {% else %}
+            N/A
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="text-body-secondary">
+  Report generated: {{ generated_at|date:"d M Y, H:i" }} |
+  Attendance sessions: {{ session_count }}
+</p>
+
+<h2 class="h5 mt-4">Student attendance details</h2>
+
+{% if page_obj.object_list %}
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <caption>Attendance counts and percentages for the selected filters.</caption>
+
+      <thead>
+        <tr>
+          <th scope="col">Roll number</th>
+          <th scope="col">Student</th>
+          <th scope="col">Class / section</th>
+          <th scope="col">Subject</th>
+          <th scope="col">Held</th>
+          <th scope="col">Present</th>
+          <th scope="col">Absent</th>
+          <th scope="col">Attendance %</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in page_obj %}
+          <tr>
+            <td>{{ row.student__roll_number }}</td>
+            <td>{{ row.student__full_name }}</td>
+
+            <td>
+              {{ row.session__assignment__section__class_name }} -
+              {{ row.session__assignment__section__name }}
+            </td>
+
+            <td>
+              {{ row.session__assignment__subject__code }} -
+              {{ row.session__assignment__subject__name }}
+            </td>
+
+            <td>{{ row.held }}</td>
+            <td>{{ row.present }}</td>
+            <td>{{ row.absent }}</td>
+
+            <td>
+              {% if row.percentage != None %}
+                {{ row.percentage }}%
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Report pages" class="d-flex gap-3 align-items-center">
+      {% if page_obj.has_previous %}
+        <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">
+          Previous
+        </a>
+      {% endif %}
+
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&amp;{% endif %}page={{ page_obj.next_page_number }}">
+          Next
+        </a>
+      {% endif %}
+    </nav>
+  {% endif %}
+
+{% else %}
+  <p class="text-body-secondary">
+    No attendance records match the selected filters.
+  </p>
+{% endif %}
+
+{% endblock %}
