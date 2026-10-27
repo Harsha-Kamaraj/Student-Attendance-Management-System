@@ -1,5 +1,7 @@
 asgiref==3.12.1
-Django==5.2.18
 django-environ==0.14.0
+Django==5.2.18
 psycopg[binary]==3.3.6
+pyotp==2.10.0
+qrcode==8.2
 sqlparse==0.6.0

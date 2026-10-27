@@ -10,7 +10,7 @@
   <div class="table-responsive">
     <table class="table table-sm align-middle">
       <thead>
-        <tr><th>Username</th><th>Role</th><th>Status</th><th></th></tr>
+        <tr><th>Username</th><th>Role</th><th>Status</th><th>Two-factor</th><th></th></tr>
       </thead>
       <tbody>
         {% for account in users %}
@@ -22,17 +22,21 @@
               {% elif account.must_change_password %}<span class="badge text-bg-warning">Temporary password</span>
               {% else %}<span class="badge text-bg-success">Active</span>{% endif %}
             </td>
+            <td>{% if account.otp_confirmed %}Set up{% else %}<span class="text-body-secondary">Not set up</span>{% endif %}</td>
             <td class="text-end text-nowrap">
               {% if account != user %}
                 <form method="post" action="{% url 'account_reset_password' account.pk %}" class="d-inline">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">Reset password</button>
                 </form>
+                {% if account.otp_confirmed %}
+                  <a class="btn btn-sm btn-outline-secondary text-nowrap" href="{% url 'account_reset_otp' account.pk %}">Reset OTP</a>
+                {% endif %}
               {% endif %}
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="4" class="text-body-secondary">No accounts yet.</td></tr>
+          <tr><td colspan="5" class="text-body-secondary">No accounts yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>

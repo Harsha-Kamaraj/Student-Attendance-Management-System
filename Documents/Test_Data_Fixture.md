@@ -13,6 +13,8 @@ The command creates everything below in one step. It runs only when `DEBUG=True`
 
 Every account's password is **`Attend#2026`** (no forced password change).
 
+Two-factor login (BL-33) is on by default, so each account sets up an authenticator app at its first login. To explore the data quickly on your own machine, add `OTP_REQUIRED=False` to your local `.env` and restart the server.
+
 ## Accounts
 
 | Role | Username | Scope |

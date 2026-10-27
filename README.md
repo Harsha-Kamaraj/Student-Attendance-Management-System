@@ -74,6 +74,22 @@ Open http://127.0.0.1:8000/login/ and log in with the Admin account you just cre
 - After 5 wrong passwords in a row, login is blocked for 15 minutes. The Admin can reset a password (`/users/`), which also removes the block.
 - Logins, account creation, password changes and resets are recorded in the audit log.
 
+## Two-factor login (BL-33)
+
+After the password, every user enters a one-time code:
+
+- **First login:** scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator) and enter the 6-digit code. Save the 10 backup codes shown afterwards — each works once.
+- **Every login:** enter the current code from the app. No phone? Click **Email me a code** (valid 10 minutes, at most 3 per 15 minutes) or use a backup code.
+- 5 wrong codes lock the account for 15 minutes. An Admin can reset someone's two-factor login at **Accounts → Reset OTP** after re-entering their own password.
+- The same attempt limit applies during initial setup. Resetting OTP invalidates all of that user's existing sessions and recovery codes; they must log in and enroll again.
+- During development, emails are printed in the terminal running the server.
+- For real email delivery, set `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend` and configure the `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, and TLS/SSL values shown in `.env.example`. If delivery fails, the login page offers the authenticator and backup-code alternatives.
+- To try the app on your own machine without a phone, add `OTP_REQUIRED=False` to your `.env` and restart the server. Never do this on a shared or production server.
+
+When upgrading an existing checkout, install `requirements-dev.txt` and run `python manage.py migrate` before starting the server. The OTP session-invalidation migration signs existing sessions out.
+
+OTP regression checks: `python manage.py test apps.accounts.test_otp apps.accounts.test_otp_concurrency`. These enable OTP explicitly and cover the complete login flow, replay prevention, lockouts, recovery, CSRF, session invalidation, and concurrent requests against PostgreSQL. The test runner disables OTP for older tests that exercise other features with password-only test logins.
+
 ## Attendance percentages (BL-14)
 
 Students open **View my attendance percentages** from their dashboard (`/attendance/mine/`). Each subject shows attended/held counts and a percentage rounded half up to two decimals. Overall attendance pools the counts: `10/12 + 8/10 = 18/22 (81.82%)`. Subjects without recorded classes show **N/A – no classes yet**. Totals use current saved records and update automatically after new marks or valid corrections. See [`Documents/BL-14_Percentage_Calculation.md`](Documents/BL-14_Percentage_Calculation.md).

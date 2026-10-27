@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Reset two-factor login · Student Attendance{% endblock %}
+
+{% block content %}
+  <div class="row"><div class="col-md-6">
+    <h1 class="h3 mb-3">Reset two-factor login for {{ account.username }}?</h1>
+    <p>{{ account.username }} will have to set up an authenticator app again at their next login.
+       Their current sessions end, and their email and backup codes stop working.
+       Enter your own password to confirm.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "includes/form_fields.html" %}
+      <button type="submit" class="btn btn-danger">Reset two-factor login</button>
+      <a class="btn btn-link" href="{% url 'account_list' %}">Cancel</a>
+    </form>
+  </div></div>
+{% endblock %}

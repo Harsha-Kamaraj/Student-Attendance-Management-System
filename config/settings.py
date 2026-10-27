@@ -15,6 +15,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     SECURE_COOKIES=(bool, False),
+    OTP_REQUIRED=(bool, True),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -46,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",  # login needed unless marked public (SEC-01)
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.accounts.middleware.OTPRequiredMiddleware",  # one-time code after the password (SEC-29)
     "apps.accounts.middleware.ForcePasswordChangeMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -114,3 +116,23 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Two-factor login (BL-33, SEC-29 to SEC-32). On by default; set OTP_REQUIRED=False in a local .env
+# only to try the app without an authenticator app during development.
+
+OTP_REQUIRED = env("OTP_REQUIRED")
+TEST_RUNNER = "config.test_runner.Runner"
+
+
+# Email: printed to the terminal by default; set the SMTP backend and credentials for delivery.
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Student Attendance <noreply@attendance.local>")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=25)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)

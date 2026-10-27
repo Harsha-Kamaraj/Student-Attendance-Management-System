@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Set up two-factor login · Student Attendance{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <h1 class="h3 mb-3">Set up two-factor login</h1>
+      <p>Every login needs a one-time code as well as your password.</p>
+      <ol>
+        <li>Install an authenticator app on your phone, such as Google Authenticator or Microsoft Authenticator.</li>
+        <li>In the app, add an account and scan this QR code.</li>
+        <li>Enter the 6-digit code the app shows.</li>
+      </ol>
+      <div class="text-center my-3" style="max-width: 220px; margin: 0 auto">{{ qr_svg }}</div>
+      <p class="small text-body-secondary">Can't scan? Enter this key in the app instead:
+        <code class="d-block fs-6 mt-1 text-break">{{ manual_key }}</code></p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "includes/form_fields.html" %}
+        <button type="submit" class="btn btn-primary w-100">Confirm and continue</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

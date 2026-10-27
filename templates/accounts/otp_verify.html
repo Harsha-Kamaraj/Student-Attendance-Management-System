@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Enter your code · Student Attendance{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-sm-8 col-md-5">
+      <h1 class="h3 mb-3">Enter your login code</h1>
+      <p>Open your authenticator app and enter the 6-digit code for Student Attendance.</p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "includes/form_fields.html" %}
+        <button type="submit" class="btn btn-primary w-100">Verify</button>
+      </form>
+      <hr>
+      <p class="small mb-2">No access to your phone?</p>
+      {% if has_email %}
+        <form method="post" action="{% url 'otp_email' %}" class="mb-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-secondary btn-sm">Email me a code</button>
+        </form>
+      {% endif %}
+      <p class="small text-body-secondary">You can also enter one of your backup codes ({{ backup_left }} left).
+        If you have none, ask the Admin to reset your two-factor login.</p>
+    </div>
+  </div>
+{% endblock %}
