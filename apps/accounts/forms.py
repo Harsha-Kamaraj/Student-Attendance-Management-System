@@ -47,3 +47,28 @@ class AccountCreateForm(BootstrapMixin, forms.ModelForm):
 
 class ChangePasswordForm(BootstrapMixin, PasswordChangeForm):
     pass
+
+
+class OTPCodeForm(BootstrapMixin, forms.Form):
+    code = forms.CharField(
+        label="Code",
+        max_length=20,
+        help_text="The 6-digit code from your authenticator app or email, or one of your backup codes.",
+        widget=forms.TextInput(attrs={"autocomplete": "one-time-code", "autofocus": True}),
+    )
+
+
+class ReauthenticateForm(BootstrapMixin, forms.Form):
+    password = forms.CharField(label="Your password", widget=forms.PasswordInput)
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_password(self):
+        from .services import check_login
+
+        password = self.cleaned_data["password"]
+        if check_login(None, self.user.username, password) is None:
+            raise ValidationError("Incorrect password.")
+        return password

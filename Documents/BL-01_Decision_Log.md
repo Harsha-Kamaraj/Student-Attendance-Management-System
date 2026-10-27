@@ -28,6 +28,14 @@ These decisions are recorded in the SRS (FR/NFR updates and rules AR-01 to AR-14
 | D-18 | Document format | SRS requirement tables use the columns Req ID, Type, Description, Priority, Acceptance Criteria, Rationale; priorities follow the project board (P0/P1/P2). UC-IDs added to the use case Goal rows. Use case diagram redrawn with associations matching the use case actors; editable source added (`use_flow_diagram.svg`). Component diagram labels updated: Notification Service includes the weekly faculty list, and the security note mentions the Admin override with reason. | Traceability between SRS, use cases, tests and backlog. The previous use case diagram linked Faculty to UC-05 instead of UC-04, linked Student to UC-09 and UC-11, omitted Student–UC-10 and Admin–UC-12, and contained unlabelled use-case-to-use-case lines. | SRS, Use_Case_Flow.docx, use_flow_diagram.pdf/.svg, Component_Diagram.drawio.png |
 | D-19 | Section enrolment | A student can be enrolled in only one section per subject at a time. Assigning a student to a second section for the same subject is rejected, and the message names the section the student is already in. | Otherwise the student appears on two attendance sheets for one subject and the percentage is wrong. Answers the open question in BL-10. | FR-06, UC-05 4a, ST_05_2 |
 
+## Decisions added later
+
+| ID | Topic | Decision | Reason | Recorded in |
+|---|---|---|---|---|
+| D-20 | Two-factor login (BL-33, 26 Oct 2026) | After the password, every user — Admin, Faculty and Student — enters a 6-digit one-time code. Main method: an authenticator app (time-based codes, 30 seconds). Backup: a code sent by email, valid 10 minutes, single use, at most 3 requests per 15 minutes. No "remember this device". | Protects accounts if a password is guessed or stolen (TH-01, TH-02). Not in the original SRS; added by team decision. | SEC-29 to SEC-32, FR-21, UC-01, test plan UT_01_5–8, IT_01_4–5, ST_01_6–7 |
+| D-21 | OTP setup and recovery (BL-33) | Users set up the authenticator app at first login (QR code plus one confirming code) and receive 10 single-use backup codes, shown once and stored only as hashes. An Admin can reset another user's OTP after re-entering their own password; the reset is logged and forces setup again. | Users who lose their phone can still log in without weakening security. | SEC-30, SEC-31, BL-05 permission matrix |
+| D-22 | OTP attempt limits (BL-33) | 5 consecutive wrong codes lock the account for 15 minutes; every OTP setup, success, failure, lockout and reset is logged. | Same rule as passwords (SEC-03), so codes cannot be guessed. | SEC-32 |
+
 ## Confirmations (19 Oct 2026)
 
 - Threshold: 75% confirmed as the default (D-13); the Admin can change it within 1–100 as required by SEC-14, UC-10 and BL-22.

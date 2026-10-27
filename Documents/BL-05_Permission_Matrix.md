@@ -19,6 +19,7 @@ A refused request shows **"Access denied"** (HTTP 403), returns no protected dat
 | Action | Admin | Faculty | Student | Source |
 |---|---|---|---|---|
 | Create, reset, deactivate, delete accounts | ✓ | — | — | AR-01, AR-02 |
+| Reset another user's OTP (two-factor login) | ✓ after re-entering own password | — | — | SEC-31, BL-01 D-21 |
 | Add, update, deactivate, reactivate, delete student records | ✓ | — | — | FR-03, AR-02 |
 | View student details | ✓ | ✓ own classes | ✓ own profile (read-only) | FR-03, AR-02 |
 | Manage faculty records | ✓ | — | — | FR-04, SEC-14 |
