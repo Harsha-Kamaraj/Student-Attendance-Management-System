@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Backup schedule · Student Attendance{% endblock %}
+{% block content %}
+<div class="col-md-6"><h1 class="h3">Daily backup schedule</h1>
+<p>Choose when to create an encrypted backup each day. All times are India Standard Time. Missed runs are caught up when the server scheduler next runs.</p>
+<form method="post" novalidate>{% csrf_token %}{% include "includes/form_fields.html" %}
+<button class="btn btn-primary">Save schedule</button> <a class="btn btn-link" href="{% url 'backup_list' %}">Cancel</a>
+</form></div>
+{% endblock %}

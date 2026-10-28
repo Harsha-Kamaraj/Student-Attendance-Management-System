@@ -1,11 +1,13 @@
 """BL-05: permission matrix, scope rules and denial handling."""
 
 import datetime
+from uuid import UUID
 
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.test import TestCase
 from django.urls import URLPattern, URLResolver, get_resolver, reverse
+from django.urls.converters import UUIDConverter
 
 from apps.academics.models import Enrollment, Section, Student, Subject, TeachingAssignment
 from apps.academics.tests import make_faculty, make_student
@@ -206,7 +208,11 @@ class LoginRequiredEverywhereTests(TestCase):
         for pattern in self.named_routes():
             if pattern.name in self.PUBLIC:
                 continue
-            url = reverse(pattern.name, kwargs=dict.fromkeys(pattern.pattern.converters, 1))
+            kwargs = {
+                name: UUID(int=1) if isinstance(converter, UUIDConverter) else 1
+                for name, converter in pattern.pattern.converters.items()
+            }
+            url = reverse(pattern.name, kwargs=kwargs)
             with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 302)

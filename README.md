@@ -108,6 +108,37 @@ Each correction and its editor, timestamp, old/new status and reason are saved a
 
 Run `python manage.py migrate` before using these pages. See [`Documents/BL-23-24_Implementation.md`](Documents/BL-23-24_Implementation.md).
 
+## Backup and recovery (BL-26 / BL-27)
+
+These features are independent of low-attendance notifications and lists (BL-23/24).
+Admins open **Backup and recovery** from their dashboard (`/backups/`).
+
+- **Back up now** creates an authenticated-encrypted snapshot of users, academics, attendance, application settings, permissions and audit history. Files are private (`0600`) in `BACKUP_DIRECTORY` (`0700`, default `var/backups`, excluded from Git). A failed backup never overwrites an older one.
+- **Configure schedule** enables a daily time in IST. The server scheduler must invoke `run_scheduled_backups` every minute (see below). Missed runs catch up once; failures retry after 15 minutes. The page shows the next attempt, last scheduled success and failures.
+- **Download encrypted file** lets the Admin keep an off-server copy. **Import a saved backup** validates a downloaded `.sambak` file and adds it to the catalogue without changing application data.
+- **Restore** requires the Admin's current password and explicit confirmation. Integrity and schema checks run first; a safety backup is required before replacement. Restore commits all data together or rolls back. Live requests are blocked during recovery, and an active request causes restore to ask the Admin to retry.
+- Existing audit events and the backup catalogue/schedule survive restore. Missing audit events from the snapshot are appended. All sessions end, and previously issued email/backup codes are invalidated; sign in with an account/password from the snapshot and a fresh authenticator code or new email code. Admin OTP reset can issue a replacement set of backup codes.
+
+After installing dependencies and running migrations, generate a Fernet key and put it in the local `.env` as `BACKUP_ENCRYPTION_KEY`. Keep a secure copy of the key separately from backup files. A missing key disables backup creation; there is no unencrypted fallback.
+
+Configure the **server's** task scheduler to run the following every minute, as the application OS user. Example crontab (replace paths for your deployment):
+
+```cron
+* * * * * cd /srv/attendance && /srv/attendance/.venv/bin/python manage.py run_scheduled_backups >> /srv/attendance-backup-scheduler.log 2>&1
+```
+
+Setting a time in the web page does not install a system scheduler. To check one tick manually:
+
+```bash
+python manage.py run_scheduled_backups
+```
+
+For recovery onto a replacement server, deploy the same application release and migrations, configure PostgreSQL and the original encryption key, create a temporary Admin and complete OTP setup, then import and restore a saved encrypted file. Restoring replaces the temporary Admin too; use an Admin account from the snapshot afterward. Backups from a different migration/schema version are rejected. `.env`, encryption keys, application source, sessions and external files are not part of the data snapshot.
+
+Snapshots are processed in memory with a configurable 256 MiB file limit; provision sufficient worker memory and request timeouts. Backup operations require a direct or session-pooled PostgreSQL connection because maintenance locks span transactions. Do not use transaction-pooling mode. Database table locks also protect consistency from external writers; run recovery during a maintenance window and stop external jobs that write application data.
+
+Tests: `python manage.py test apps.backups` (uses only disposable test databases and temporary encrypted storage).
+
 ## Configuration variables
 
 All settings that differ between machines are read from `.env` (or real environment variables).
