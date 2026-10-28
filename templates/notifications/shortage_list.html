@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Students below threshold · Student Attendance{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Students below threshold</h1>
+  <a href="{% url 'dashboard' %}">Back to dashboard</a>
+</div>
+<p class="text-body-secondary">
+  Threshold {{ threshold }}%. Equal to the threshold is not a shortage; classes with no sessions are not counted.
+  {% if not show_overall %}Only the subjects you teach are shown.{% endif %}
+  Updated {{ generated_at|date:"d M Y, H:i" }}.
+</p>
+
+{% if not overall_rows and not subject_rows %}
+  <div class="alert alert-success" role="status">No students are currently below the {{ threshold }}% threshold{% if not show_overall %} in your subjects{% endif %}.</div>
+{% else %}
+  {% if show_overall %}
+    <h2 class="h5 mt-4">Overall attendance</h2>
+    {% if overall_rows %}
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+          <thead><tr><th>Roll number</th><th>Name</th><th>Class / section</th><th>Overall attendance</th></tr></thead>
+          <tbody>
+            {% for row in overall_rows %}
+              <tr><td>{{ row.student.roll_number }}</td><td>{{ row.student.full_name }}</td><td>{{ row.section|default:"—" }}</td><td class="text-danger">{{ row.display }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-body-secondary">No students are below the threshold overall.</p>
+    {% endif %}
+  {% endif %}
+
+  <h2 class="h5 mt-4">By subject</h2>
+  {% if subject_rows %}
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle">
+        <thead><tr><th>Subject</th><th>Roll number</th><th>Name</th><th>Class / section</th><th>Subject attendance</th></tr></thead>
+        <tbody>
+          {% for row in subject_rows %}
+            <tr><td>{{ row.subject }}</td><td>{{ row.student.roll_number }}</td><td>{{ row.student.full_name }}</td><td>{{ row.section|default:"—" }}</td><td class="text-danger">{{ row.display }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-body-secondary">No subject-level shortages.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

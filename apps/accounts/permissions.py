@@ -43,6 +43,7 @@ PERMISSIONS = {
     "records.search": {ADMIN, FACULTY},  # faculty: own classes (UC-11)
     "threshold.configure": {ADMIN},  # SEC-14
     "low_attendance.view": {ADMIN, FACULTY},  # faculty: own classes (AR-14)
+    "notifications.view": {STUDENT},  # own low-attendance notifications only (BL-23, SEC-25)
     "backup.manage": {ADMIN},  # FR-19, SEC-26
     "audit.view": {ADMIN},  # full audit log
 }

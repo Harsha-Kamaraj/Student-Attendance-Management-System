@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Notifications · Student Attendance{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Notifications</h1>
+  <a href="{% url 'dashboard' %}">Back to dashboard</a>
+</div>
+{% if page_obj.object_list %}
+  <div class="list-group mb-3">
+    {% for notification in page_obj %}
+      <div class="list-group-item{% if notification.pk in unread_ids %} list-group-item-warning{% endif %}">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+          <strong>{{ notification.title }}{% if notification.pk in unread_ids %} <span class="badge text-bg-danger">New</span>{% endif %}</strong>
+          <small class="text-body-secondary">{{ notification.created_at|date:"d M Y, H:i" }}</small>
+        </div>
+        <p class="mb-0 mt-2" style="white-space: pre-line">{{ notification.body }}</p>
+      </div>
+    {% endfor %}
+  </div>
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Notification pages" class="d-flex gap-3">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Newer</a>{% endif %}
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Older</a>{% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <p class="text-body-secondary">You have no notifications.</p>
+{% endif %}
+<p class="mt-3"><a href="{% url 'attendance_summary' %}">View my attendance</a></p>
+{% endblock %}

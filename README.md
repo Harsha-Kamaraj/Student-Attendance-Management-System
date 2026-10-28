@@ -100,6 +100,14 @@ Admin and Faculty open **Attendance history and corrections** from their dashboa
 
 Each correction and its editor, timestamp, old/new status and reason are saved atomically. Percentages and dashboards reflect the saved correction immediately. Students see their own updated totals, while staff history remains restricted to Admin and authorized Faculty. Run `python manage.py migrate` before using these pages. See [`Documents/BL-16-18_Implementation.md`](Documents/BL-16-18_Implementation.md).
 
+## Low-attendance notifications and the below-threshold list (BL-23, BL-24)
+
+- **Students** get one in-app notification (**Notifications** in the navigation bar) and one email each time a subject or overall percentage falls below the threshold. Nothing more is sent while it stays below; recovering to the threshold or above clears it, and a later drop notifies again. The check runs after every attendance save, correction and threshold change. If email fails, the in-app notification is still delivered and the failure is logged.
+- **Admin and Faculty** open **Students below threshold** from the dashboard (`/attendance/shortages/`). Faculty see only their assigned subjects; the Admin also sees overall percentages. The list is always current.
+- **Monday email:** schedule `python manage.py send_weekly_shortage_emails` for Mondays at 08:00 IST (cron example in the implementation note). Faculty with an empty list get no email, and re-running in the same week sends no duplicates.
+
+Run `python manage.py migrate` before using these pages. See [`Documents/BL-23-24_Implementation.md`](Documents/BL-23-24_Implementation.md).
+
 ## Configuration variables
 
 All settings that differ between machines are read from `.env` (or real environment variables).
@@ -141,6 +149,7 @@ apps/
   academics/      Students, faculty, subjects, sections    (BL-07 to BL-11)
   attendance/     Attendance sessions and corrections      (BL-12 to BL-17)
   audit/          Audit history                            (BL-18)
+  notifications/  Low-attendance alerts and shortage list  (BL-23, BL-24)
 templates/        Shared page layouts
 static/           Shared CSS, JavaScript and images
 Documents/        SRS, use cases, test plan, security requirements, diagrams

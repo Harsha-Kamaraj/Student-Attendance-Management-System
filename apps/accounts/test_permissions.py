@@ -51,6 +51,7 @@ EXPECTED_MATRIX = {
     "records.search": {A, F},
     "threshold.configure": {A},
     "low_attendance.view": {A, F},
+    "notifications.view": {S},
     "backup.manage": {A},
     "audit.view": {A},
 }
