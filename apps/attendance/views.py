@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import DatabaseError, IntegrityError
+from django.db import DatabaseError, IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -15,6 +15,7 @@ from apps.accounts.decorators import role_required
 from apps.accounts.models import Role
 from apps.accounts.permissions import requires, visible_assignments
 from apps.audit import services as audit
+from apps.notifications.services import evaluate_students
 
 from .calculations import student_attendance_summary
 from .forms import AttendanceSelectionForm, AttendanceSummaryFilterForm, AttendanceThresholdForm
@@ -184,18 +185,23 @@ def threshold_settings(request):
     current = AttendanceThreshold.current_value()
     form = AttendanceThresholdForm(request.POST or None, initial={"value": current})
     if request.method == "POST" and form.is_valid():
-        previous = AttendanceThreshold.current_value()
-        setting, _ = AttendanceThreshold.objects.get_or_create(pk=1, defaults={"value": 75})
-        setting.value = form.cleaned_data["value"]
-        setting.save(update_fields=["value", "updated_at"])
-        audit.record(
-            "attendance.threshold.update",
-            actor=request.user,
-            target_type="AttendanceThreshold",
-            target_id=setting.pk,
-            old_value={"value": previous},
-            new_value={"value": setting.value},
-        )
+        with transaction.atomic():
+            setting, _ = AttendanceThreshold.objects.select_for_update().get_or_create(
+                pk=1, defaults={"value": 75}
+            )
+            previous = setting.value
+            setting.value = form.cleaned_data["value"]
+            setting.save(update_fields=["value", "updated_at"])
+            audit.record(
+                "attendance.threshold.update",
+                actor=request.user,
+                target_type="AttendanceThreshold",
+                target_id=setting.pk,
+                old_value={"value": previous},
+                new_value={"value": setting.value},
+            )
+            # A threshold change re-evaluates every active student (BL-01 D-14, AR-13).
+            evaluate_students(threshold=setting.value)
         messages.success(
             request,
             f"Attendance threshold saved as {setting.value}%. Shortage counts update immediately.",

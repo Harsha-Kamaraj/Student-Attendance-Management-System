@@ -11,6 +11,7 @@ from apps.academics.models import TeachingAssignment
 from apps.accounts.models import Role, User
 from apps.accounts.permissions import can_correct_attendance
 from apps.audit import services as audit
+from apps.notifications.services import evaluate_students
 
 from .models import AttendanceRecord, CorrectionWindow, Status
 
@@ -85,6 +86,7 @@ def correct_attendance(*, actor, record, status, reason=""):
         reason=reason,
         is_admin_override=override,
     )
+    evaluate_students([record.student_id])  # UC-10: re-check after every correction (BL-23)
     return record
 
 

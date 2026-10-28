@@ -12,6 +12,7 @@ from apps.academics.models import Enrollment, Faculty, TeachingAssignment
 from apps.accounts.models import Role, User
 from apps.accounts.permissions import can_mark_attendance
 from apps.audit import services as audit
+from apps.notifications.services import evaluate_students
 
 from .models import MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, CorrectionWindow, Status
 
@@ -110,4 +111,5 @@ def submit_attendance(*, actor, assignment, day, period, statuses, reason=""):
         reason=reason.strip(),
         is_admin_override=actor.role == Role.ADMIN,
     )
+    evaluate_students(student_ids)  # UC-06 step 5 → UC-10 threshold check (BL-23)
     return session, True

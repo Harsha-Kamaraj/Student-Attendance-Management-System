@@ -37,6 +37,7 @@ A refused request shows **"Access denied"** (HTTP 403), returns no protected dat
 | Configure attendance threshold | ✓ | — | — | SEC-14 |
 | Configure faculty correction window | ✓ with reason | — | — | BL-01 D-09, SEC-23, BL-17 |
 | View below-threshold list | ✓ | ✓ own classes | — | FR-13, AR-14 |
+| View own low-attendance notifications | — | — | ✓ own | FR-14, AR-13, BL-23 |
 | Backup and restore | ✓ | — | — | FR-19, SEC-26 |
 | View full audit log | ✓ | — | — | SEC-21 |
 | Own dashboard | ✓ Admin | ✓ Faculty | ✓ Student | FR-17, UC-01 |
