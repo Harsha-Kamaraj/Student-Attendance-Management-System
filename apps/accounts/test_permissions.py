@@ -193,7 +193,7 @@ class ScopeTests(TestCase):
 class LoginRequiredEverywhereTests(TestCase):
     """SEC-01: every page except the public ones redirects anonymous users to login."""
 
-    PUBLIC = {"home", "login"}
+    PUBLIC = {"home", "login", "health"}
 
     def named_routes(self, resolver=None):
         for pattern in (resolver or get_resolver()).url_patterns:

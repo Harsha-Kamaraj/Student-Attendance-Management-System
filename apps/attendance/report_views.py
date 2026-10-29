@@ -5,10 +5,11 @@ from io import BytesIO
 
 from django import forms
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
@@ -23,7 +24,15 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from apps.accounts.permissions import requires, visible_assignments
+from apps.academics.models import Student, TeachingAssignment
+from apps.accounts.permissions import (
+    get_visible_or_deny,
+    requires,
+    visible_assignments,
+    visible_attendance_records,
+    visible_students,
+)
+from apps.audit import services as audit
 
 from .calculations import AttendanceTotals
 from .models import AttendanceRecord, AttendanceSession, Status
@@ -50,10 +59,22 @@ class AttendanceReportFilterForm(forms.Form):
         required=False,
         choices=[("", "All statuses"), *Status.choices],
         widget=forms.Select(attrs={"class": "form-select"}),
+        label="Group contains status",
+        help_text="Select groups containing this status. Attendance counts still include all their marks.",
+    )
+    student = forms.ModelChoiceField(
+        queryset=Student.objects.none(),
+        required=False,
+        empty_label="All authorized students",
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
+        recorded = visible_attendance_records(user).values("student_id")
+        self.fields["student"].queryset = Student.objects.filter(
+            Q(pk__in=recorded) | Q(pk__in=visible_students(user).values("pk"))
+        ).order_by("roll_number")
 
         self.fields["assignment"].queryset = (
             visible_assignments(user)
@@ -84,6 +105,16 @@ def _filtered_records(request, form):
     """Return records and sessions restricted to authorized assignments."""
 
     assignments = visible_assignments(request.user)
+    for field, model in (("assignment", TeachingAssignment), ("student", Student)):
+        value = form.data.get(field, "")
+        if (
+            isinstance(value, str)
+            and value.isascii()
+            and value.isdecimal()
+            and len(value) <= 19
+            and 0 < int(value) <= 9223372036854775807
+        ):
+            get_visible_or_deny(form.fields[field].queryset, model, int(value))
 
     records = AttendanceRecord.objects.filter(session__assignment__in=assignments).select_related(
         "student",
@@ -112,9 +143,16 @@ def _filtered_records(request, form):
             sessions = sessions.filter(assignment=filters["assignment"])
 
         if filters["status"]:
-            records = records.filter(status=filters["status"])
+            matching = records.filter(
+                student_id=OuterRef("student_id"),
+                session__assignment_id=OuterRef("session__assignment_id"),
+                status=filters["status"],
+            )
+            records = records.filter(Exists(matching))
+        if filters["student"]:
+            records = records.filter(student=filters["student"])
 
-    return records, sessions
+    return records, sessions.filter(pk__in=records.values("session_id"))
 
 
 def _report_rows(records):
@@ -167,8 +205,18 @@ def _report_rows(records):
     return rows
 
 
-@require_GET
+def _row_totals(rows):
+    # Derive totals from the same grouped snapshot used by the report/export rows.
+    return {
+        "held": sum(row["held"] for row in rows),
+        "present": sum(row["present"] for row in rows),
+        "absent": sum(row["absent"] for row in rows),
+    }
+
+
+@never_cache
 @requires("reports.generate")
+@require_GET
 def attendance_report(request):
     """Display an attendance report for authorized users."""
 
@@ -179,24 +227,13 @@ def attendance_report(request):
 
     records, sessions = _filtered_records(request, form)
 
-    totals = records.aggregate(
-        held=Count("pk"),
-        present=Count(
-            "pk",
-            filter=Q(status=Status.PRESENT),
-        ),
-        absent=Count(
-            "pk",
-            filter=Q(status=Status.ABSENT),
-        ),
-    )
+    report_rows = _report_rows(records)
+    totals = _row_totals(report_rows)
 
     overall = AttendanceTotals(
         attended=totals["present"],
         held=totals["held"],
     )
-
-    report_rows = _report_rows(records)
 
     page = Paginator(report_rows, 50).get_page(request.GET.get("page"))
 
@@ -208,17 +245,45 @@ def attendance_report(request):
         "absent_count": totals["absent"],
         "session_count": sessions.count(),
         "generated_at": timezone.localtime(),
+        "query_string": request.GET.copy(),
     }
+    context["query_string"].pop("page", None)
+    context["query_string"] = context["query_string"].urlencode()
 
     return render(
         request,
         "attendance/report.html",
         context,
+        status=400 if form.is_bound and not form.is_valid() else 200,
     )
 
 
-@require_GET
+def _csv_label(value):
+    """Keep spreadsheet applications from interpreting untrusted labels as formulas."""
+    value = str(value or "")
+    if value.startswith(("\t", "\r", "\n")) or value.lstrip().startswith(("=", "+", "-", "@")):
+        return "'" + value
+    return value
+
+
+def _export_fallback(request, form, records):
+    if (form.is_bound and not form.is_valid()) or not records.exists():
+        return attendance_report(request)
+    return None
+
+
+def _audit_export(request, format_name, row_count):
+    audit.record(
+        "reports.export",
+        actor=request.user,
+        target_type="AttendanceReport",
+        new_value={"format": format_name, "rows": row_count},
+    )
+
+
+@never_cache
 @requires("reports.export")
+@require_GET
 def attendance_report_csv(request):
     """Export matching authorized attendance report rows to CSV."""
 
@@ -228,6 +293,9 @@ def attendance_report_csv(request):
     )
 
     records, _sessions = _filtered_records(request, form)
+    if (fallback := _export_fallback(request, form, records)) is not None:
+        return fallback
+    rows = _report_rows(records)
 
     response = HttpResponse(content_type="text/csv; charset=utf-8")
 
@@ -252,17 +320,17 @@ def attendance_report_csv(request):
         ]
     )
 
-    for row in _report_rows(records):
+    for row in rows:
         percentage = row["percentage"]
 
         writer.writerow(
             [
-                row["student__roll_number"],
-                row["student__full_name"],
-                row["session__assignment__section__class_name"],
-                row["session__assignment__section__name"],
-                row["session__assignment__subject__code"],
-                row["session__assignment__subject__name"],
+                _csv_label(row["student__roll_number"]),
+                _csv_label(row["student__full_name"]),
+                _csv_label(row["session__assignment__section__class_name"]),
+                _csv_label(row["session__assignment__section__name"]),
+                _csv_label(row["session__assignment__subject__code"]),
+                _csv_label(row["session__assignment__subject__name"]),
                 row["held"],
                 row["present"],
                 row["absent"],
@@ -270,11 +338,13 @@ def attendance_report_csv(request):
             ]
         )
 
+    _audit_export(request, "csv", len(rows))
     return response
 
 
-@require_GET
+@never_cache
 @requires("reports.export")
+@require_GET
 def attendance_report_pdf(request):
     """Export matching authorized attendance report rows to PDF."""
 
@@ -284,6 +354,8 @@ def attendance_report_pdf(request):
     )
 
     records, sessions = _filtered_records(request, form)
+    if (fallback := _export_fallback(request, form, records)) is not None:
+        return fallback
     rows = _report_rows(records)
 
     buffer = BytesIO()
@@ -329,17 +401,7 @@ def attendance_report_pdf(request):
         Spacer(1, 4 * mm),
     ]
 
-    totals = records.aggregate(
-        held=Count("pk"),
-        present=Count(
-            "pk",
-            filter=Q(status=Status.PRESENT),
-        ),
-        absent=Count(
-            "pk",
-            filter=Q(status=Status.ABSENT),
-        ),
-    )
+    totals = _row_totals(rows)
 
     overall = AttendanceTotals(
         attended=totals["present"],
@@ -495,4 +557,5 @@ def attendance_report_pdf(request):
     )
     response["Content-Disposition"] = 'attachment; filename="attendance_report.pdf"'
 
+    _audit_export(request, "pdf", len(rows))
     return response

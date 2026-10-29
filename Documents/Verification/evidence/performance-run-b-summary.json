@@ -1,0 +1,338 @@
+{
+  "protocol": "BL29-v1",
+  "plan_id": "14d9fe18-b379-4f9e-a41f-48e2ed22bf68",
+  "seed_plan_id": "14d9fe18-b379-4f9e-a41f-48e2ed22bf68",
+  "declared_at": "2026-10-29T08:59:28.227525+00:00",
+  "started_at": "2026-10-29T13:21:29.248567+00:00",
+  "source_revision": {
+    "head": "3ba25e33d7cbb3630bb8aa197a54d4acb85aa370",
+    "application_diff_sha256": "dccbe3268f8a7050452245b2a9f804796104527dc400fbc84f57b4e1e6a5036e",
+    "application_tree_sha256": "0f30d2b030177e067ddbf0566931ba03467622daf45229a16e0d9a9db1563f40"
+  },
+  "dataset_id": "3f4b4d3f-7a49-48e3-b222-b8ece9ec7ca1",
+  "targets": {
+    "common_requests_at_or_below_seconds": 2.0,
+    "common_requests_required_fraction": 0.95,
+    "mark_60_students_max_seconds": 3.0,
+    "semester_section_report_max_seconds": 10.0,
+    "concurrent_authenticated_users": 50,
+    "monthly_institutional_availability_fraction": 0.99
+  },
+  "sampling_plan": {
+    "common_requests": {
+      "rounds": 30,
+      "users": {
+        "admin": 1,
+        "faculty": 10,
+        "student": 39
+      },
+      "routes": [
+        "dashboard_admin",
+        "dashboard_faculty",
+        "dashboard_student",
+        "attendance_summary"
+      ],
+      "student_route_selection": "alternate dashboard and report across rounds",
+      "warmup_requests_per_user": 1,
+      "synchronization": "50-worker barrier before every timed round"
+    },
+    "marking": {
+      "repeats": 3,
+      "students_per_submission": 60,
+      "foreground_users": 1,
+      "background_users": 49,
+      "route": "attendance_mark",
+      "status": "Absent",
+      "first_submission_expected_new_notifications": 60,
+      "first_submission_expected_locmem_emails": 60,
+      "callbacks": "normal autocommit, including notification on_commit callbacks before response completion"
+    },
+    "semester_report": {
+      "repeats": 3,
+      "foreground_users": 1,
+      "background_users": 49,
+      "route": "attendance_report_csv",
+      "scope": "F000 owns all five subjects in one 60-student section; last 125 teaching days",
+      "expected_student_subject_rows": 300,
+      "expected_records_summarized": 22500
+    }
+  },
+  "baseline_counts": {
+    "students": 1000,
+    "faculty": 60,
+    "users": 1061,
+    "sections": 17,
+    "subjects": 5,
+    "assignments": 85,
+    "enrollments": 5000,
+    "sessions": 12750,
+    "attendance_records": 750000,
+    "notifications": 470,
+    "shortage_flags": 2820
+  },
+  "environment": {
+    "python": "3.13.5",
+    "django": "5.2.18",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "logical_cpus": 8,
+    "postgresql": "PostgreSQL 16.15, compiled by Visual C++ build 1944, 64-bit",
+    "postgresql_settings": {
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB",
+      "max_parallel_workers_per_gather": "2"
+    },
+    "database": {
+      "host": "127.0.0.1",
+      "port": "55432",
+      "name": "verification_bl29_20261029_b"
+    },
+    "database_bytes": 134470679,
+    "otp_required": true,
+    "csrf_enforced": true,
+    "mail_backend": "django.core.mail.backends.locmem.EmailBackend",
+    "deployment": "one Python process, 50 threads, loopback PostgreSQL; in-process Django request stack"
+  },
+  "measurement_boundary": "Django Client in-process request stack, one process and 50 threads, authenticated persisted sessions with OTP already verified, CSRF enforced; excludes network, proxy, browser assets, password/OTP setup and external SMTP",
+  "availability": {
+    "status": "pending_monthly_observation",
+    "target": 0.99,
+    "reason": "A local load run cannot establish monthly institutional-hours uptime."
+  },
+  "finished_at": "2026-10-29T13:24:49.650521+00:00",
+  "final_counts": {
+    "students": 1000,
+    "faculty": 60,
+    "users": 1061,
+    "sections": 17,
+    "subjects": 5,
+    "assignments": 85,
+    "enrollments": 5000,
+    "sessions": 12750,
+    "attendance_records": 750000,
+    "notifications": 470,
+    "shortage_flags": 2820
+  },
+  "checks": {
+    "PT_01": false,
+    "PT_02": false,
+    "PT_03": true,
+    "PT_04": false
+  },
+  "outcome": "failed",
+  "latency": {
+    "common": {
+      "count": 1500,
+      "successful": 1500,
+      "failed": 0,
+      "limit_seconds": 2.0,
+      "within_limit": 519,
+      "within_limit_fraction": 0.346,
+      "p50_seconds": 2.583802100009052,
+      "p95_seconds": 4.16294690000359,
+      "p99_seconds": 4.7191230000171345,
+      "max_seconds": 7.134759299980942
+    },
+    "mark_60": {
+      "count": 3,
+      "successful": 0,
+      "failed": 3,
+      "limit_seconds": 3.0,
+      "within_limit": 0,
+      "within_limit_fraction": 0.0,
+      "p50_seconds": 3.1939379000104964,
+      "p95_seconds": 4.684043399989605,
+      "p99_seconds": 4.684043399989605,
+      "max_seconds": 4.684043399989605
+    },
+    "semester_report": {
+      "count": 3,
+      "successful": 3,
+      "failed": 0,
+      "limit_seconds": 10.0,
+      "within_limit": 3,
+      "within_limit_fraction": 1.0,
+      "p50_seconds": 2.6175164000014775,
+      "p95_seconds": 3.980022400006419,
+      "p99_seconds": 3.980022400006419,
+      "max_seconds": 3.980022400006419
+    }
+  },
+  "latency_by_route": {
+    "attendance_history": {
+      "count": 36,
+      "successful": 36,
+      "failed": 0,
+      "limit_seconds": 2,
+      "within_limit": 1,
+      "within_limit_fraction": 0.027777777777777776,
+      "p50_seconds": 4.178179399983492,
+      "p95_seconds": 5.428174800006673,
+      "p99_seconds": 5.753159699990647,
+      "max_seconds": 5.753159699990647
+    },
+    "attendance_mark": {
+      "count": 3,
+      "successful": 0,
+      "failed": 3,
+      "limit_seconds": 3,
+      "within_limit": 0,
+      "within_limit_fraction": 0.0,
+      "p50_seconds": 3.1939379000104964,
+      "p95_seconds": 4.684043399989605,
+      "p99_seconds": 4.684043399989605,
+      "max_seconds": 4.684043399989605
+    },
+    "attendance_report": {
+      "count": 18,
+      "successful": 18,
+      "failed": 0,
+      "limit_seconds": 2,
+      "within_limit": 0,
+      "within_limit_fraction": 0.0,
+      "p50_seconds": 4.786954899987904,
+      "p95_seconds": 6.6136017000244465,
+      "p99_seconds": 6.6136017000244465,
+      "max_seconds": 6.6136017000244465
+    },
+    "attendance_report_csv": {
+      "count": 3,
+      "successful": 3,
+      "failed": 0,
+      "limit_seconds": 10,
+      "within_limit": 3,
+      "within_limit_fraction": 1.0,
+      "p50_seconds": 2.6175164000014775,
+      "p95_seconds": 3.980022400006419,
+      "p99_seconds": 3.980022400006419,
+      "max_seconds": 3.980022400006419
+    },
+    "attendance_summary": {
+      "count": 663,
+      "successful": 663,
+      "failed": 0,
+      "limit_seconds": 2,
+      "within_limit": 180,
+      "within_limit_fraction": 0.27149321266968324,
+      "p50_seconds": 2.8817475000105333,
+      "p95_seconds": 4.598399599984987,
+      "p99_seconds": 5.578091900009895,
+      "max_seconds": 5.910550100001274
+    },
+    "dashboard_admin": {
+      "count": 36,
+      "successful": 36,
+      "failed": 0,
+      "limit_seconds": 2,
+      "within_limit": 0,
+      "within_limit_fraction": 0.0,
+      "p50_seconds": 3.8886997000081465,
+      "p95_seconds": 5.972285199997714,
+      "p99_seconds": 7.134759299980942,
+      "max_seconds": 7.134759299980942
+    },
+    "dashboard_faculty": {
+      "count": 300,
+      "successful": 300,
+      "failed": 0,
+      "limit_seconds": 2,
+      "within_limit": 111,
+      "within_limit_fraction": 0.37,
+      "p50_seconds": 2.433659100002842,
+      "p95_seconds": 3.9988931999832857,
+      "p99_seconds": 4.634322600002633,
+      "max_seconds": 5.23991110001225
+    },
+    "dashboard_student": {
+      "count": 741,
+      "successful": 741,
+      "failed": 0,
+      "limit_seconds": 2,
+      "within_limit": 269,
+      "within_limit_fraction": 0.3630229419703104,
+      "p50_seconds": 2.4962572999938857,
+      "p95_seconds": 3.9085584999993443,
+      "p99_seconds": 4.493499399977736,
+      "max_seconds": 5.862576000014087
+    }
+  },
+  "offered_concurrent_authenticated_users": 50,
+  "measured_peak_inflight_requests": 50,
+  "notification_events": [
+    {
+      "repeat": 1,
+      "new_notifications": 0,
+      "locmem_emails": 0
+    },
+    {
+      "repeat": 2,
+      "new_notifications": 0,
+      "locmem_emails": 0
+    },
+    {
+      "repeat": 3,
+      "new_notifications": 0,
+      "locmem_emails": 0
+    }
+  ],
+  "resources": {
+    "python_process_cpu_seconds": 69.921875,
+    "wall_seconds": 200.41528590000235
+  },
+  "ending_source_revision": {
+    "head": "3ba25e33d7cbb3630bb8aa197a54d4acb85aa370",
+    "application_diff_sha256": "dccbe3268f8a7050452245b2a9f804796104527dc400fbc84f57b4e1e6a5036e",
+    "application_tree_sha256": "0f30d2b030177e067ddbf0566931ba03467622daf45229a16e0d9a9db1563f40"
+  },
+  "limitations": [
+    "Network, proxy, external SMTP and browser asset latency excluded.",
+    "Password/OTP setup excluded; persisted authenticated OTP-verified sessions used.",
+    "Single Python process with 50 threads; not a production multiprocess deployment test.",
+    "Availability remains pending a monthly institutional-hours observation window."
+  ],
+  "evidence_note": "Historical initial run: marking measurements are invalid because the HTTPS harness omitted Origin/Referer. This is a summary of the original artifact, not a new measurement. Per-request samples/warmup omitted for review size; original SHA-256 and omitted counts recorded below. Corrected run C retains every measured request sample.",
+  "source_artifact_sha256": "e7571a0b5c31974af087ab79cd07bc7cecbaeb38b46fbf07a42d13b144f608a3",
+  "source_artifact_bytes": 598682,
+  "omitted_fields": {
+    "samples": 1800,
+    "warmup": 50
+  },
+  "failed_marking_samples": [
+    {
+      "phase": "marking",
+      "route": "attendance_mark",
+      "method": "POST",
+      "actor": "BL29F000",
+      "status": 403,
+      "seconds": 4.684043399989605,
+      "started_offset": 164.6658304000157,
+      "ended_offset": 169.3498738000053,
+      "ok": false,
+      "error": "First absence did not execute 60 notification/email callbacks."
+    },
+    {
+      "phase": "marking",
+      "route": "attendance_mark",
+      "method": "POST",
+      "actor": "BL29F000",
+      "status": 403,
+      "seconds": 1.6367977999907453,
+      "started_offset": 171.68722260001232,
+      "ended_offset": 173.32402040000306,
+      "ok": false,
+      "error": "Submission did not persist exactly 60 marks."
+    },
+    {
+      "phase": "marking",
+      "route": "attendance_mark",
+      "method": "POST",
+      "actor": "BL29F000",
+      "status": 403,
+      "seconds": 3.1939379000104964,
+      "started_offset": 179.8556504000153,
+      "ended_offset": 183.0495883000258,
+      "ok": false,
+      "error": "Submission did not persist exactly 60 marks."
+    }
+  ]
+}

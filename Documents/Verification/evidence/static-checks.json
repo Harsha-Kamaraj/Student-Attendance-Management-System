@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-29T13:31:54.281705+00:00",
+  "checks": [
+    {
+      "command": "ruff check .",
+      "exit_code": 0,
+      "seconds": 1.2023912000004202,
+      "output": "All checks passed!\n"
+    },
+    {
+      "command": "ruff format --check .",
+      "exit_code": 0,
+      "seconds": 0.4150931000185665,
+      "output": "138 files already formatted\n"
+    },
+    {
+      "command": "python manage.py check",
+      "exit_code": 0,
+      "seconds": 33.89253529999405,
+      "output": "System check identified no issues (0 silenced).\n"
+    },
+    {
+      "command": "python manage.py makemigrations --check --dry-run",
+      "exit_code": 0,
+      "seconds": 20.81155480002053,
+      "output": "No changes detected\n"
+    },
+    {
+      "command": "python -m pip check",
+      "exit_code": 0,
+      "seconds": 22.551402600016445,
+      "output": "No broken requirements found.\n"
+    }
+  ]
+}
