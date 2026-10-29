@@ -140,6 +140,7 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
+SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000" if DEBUG else "")
 
 # Encrypted backups (BL-26/27). Keep the key separately from copies of the backup files.
 BACKUP_DIRECTORY = Path(env("BACKUP_DIRECTORY", default=str(BASE_DIR / "var" / "backups")))

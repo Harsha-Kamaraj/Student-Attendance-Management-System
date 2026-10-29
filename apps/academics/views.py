@@ -7,8 +7,10 @@ from django.db import IntegrityError, transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_variables
 from django.views.decorators.http import require_POST
 
+from apps.accounts.credentials import delivery_context
 from apps.accounts.decorators import role_required
 from apps.accounts.models import Role
 from apps.accounts.permissions import (
@@ -57,6 +59,7 @@ def student_detail(request, pk):
 
 @never_cache
 @requires("students.manage")
+@sensitive_variables()
 def student_create(request):
     form = StudentCreateForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -88,7 +91,12 @@ def student_create(request):
             return render(
                 request,
                 "academics/student_created.html",
-                {"student": student, "temporary_password": password},
+                {
+                    "student": student,
+                    **delivery_context(
+                        user=account, temporary_password=password, actor=request.user, purpose="created"
+                    ),
+                },
             )
     return render(request, "academics/student_form.html", {"form": form, "creating": True})
 
@@ -485,6 +493,7 @@ def faculty_list(request):
 
 @never_cache
 @requires("faculty.manage")
+@sensitive_variables()
 def faculty_create(request):
     form = FacultyCreateForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -514,7 +523,14 @@ def faculty_create(request):
             form.add_error("faculty_id", "This faculty ID already exists.")
         else:
             return render(
-                request, "academics/faculty_created.html", {"member": member, "temporary_password": password}
+                request,
+                "academics/faculty_created.html",
+                {
+                    "member": member,
+                    **delivery_context(
+                        user=account, temporary_password=password, actor=request.user, purpose="created"
+                    ),
+                },
             )
     return render(request, "academics/faculty_form.html", {"form": form, "creating": True})
 

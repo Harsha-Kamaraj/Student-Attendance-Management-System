@@ -108,6 +108,18 @@ Each correction and its editor, timestamp, old/new status and reason are saved a
 
 Run `python manage.py migrate` before using these pages. See [`Documents/BL-23-24_Implementation.md`](Documents/BL-23-24_Implementation.md).
 
+## Email login details (BL-34 / issue #42)
+
+Adding a student or faculty member sends their username, a fresh temporary password and the login link to their own email address only. Password resets also email the account owner. The Admin sees a masked delivery result; if delivery fails, the saved account remains available and the temporary password appears once on the response page for private handover. Successful emails do not show the password on the Admin page. Users must still complete OTP and change the temporary password at first login.
+
+**Accounts → Resend login details** is available for active accounts still using a temporary password. It generates a new password and invalidates the earlier one; existing passwords cannot be recovered from their hashes. After a user has chosen their own password, use **Reset password** instead. Only Admins may create, reset or resend credentials. Attempts and outcomes are audited without the password, message body or provider exception text.
+
+Set `SITE_URL` in `.env` to the application's public origin, for example `https://attendance.example.edu`. Production requires HTTPS; links never use the request's Host header. Configure the existing SMTP `EMAIL_*` settings and `DEFAULT_FROM_EMAIL` for real delivery. `EMAIL_TIMEOUT` bounds the synchronous send; a successful send means the mail backend accepted the message, not proof that it reached an inbox.
+
+With `DEBUG=True`, the console backend prints a development preview and the UI explicitly says no email was delivered. Use fictional accounts and do not retain these previews in logs. Credential emails refuse the console backend in production and refuse file-based/dummy backends; failure falls back to the one-time password display. No plaintext credential queue or stored email body is created. If a process stops after saving the account and before responding/sending, the Admin can issue new login details from Accounts.
+
+See [`Documents/BL-34_Implementation.md`](Documents/BL-34_Implementation.md). Tests: `python manage.py test apps.accounts.test_credential_email`.
+
 ## Backup and recovery (BL-26 / BL-27)
 
 These features are independent of low-attendance notifications and lists (BL-23/24).

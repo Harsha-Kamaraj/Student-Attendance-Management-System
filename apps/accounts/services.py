@@ -3,11 +3,14 @@
 import secrets
 from datetime import timedelta
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
+from django.views.decorators.debug import sensitive_variables
 
 from apps.audit import services as audit
 
+from .credentials import require_account_admin
 from .models import User
 
 MAX_FAILED_LOGINS = 5  # SEC-03
@@ -31,11 +34,13 @@ def generate_temporary_password():
     return "".join(chars)
 
 
+@sensitive_variables()
 def provision_account(*, username, role, email, created_by):
     """Create an account with a one-time temporary password (BL-01 D-02, SEC-06).
 
     Returns (user, temporary_password). The password is not stored in readable form.
     """
+    require_account_admin(created_by)
     temporary_password = generate_temporary_password()
     with transaction.atomic():
         user = User.objects.create_user(
@@ -55,10 +60,17 @@ def provision_account(*, username, role, email, created_by):
     return user, temporary_password
 
 
-def reset_password(*, user, reset_by):
+@sensitive_variables()
+def reset_password(*, user, reset_by, temporary_only=False):
     """Admin reset: new temporary password, forced change at next login, lockout cleared."""
+    require_account_admin(reset_by)
     temporary_password = generate_temporary_password()
     with transaction.atomic():
+        user = User.objects.select_for_update().get(pk=user.pk)
+        if temporary_only and (not user.must_change_password or not user.is_active):
+            raise ValidationError(
+                "Login details can only be resent for an active temporary-password account."
+            )
         user.set_password(temporary_password)
         user.must_change_password = True
         user.failed_login_count = 0

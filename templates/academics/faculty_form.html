@@ -4,7 +4,7 @@
 <div class="row"><div class="col-lg-7">
   <h1 class="h3">{% if creating %}Add faculty{% else %}Edit {{ member.faculty_id }}{% endif %}</h1>
   {% if creating %}
-    <p>A login and a one-time temporary password will be created. The faculty ID is the username.</p>
+    <p>Login details will be emailed to the faculty member's own address. The faculty ID is the username.</p>
   {% else %}
     <p>Faculty IDs are login identifiers and cannot be changed here.</p>
   {% endif %}
