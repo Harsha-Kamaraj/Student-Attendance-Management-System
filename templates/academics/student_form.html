@@ -4,7 +4,7 @@
 <div class="row"><div class="col-lg-7">
   <h1 class="h3">{% if creating %}Add student{% else %}Edit {{ student.roll_number }}{% endif %}</h1>
   {% if creating %}
-    <p>An account and a one-time temporary password will be created. Create classes/sections first.</p>
+    <p>An account will be created and login details emailed to the student's own address. Create classes/sections first.</p>
   {% else %}
     <p>Roll numbers are login identifiers and cannot be changed here. Course enrollments are managed separately.</p>
   {% endif %}

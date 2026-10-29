@@ -1,9 +1,9 @@
 """BL-08 / UC-03: faculty management."""
 
 import datetime
-import html
 
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.accounts.models import Role, User
@@ -38,6 +38,7 @@ class FacultyTestBase(TestCase):
         return self.client.post(reverse("faculty_create"), values | data)
 
 
+@override_settings(SITE_URL="https://attendance.example.edu")
 class CreateAndViewTests(FacultyTestBase):
     def test_admin_adds_faculty_with_login_and_temporary_password(self):
         # UT_03_1, AC 1, BL-01 D-02
@@ -47,16 +48,18 @@ class CreateAndViewTests(FacultyTestBase):
         self.assertEqual(member.user.username, "F010")
         self.assertEqual(member.user.role, Role.FACULTY)
         self.assertTrue(member.user.must_change_password)
-        raw = response.content.decode().split('data-testid="temporary-password">')[1].split("<")[0]
-        self.assertTrue(member.user.check_password(html.unescape(raw)))
+        raw = mail.outbox[-1].body.split("Temporary password: ")[1].splitlines()[0]
+        self.assertTrue(member.user.check_password(raw))
+        self.assertNotContains(response, raw)
+        self.assertContains(response, "Login details sent to")
         self.assertIn("no-store", response["Cache-Control"])
         self.assertTrue(AuditEntry.objects.filter(action="faculty.create").exists())
 
     def test_new_faculty_can_log_in_and_is_forced_to_change_password(self):
-        response = self.create()
-        raw = response.content.decode().split('data-testid="temporary-password">')[1].split("<")[0]
+        self.create()
+        raw = mail.outbox[-1].body.split("Temporary password: ")[1].splitlines()[0]
         self.client.logout()
-        login = self.client.post(reverse("login"), {"username": "f010", "password": html.unescape(raw)})
+        login = self.client.post(reverse("login"), {"username": "f010", "password": raw})
         self.assertRedirects(login, reverse("dashboard"), fetch_redirect_response=False)
         self.assertRedirects(self.client.get(reverse("dashboard")), reverse("password_change"))
 

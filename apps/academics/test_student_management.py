@@ -2,7 +2,8 @@
 
 from datetime import date
 
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from apps.accounts.models import Role, User
@@ -46,14 +47,18 @@ class StudentManagementTests(TestCase):
             **updates,
         }
 
+    @override_settings(SITE_URL="https://attendance.example.edu")
     def test_admin_creates_student_and_login_atomically(self):
         self.client.force_login(self.admin)
         response = self.client.post(reverse("student_create"), self.form_data())
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'data-testid="temporary-password"')
+        self.assertNotContains(response, 'data-testid="temporary-password"')
+        self.assertContains(response, "Login details sent to s***@example.edu")
         student = Student.objects.get(roll_number="21CS002")
         self.assertEqual(student.user.username, "21CS002")
         self.assertTrue(student.user.must_change_password)
+        temporary = mail.outbox[-1].body.split("Temporary password: ")[1].splitlines()[0]
+        self.assertTrue(student.user.check_password(temporary))
         self.assertEqual(student.home_section, self.section_b)
         self.assertIn("no-store", response["Cache-Control"])
         self.assertTrue(AuditEntry.objects.filter(action="student.create").exists())

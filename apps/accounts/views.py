@@ -2,9 +2,11 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_variables
 from django.views.decorators.http import require_POST
 
 from apps.academics.models import Enrollment, Faculty, Section, Student, TeachingAssignment
@@ -12,6 +14,7 @@ from apps.attendance.calculations import attendance_shortage_statistics, student
 from apps.attendance.models import AttendanceSession, AttendanceThreshold
 from apps.audit import services as audit
 
+from .credentials import delivery_context
 from .decorators import role_required
 from .forms import AccountCreateForm, ChangePasswordForm, LoginForm
 from .models import Role, User
@@ -123,6 +126,7 @@ def account_list(request):
 
 @never_cache
 @requires("accounts.manage")
+@sensitive_variables()
 def account_create(request):
     form = AccountCreateForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -144,11 +148,43 @@ def account_create(request):
 @never_cache
 @require_POST
 @requires("accounts.manage")
+@sensitive_variables()
 def account_reset_password(request, pk):
     user = get_object_or_404(User, pk=pk)
     temporary_password = reset_password(user=user, reset_by=request.user)
     return render(
         request,
         "accounts/temporary_password.html",
-        {"account": user, "temporary_password": temporary_password, "created": False},
+        {
+            "account": user,
+            "created": False,
+            **delivery_context(
+                user=user, temporary_password=temporary_password, actor=request.user, purpose="reset"
+            ),
+        },
+    )
+
+
+@never_cache
+@require_POST
+@requires("accounts.manage")
+@sensitive_variables()
+def account_resend_credentials(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    try:
+        temporary_password = reset_password(user=user, reset_by=request.user, temporary_only=True)
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+        return redirect("account_list")
+    return render(
+        request,
+        "accounts/temporary_password.html",
+        {
+            "account": user,
+            "created": False,
+            "resent": True,
+            **delivery_context(
+                user=user, temporary_password=temporary_password, actor=request.user, purpose="resend"
+            ),
+        },
     )

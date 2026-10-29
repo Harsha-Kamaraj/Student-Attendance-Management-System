@@ -7,6 +7,7 @@
     <h1 class="h3 mb-0">Accounts</h1>
     <a class="btn btn-primary" href="{% url 'account_create' %}">Create Admin account</a>
   </div>
+  <p class="text-body-secondary">Resending login details generates a new temporary password; earlier passwords stop working.</p>
   <div class="table-responsive">
     <table class="table table-sm align-middle">
       <thead>
@@ -29,6 +30,12 @@
                   {% csrf_token %}
                   <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">Reset password</button>
                 </form>
+                {% if account.must_change_password and account.is_active %}
+                  <form method="post" action="{% url 'account_resend_credentials' account.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Resend login details</button>
+                  </form>
+                {% endif %}
                 {% if account.otp_confirmed %}
                   <a class="btn btn-sm btn-outline-secondary text-nowrap" href="{% url 'account_reset_otp' account.pk %}">Reset OTP</a>
                 {% endif %}
