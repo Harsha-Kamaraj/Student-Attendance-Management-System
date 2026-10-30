@@ -1,0 +1,19 @@
+{
+  "month": "2026-10",
+  "timezone": "Asia/Kolkata",
+  "business_hours": "08:00\u201318:00 Monday\u2013Saturday",
+  "target_percent": 99,
+  "interval_seconds": 60,
+  "eligible_seconds": 972000.0,
+  "announced_maintenance_seconds": 0.0,
+  "observed_up_seconds": 0.0,
+  "observed_down_seconds": 0.0,
+  "unobserved_seconds": 972000.0,
+  "coverage_percent": 0.0,
+  "observed_availability_percent": null,
+  "fully_observed_month": false,
+  "ignored_future_samples": 0,
+  "status": "pending",
+  "measured_at": "2026-10-29T13:31:12.722493+00:00",
+  "method": "Scheduled-slot sampling; gaps are unknown, never assumed uptime."
+}

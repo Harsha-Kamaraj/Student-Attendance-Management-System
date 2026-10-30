@@ -13,6 +13,7 @@ __pycache__/
 
 # Tools
 .ruff_cache/
+/artifacts/
 
 # Editors and operating systems
 .DS_Store

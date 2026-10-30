@@ -16,9 +16,17 @@ class RestoreMaintenanceMiddleware:
 
     def __call__(self, request):
         try:
-            restore = request.method == "POST" and resolve(request.path_info).url_name == "backup_restore"
+            route = resolve(request.path_info).url_name
+            restore = request.method == "POST" and route == "backup_restore"
         except Resolver404:
+            route = None
             restore = False
+        # Readiness owns its database gate and must run before session/authentication
+        # middleware can load a stale cookie from an unavailable database.
+        if route == "health":
+            from config.health import health
+
+            return health(request)
         if restore:
             return self.get_response(request)
         try:

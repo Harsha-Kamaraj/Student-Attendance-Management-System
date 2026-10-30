@@ -85,8 +85,12 @@ class BackupTests(TestCase):
         token = path.read_bytes()
         self.assertNotIn(b"RECOVERY_STU", token)
         self.assertNotIn(PASSWORD.encode(), token)
-        self.assertEqual(os.stat(path).st_mode & 0o777, 0o600)
-        self.assertEqual(os.stat(self.root).st_mode & 0o777, 0o700)
+        if os.name == "nt":
+            storage._windows_storage().validate_directory(self.root)
+            os.close(storage._windows_storage().open_read(path))
+        else:
+            self.assertEqual(os.stat(path).st_mode & 0o777, 0o600)
+            self.assertEqual(os.stat(self.root).st_mode & 0o777, 0o700)
         self.assertEqual(backup.checksum, storage.checksum(token))
         payload = storage.decrypt(token)
         self.assertEqual(payload["tables"]["attendance_attendancerecord"][0]["status"], "P")
@@ -128,7 +132,12 @@ class BackupTests(TestCase):
         with override_settings(BACKUP_DIRECTORY=Path(__file__).resolve().parents[2] / "static" / "backup"):
             with self.assertRaises(BackupError):
                 self.backup()
-        self.root.symlink_to(self.root.parent, target_is_directory=True)
+        try:
+            self.root.symlink_to(self.root.parent, target_is_directory=True)
+        except OSError as error:
+            if os.name == "nt" and getattr(error, "winerror", None) == 1314:
+                self.skipTest("Creating a symbolic link requires Windows Developer Mode or privilege.")
+            raise
         with self.assertRaises(BackupError):
             self.backup()
 

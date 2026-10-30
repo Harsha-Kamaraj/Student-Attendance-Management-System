@@ -1,0 +1,81 @@
+name: BL-29 and BL-31 verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "50-user request rounds (30 or more for the full sampling plan)"
+        type: number
+        default: 30
+        required: true
+      repeats:
+        description: "60-student submission and semester-report repetitions (1-6)"
+        type: number
+        default: 3
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: verification_bl29_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SECRET_KEY: verification-ci-only-not-production
+      DEBUG: "False"
+      ALLOWED_HOSTS: testserver,localhost,127.0.0.1
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/verification_bl29_ci
+      EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+      SITE_URL: https://attendance.invalid
+      ROUNDS: ${{ inputs.rounds }}
+      REPEATS: ${{ inputs.repeats }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install exact application and test dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Static and schema checks
+        run: |
+          ruff check .
+          ruff format --check .
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+      - name: Full integration, security and regression suite
+        env:
+          VERIFICATION_RESULTS: artifacts/tests.json
+        run: python manage.py test --noinput --testrunner verification.test_runner.Runner
+      - name: Declare targets before loading the capacity dataset
+        run: python -m verification.performance plan --out artifacts/plan.json --rounds "$ROUNDS" --repeats "$REPEATS"
+      - name: Migrate and load isolated synthetic capacity dataset
+        run: |
+          python manage.py migrate --noinput
+          python -m verification.performance seed --plan artifacts/plan.json --out artifacts/seed.json
+      - name: Measure 50 users, 60-student submissions and semester reports
+        run: python -m verification.performance run --plan artifacts/plan.json --seed artifacts/seed.json --out artifacts/performance.json
+      - name: Preserve measured evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bl29-bl31-verification
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 30
