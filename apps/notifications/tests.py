@@ -11,6 +11,7 @@ from unittest import mock
 from django.core import mail
 from django.core.exceptions import PermissionDenied
 from django.core.management import call_command
+from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +28,7 @@ from .models import Notification, ShortageFlag, WeeklyShortageEmail
 from .services import (
     evaluate_students,
     is_below,
+    send_notification_emails,
     send_weekly_faculty_emails,
     shortage_list_for,
     students_below,
@@ -130,6 +132,19 @@ class DetectionTests(Fixture):
 
 
 class StudentNotificationTests(Fixture):
+    def test_batch_is_rolled_back_without_delivering_any_email(self):
+        self.history(self.s1, self.a101, 1, 4)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            with self.assertRaisesMessage(RuntimeError, "rollback"), transaction.atomic():
+                notes = evaluate_students([self.s1.pk])
+                self.assertEqual(len(notes), 1)
+                self.assertIsNotNone(notes[0].pk)
+                raise RuntimeError("rollback")
+        self.assertEqual(callbacks, [])
+        self.assertFalse(Notification.objects.exists())
+        self.assertFalse(ShortageFlag.objects.exists())
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_st_10_1_equal_is_silent_then_one_drop_one_notification_and_email(self):
         self.history(self.s1, self.a101, 75, 99)
         self.mark(self.a101, S001=A)  # 75/100 = 75.00%: equal, not flagged
@@ -267,6 +282,64 @@ class StudentNotificationTests(Fixture):
             )
         self.assertFalse(Notification.objects.exists())
         self.assertEqual(len(mail.outbox), 0)
+
+
+class BatchDeliveryTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        users = User.objects.bulk_create(
+            [
+                User(
+                    username=f"BATCH{number:03}",
+                    role=Role.STUDENT,
+                    email=f"student{number}@example.test",
+                    password="!unusable-batch-fixture",
+                )
+                for number in range(60)
+            ]
+        )
+        cls.notes = Notification.objects.bulk_create(
+            [
+                Notification(
+                    recipient=user, title="Low attendance", body=f"Private message for {user.username}"
+                )
+                for user in users
+            ]
+        )
+
+    def test_sixty_private_emails_require_one_recipient_query(self):
+        with self.assertNumQueries(1):
+            sent = send_notification_emails([note.pk for note in self.notes])
+        self.assertEqual(sent, 60)
+        self.assertEqual(len(mail.outbox), 60)
+        expected = {note.recipient.email: note.body for note in self.notes}
+        for message in mail.outbox:
+            self.assertEqual(len(message.to), 1)
+            self.assertEqual(message.cc, [])
+            self.assertEqual(message.bcc, [])
+            self.assertEqual(message.body, expected[message.to[0]])
+
+    def test_failed_recipient_does_not_prevent_remaining_deliveries(self):
+        from django.core.mail import send_mail
+
+        def fail_one(subject, body, sender, recipients):
+            if recipients == ["student0@example.test"]:
+                raise SMTPException("Synthetic failure")
+            return send_mail(subject, body, sender, recipients)
+
+        with mock.patch("apps.notifications.services.send_mail", side_effect=fail_one):
+            self.assertEqual(send_notification_emails([note.pk for note in self.notes]), 59)
+        self.assertEqual(len(mail.outbox), 59)
+        self.assertEqual(AuditEntry.objects.filter(action="notification.email_failed").count(), 1)
+
+    def test_deleted_notifications_are_not_sent_and_current_address_is_used(self):
+        note = self.notes[0]
+        deleted_pk = self.notes[1].pk
+        Notification.objects.filter(pk=deleted_pk).delete()
+        User.objects.filter(pk=note.recipient_id).update(email="updated@example.test")
+        with self.assertNumQueries(1):
+            self.assertEqual(send_notification_emails([note.pk, deleted_pk]), 1)
+        self.assertEqual(mail.outbox[0].to, ["updated@example.test"])
 
 
 class NotificationPageTests(Fixture):

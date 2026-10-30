@@ -11,6 +11,7 @@ from threading import Barrier
 
 from .performance import (
     VerificationError,
+    check_seed_manifest,
     database_guard,
     environment_details,
     latency_statistics,
@@ -160,8 +161,7 @@ def run_benchmark(plan, seed, *, output_path, phase="full"):
     from apps.attendance.models import AttendanceSession
 
     database = database_guard(settings.DATABASES["default"])
-    if seed.get("database_name") != database or seed.get("dataset") != plan["dataset"]:
-        raise VerificationError("Seed manifest and declared dataset/database do not match.")
+    check_seed_manifest(plan, seed, database)
     baseline = actual_counts()
     for key in (
         "students",
@@ -341,7 +341,7 @@ def run_benchmark(plan, seed, *, output_path, phase="full"):
                 "failed"
                 if any(value is False for value in checks.values())
                 else "partial_verification"
-                if phase != "full"
+                if phase != "full" or not plan["full_sampling_plan"]
                 else "performance_passed_availability_pending"
             ),
             "latency": {"common": common_stats, "mark_60": mark_stats, "semester_report": semester_stats},
