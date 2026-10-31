@@ -1,6 +1,6 @@
 # BL-29 / BL-31 verification follow-up
 
-This follow-up reviews merged PR #50 (`577489b`) and verifies the changes at `27b5329`.
+This follow-up reviews merged PR #50 (`577489b`) and verifies the changes at `daebfc1`, including main `60cdba8` (PR #52).
 The retained JSON records actual execution timestamps and source fingerprints. All records, accounts,
 emails and backups used for verification are synthetic and isolated from `attendance_dev`.
 
@@ -38,13 +38,13 @@ process, 50 synchronized threads, real Django middleware, persisted OTP-verified
 Email callbacks run synchronously with the in-memory mail backend. No other verification workload
 ran during the timed baseline or final benchmark.
 
-| Check | Baseline `577489b` | Final `27b5329` | Required target / result |
+| Check | Baseline `577489b` | Final `daebfc1` | Required target / result |
 | --- | --- | --- | --- |
 | Common requests within 2 s | 1,500/1,500 | 1,500/1,500 | At least 95%; passed |
-| Common p95 | 0.220 s | 0.190 s | Below 2 s |
-| Common maximum | 0.265 s | 0.213 s | Recorded |
-| Slowest 60-student submission | 0.306 s | 0.301 s | Each of three at most 3 s; passed |
-| Slowest semester export | 0.200 s | 0.195 s | Each of three at most 10 s; passed |
+| Common p95 | 0.220 s | 0.186 s | Below 2 s |
+| Common maximum | 0.265 s | 0.212 s | Recorded |
+| Slowest 60-student submission | 0.306 s | 0.286 s | Each of three at most 3 s; passed |
+| Slowest semester export | 0.200 s | 0.156 s | Each of three at most 10 s; passed |
 | Functional requests | 1,800/1,800 | 1,800/1,800 | No failures; passed |
 | Peak in-flight requests | 50 | 50 | 50 authenticated users; passed |
 
@@ -62,9 +62,25 @@ Evidence: [baseline](evidence/followup/baseline-performance.json),
 The profiles cover the query optimization at `5c956ae`; the final benchmark includes the report fix.
 Profiles are sequential diagnostics, not concurrent acceptance timings.
 
+### Independent GitHub verification
+
+[Workflow run 41153839750](https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/actions/runs/41153839750)
+**passed** on Ubuntu at `27b5329`, before the subsequent PR #52 navigation merge. It independently ran
+the complete suite (**473 passed, 3 Windows-only skips**) and all four performance checks against
+PostgreSQL 18.6, Python 3.14.9 and four logical CPUs. All 1,800 requests succeeded; common p95 was
+**0.901 s**, the slowest marking submission **1.285 s**, and the slowest semester export **0.964 s**.
+All 1,500 common requests met the two-second target. These remain in-process test-stack measurements,
+not external HTTP/deployment or Windows measurements.
+
+The downloaded [plan](evidence/followup/github-plan.json), [seed](evidence/followup/github-seed.json),
+[per-request results](evidence/followup/github-performance.json) and
+[per-test results](evidence/followup/github-tests.json) are retained locally so the evidence survives
+GitHub artifact expiry. The integrated Mac run above includes the later navigation merge. The latest
+standard CI checks are attached to [PR #53](https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/pull/53).
+
 ## Integration, security and regression
 
-The final suite discovered **476 tests: 473 passed, 0 failures/errors, 3 skipped**, in **81.211 seconds**.
+The final suite discovered **476 tests: 473 passed, 0 failures/errors, 3 skipped**, in **80.635 seconds**.
 It used the application's default password hashers. The three skips require native Windows ACL/junction
 APIs; the existing PR #50 evidence records their earlier Windows execution. No new Windows execution
 is claimed here. Ruff lint/format, Django system checks, migration drift, dependency consistency and

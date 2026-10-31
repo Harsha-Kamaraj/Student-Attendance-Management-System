@@ -74,12 +74,12 @@
   "measurement_boundary": "Django Client in-process request stack, one process and 50 threads, authenticated persisted sessions with OTP already verified, CSRF enforced; excludes network, proxy, browser assets, password/OTP setup and external SMTP",
   "mail_backend": "django.core.mail.backends.locmem.EmailBackend",
   "availability": "Monthly 99% institutional-hours availability requires dated monitoring evidence; local benchmark does not establish it",
-  "plan_id": "17de27a0-ebbe-4f45-a949-fc04dfbbebea",
-  "declared_at": "2026-10-31T01:07:41.106317+00:00",
+  "plan_id": "6d3be941-c52a-48d1-b515-1af563884782",
+  "declared_at": "2026-10-31T01:13:39.630669+00:00",
   "source_revision": {
-    "head": "27b5329592a9a5343a270cb6f041f0788d54e79a",
+    "head": "daebfc104614c5dbd140c10f62c154e21fa80ab8",
     "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "application_tree_sha256": "f812b6060a79d71d9fe0884d3c3651bb50ec2f5f8b1d8195fe36c02c6f41f122"
+    "application_tree_sha256": "bdc7df231cce73c8a5e046c09a9f76891f416e47214c2b735e31c50dd356f320"
   },
   "full_sampling_plan": true
 }
