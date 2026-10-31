@@ -1,0 +1,151 @@
+/*
+ * Maroon + Sand colour theme, layered over the local Bootstrap 5.3 stylesheet.
+ *
+ * Present (green), Absent (red) and below-threshold (amber) keep their own
+ * colours so attendance status never depends on the brand colour. All text
+ * pairs meet WCAG AA (4.5:1) contrast.
+ */
+
+:root {
+  --sam-nav: #3b0d11;
+  --sam-primary: #8b1e2d;
+  --sam-primary-hover: #701824;
+  --sam-primary-active: #5e141e;
+  --sam-accent: #a16207;
+  --sam-page: #faf7f2;
+  --sam-soft: #f2e8da;
+  --sam-border: #e7ddd0;
+  --sam-text: #2b2220;
+  --sam-present: #15803d;
+  --sam-absent: #b91c1c;
+  --sam-warn: #b45309;
+
+  --bs-primary: var(--sam-primary);
+  --bs-primary-rgb: 139, 30, 45;
+  --bs-primary-text-emphasis: var(--sam-primary-active);
+  --bs-primary-bg-subtle: #f6e3e5;
+  --bs-primary-border-subtle: #e3b7bd;
+  --bs-success: var(--sam-present);
+  --bs-success-rgb: 21, 128, 61;
+  --bs-danger: var(--sam-absent);
+  --bs-danger-rgb: 185, 28, 28;
+  --bs-body-color: var(--sam-text);
+  --bs-body-color-rgb: 43, 34, 32;
+  --bs-border-color: var(--sam-border);
+  --bs-link-color: var(--sam-primary);
+  --bs-link-color-rgb: 139, 30, 45;
+  --bs-link-hover-color: var(--sam-primary-hover);
+  --bs-link-hover-color-rgb: 112, 24, 36;
+  --bs-focus-ring-color: rgba(139, 30, 45, 0.25);
+}
+
+/* Sand page behind white cards, tables, lists and inputs. */
+body {
+  background-color: var(--sam-page);
+  accent-color: var(--sam-primary);
+}
+
+.app-navbar {
+  background-color: var(--sam-nav);
+  border-bottom: 3px solid var(--sam-accent);
+}
+
+.app-navbar .navbar-brand {
+  font-weight: 600;
+}
+
+.app-navbar .navbar-text {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Buttons */
+.btn-primary {
+  --bs-btn-bg: var(--sam-primary);
+  --bs-btn-border-color: var(--sam-primary);
+  --bs-btn-hover-bg: var(--sam-primary-hover);
+  --bs-btn-hover-border-color: var(--sam-primary-hover);
+  --bs-btn-active-bg: var(--sam-primary-active);
+  --bs-btn-active-border-color: var(--sam-primary-active);
+  --bs-btn-disabled-bg: var(--sam-primary);
+  --bs-btn-disabled-border-color: var(--sam-primary);
+  --bs-btn-focus-shadow-rgb: 139, 30, 45;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sam-primary);
+  --bs-btn-border-color: var(--sam-primary);
+  --bs-btn-hover-bg: var(--sam-primary);
+  --bs-btn-hover-border-color: var(--sam-primary);
+  --bs-btn-active-bg: var(--sam-primary-hover);
+  --bs-btn-active-border-color: var(--sam-primary-hover);
+  --bs-btn-disabled-color: var(--sam-primary);
+  --bs-btn-disabled-border-color: var(--sam-primary);
+  --bs-btn-focus-shadow-rgb: 139, 30, 45;
+}
+
+.btn-success {
+  --bs-btn-bg: var(--sam-present);
+  --bs-btn-border-color: var(--sam-present);
+  --bs-btn-hover-bg: #116632;
+  --bs-btn-hover-border-color: #116632;
+  --bs-btn-active-bg: #0e5229;
+  --bs-btn-active-border-color: #0e5229;
+  --bs-btn-focus-shadow-rgb: 21, 128, 61;
+}
+
+.btn-danger {
+  --bs-btn-bg: var(--sam-absent);
+  --bs-btn-border-color: var(--sam-absent);
+  --bs-btn-hover-bg: #991818;
+  --bs-btn-hover-border-color: #991818;
+  --bs-btn-active-bg: #7f1414;
+  --bs-btn-active-border-color: #7f1414;
+  --bs-btn-focus-shadow-rgb: 185, 28, 28;
+}
+
+.btn-outline-danger {
+  --bs-btn-color: var(--sam-absent);
+  --bs-btn-border-color: var(--sam-absent);
+  --bs-btn-hover-bg: var(--sam-absent);
+  --bs-btn-hover-border-color: var(--sam-absent);
+  --bs-btn-active-bg: #991818;
+  --bs-btn-active-border-color: #991818;
+  --bs-btn-focus-shadow-rgb: 185, 28, 28;
+}
+
+/* Form focus and checked states follow the brand colour. */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: #c7808a;
+  box-shadow: 0 0 0 0.25rem var(--bs-focus-ring-color);
+}
+
+.form-check-input:checked {
+  background-color: var(--sam-primary);
+  border-color: var(--sam-primary);
+}
+
+/* Cards and lists sit on the sand page as white panels. */
+.card {
+  border-color: var(--sam-border);
+  box-shadow: 0 1px 2px rgba(43, 34, 32, 0.05), 0 2px 8px rgba(43, 34, 32, 0.04);
+}
+
+.list-group {
+  --bs-list-group-border-color: var(--sam-border);
+  --bs-list-group-action-hover-bg: #fbf5ee;
+  --bs-list-group-action-active-bg: var(--sam-soft);
+}
+
+/* Tables */
+.table {
+  --bs-table-striped-bg: rgba(161, 98, 7, 0.05);
+  --bs-table-hover-bg: rgba(139, 30, 45, 0.05);
+  border-color: var(--sam-border);
+}
+
+.table > thead th {
+  background-color: var(--sam-soft);
+  color: var(--sam-text);
+}
