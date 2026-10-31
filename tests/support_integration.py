@@ -49,6 +49,10 @@ def pdf_content_streams(response):
 
 
 class IntegrationSupport:
+    def report_params(self, **filters):
+        today = timezone.localdate().isoformat()
+        return {"start_date": today, "end_date": today, "all_records": "on", **filters}
+
     def committed_callbacks(self):
         # TestCase holds an outer transaction; TransactionTestCase commits naturally.
         if hasattr(self, "captureOnCommitCallbacks"):

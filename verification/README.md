@@ -64,6 +64,6 @@ The agreed window is 08:00–18:00 Asia/Kolkata, Monday–Saturday, with a month
 
 See [the protocol](../Documents/Verification/BL-29_Protocol.md), [execution report](../Documents/Verification/BL-29-31_Results.md) and [defect retests](../Documents/Verification/BL-29-31_Defects.md).
 
-The [30 October follow-up](../Documents/Verification/BL-29-31_Followup_2026-10-30.md) records the code
+The [verification follow-up](../Documents/Verification/BL-29-31_Followup.md) records the code
 optimizations and local retest after PR #50. Deployment latency, the earlier Windows latency failure,
 and monthly uptime must not be inferred from a passing Mac benchmark.

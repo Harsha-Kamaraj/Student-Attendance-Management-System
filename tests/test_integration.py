@@ -121,7 +121,9 @@ class ProvisionedAttendanceJourneyTests(IntegrationSupport, TestCase):
         self.assertEqual(summary_page.context["summary"].overall.display, "3/4 (75.00%)")
         self.assertContains(summary_page, "2/3 (66.67%)")
         before = csv_rows(
-            faculty_client.get(reverse("attendance_report_csv"), {"assignment": assignments[0].pk})
+            faculty_client.get(
+                reverse("attendance_report_csv"), self.report_params(assignment=assignments[0].pk)
+            )
         )
         self.assertEqual(
             (before[0]["Classes Held"], before[0]["Present"], before[0]["Attendance Percentage"]),
@@ -135,13 +137,13 @@ class ProvisionedAttendanceJourneyTests(IntegrationSupport, TestCase):
         self.assertEqual(corrected.context["summary"].overall.display, "4/4 (100.00%)")
         self.assertEqual(dashboard.context["summary"].overall.display, "4/4 (100.00%)")
         self.assertFalse(dashboard.context["overall_below_threshold"])
-        report = faculty_client.get(reverse("attendance_report"))
+        report = faculty_client.get(reverse("attendance_report"), self.report_params())
         self.assertEqual(report.context["overall"].display, "4/4 (100.00%)")
-        csv_response = admin_client.get(reverse("attendance_report_csv"))
+        csv_response = admin_client.get(reverse("attendance_report_csv"), self.report_params())
         rows = csv_rows(csv_response)
         self.assertEqual({row["Subject Code"] for row in rows}, {"JCS101", "JMA101"})
         self.assertTrue(all(row["Attendance Percentage"] == "100.00" for row in rows))
-        pdf_response = admin_client.get(reverse("attendance_report_pdf"))
+        pdf_response = admin_client.get(reverse("attendance_report_pdf"), self.report_params())
         self.assertEqual(pdf_response["Content-Type"], "application/pdf")
         self.assertTrue(pdf_response.content.startswith(b"%PDF-"))
         self.assertTrue(pdf_response.content.rstrip().endswith(b"%%EOF"))
@@ -283,7 +285,7 @@ class AttendanceAlertAndReportIntegrationTests(IntegrationSupport, TestCase):
         faculty = self.sign_in(self.faculty_user)
         for period, status in enumerate((P, A, P), start=1):
             self.mark(faculty, self.assignment, period, {first.pk: status, second.pk: P})
-        params = {"assignment": self.assignment.pk, "student": first.pk, "status": A}
+        params = self.report_params(assignment=self.assignment.pk, student=first.pk, status=A)
         report = faculty.get(reverse("attendance_report"), params)
         self.assertEqual(report.context["overall"].display, "2/3 (66.67%)")
         rows = csv_rows(faculty.get(reverse("attendance_report_csv"), params))
@@ -311,7 +313,9 @@ class AttendanceAlertAndReportIntegrationTests(IntegrationSupport, TestCase):
         for name in ("=1+1", "+SUM(1,2)", "-1+2", "@SUM(1,2)", "\t=1+1", "\r=1+1", "  =1+1"):
             with self.subTest(name=name):
                 Student.objects.filter(pk=first.pk).update(full_name=name)
-                rows = csv_rows(faculty.get(reverse("attendance_report_csv"), {"student": first.pk}))
+                rows = csv_rows(
+                    faculty.get(reverse("attendance_report_csv"), self.report_params(student=first.pk))
+                )
                 self.assertEqual(rows[0]["Student Name"], "'" + name)
                 self.assertEqual(
                     (rows[0]["Classes Held"], rows[0]["Present"], rows[0]["Attendance Percentage"]),
@@ -319,7 +323,7 @@ class AttendanceAlertAndReportIntegrationTests(IntegrationSupport, TestCase):
                 )
         Section.objects.filter(pk=self.section.pk).update(class_name="=CLASS()", name="@SECTION")
         Subject.objects.filter(pk=self.subject.pk).update(code="+CODE", name="-SUBJECT")
-        row = csv_rows(faculty.get(reverse("attendance_report_csv"), {"student": first.pk}))[0]
+        row = csv_rows(faculty.get(reverse("attendance_report_csv"), self.report_params(student=first.pk)))[0]
         self.assertEqual(
             (row["Class"], row["Section"], row["Subject Code"], row["Subject Name"]),
             ("'=CLASS()", "'@SECTION", "'+CODE", "'-SUBJECT"),
@@ -333,7 +337,7 @@ class AttendanceAlertAndReportIntegrationTests(IntegrationSupport, TestCase):
         for format_name in ("csv", "pdf"):
             with self.subTest(format=format_name):
                 url = reverse(f"attendance_report_{format_name}")
-                response = faculty.get(url, {"assignment": self.assignment.pk})
+                response = faculty.get(url, self.report_params(assignment=self.assignment.pk))
                 self.assertEqual(response.status_code, 200)
                 self.assertIn("no-store", response["Cache-Control"])
                 self.assertIn("attachment", response["Content-Disposition"])
@@ -347,9 +351,8 @@ class AttendanceAlertAndReportIntegrationTests(IntegrationSupport, TestCase):
                 self.assertEqual(invalid.status_code, 400)
                 self.assertTrue(invalid["Content-Type"].startswith("text/html"))
                 self.assertNotIn("Content-Disposition", invalid)
-                empty = faculty.get(
-                    url, {"start_date": (timezone.localdate() + timedelta(days=1)).isoformat()}
-                )
+                tomorrow = (timezone.localdate() + timedelta(days=1)).isoformat()
+                empty = faculty.get(url, self.report_params(start_date=tomorrow, end_date=tomorrow))
                 self.assertEqual(empty.status_code, 200)
                 self.assertTrue(empty["Content-Type"].startswith("text/html"))
                 self.assertNotIn("Content-Disposition", empty)
@@ -442,7 +445,7 @@ class AuthorizationIntegrationTests(IntegrationSupport, TestCase):
                 action="reports.export", actor_username=self.faculty_user.username
             ).exists()
         )
-        response = faculty.get(reverse("attendance_report_csv"))
+        response = faculty.get(reverse("attendance_report_csv"), self.report_params())
         self.assertEqual(
             {row["Roll Number"] for row in csv_rows(response)},
             {self.students[0].roll_number, self.students[1].roll_number},

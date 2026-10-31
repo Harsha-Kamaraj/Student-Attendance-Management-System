@@ -24,22 +24,33 @@ from .performance_data import actual_counts
 
 def _prepare_personas():
     from django.test import Client
+    from django.utils import timezone
 
     from apps.accounts.models import User
     from apps.accounts.otp import SESSION_VERIFIED
+
+    from .performance import teaching_days_before
 
     names = ["BL29ADMIN"] + [f"BL29F{i:03}" for i in range(10)] + [f"BL29S{i:04}" for i in range(39)]
     users = {user.username: user for user in User.objects.filter(username__in=names)}
     if len(users) != 50:
         raise VerificationError("The planned 50 distinct synthetic users do not exist.")
     personas = []
+    today = timezone.localdate()
+    report_query = {
+        "start_date": teaching_days_before(today)[0].isoformat(),
+        "end_date": today.isoformat(),
+        "all_records": "on",
+    }
     for name in names:
         client = Client(enforce_csrf_checks=True, raise_request_exception=False)
         client.force_login(users[name])
         session = client.session
         session[SESSION_VERIFIED] = True
         session.save()
-        personas.append({"client": client, "name": name, "role": users[name].role})
+        personas.append(
+            {"client": client, "name": name, "role": users[name].role, "report_query": report_query}
+        )
     return personas
 
 
@@ -124,7 +135,13 @@ def _wave(personas, round_index, phase, origin, *, foreground=None):
             # Background traffic also exercises faculty history and report views.
             if foreground is not None and persona["role"] == "FACULTY":
                 route = "attendance_history" if round_index % 2 == 0 else "attendance_report"
-            return _request(persona, route, phase, origin)
+            return _request(
+                persona,
+                route,
+                phase,
+                origin,
+                query=persona["report_query"] if route == "attendance_report" else None,
+            )
         finally:
             connections.close_all()
 
@@ -293,6 +310,7 @@ def run_benchmark(plan, seed, *, output_path, phase="full"):
                 "index": foreground_index,
                 "route": "attendance_report_csv",
                 "query": {
+                    "section": assignment.section_id,
                     "start_date": seed["calendar"]["semester_start"],
                     "end_date": seed["calendar"]["semester_end"],
                 },

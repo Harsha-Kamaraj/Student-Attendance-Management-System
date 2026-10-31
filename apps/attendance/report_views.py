@@ -24,7 +24,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from apps.academics.models import Student, TeachingAssignment
+from apps.academics.models import Section, Student, TeachingAssignment
 from apps.accounts.permissions import (
     get_visible_or_deny,
     requires,
@@ -42,17 +42,17 @@ class AttendanceReportFilterForm(forms.Form):
     """Form for filtering attendance reports."""
 
     start_date = forms.DateField(
-        required=False,
+        required=True,
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
     )
     end_date = forms.DateField(
-        required=False,
+        required=True,
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
     )
     assignment = forms.ModelChoiceField(
         queryset=None,
         required=False,
-        empty_label="All authorized classes and subjects",
+        empty_label="Choose a class and subject",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     status = forms.ChoiceField(
@@ -65,8 +65,21 @@ class AttendanceReportFilterForm(forms.Form):
     student = forms.ModelChoiceField(
         queryset=Student.objects.none(),
         required=False,
-        empty_label="All authorized students",
+        empty_label="Choose a student",
         widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    section = forms.ModelChoiceField(
+        queryset=Section.objects.none(),
+        required=False,
+        label="Class / section",
+        empty_label="Choose a class / section",
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    all_records = forms.BooleanField(
+        required=False,
+        label="All my authorized classes",
+        help_text="Select this, or choose a student, class / section, or class and subject.",
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
     )
 
     def __init__(self, *args, user, **kwargs):
@@ -75,6 +88,9 @@ class AttendanceReportFilterForm(forms.Form):
         self.fields["student"].queryset = Student.objects.filter(
             Q(pk__in=recorded) | Q(pk__in=visible_students(user).values("pk"))
         ).order_by("roll_number")
+        self.fields["section"].queryset = Section.objects.filter(
+            pk__in=visible_assignments(user).values("section_id")
+        ).order_by("class_name", "name")
 
         self.fields["assignment"].queryset = (
             visible_assignments(user)
@@ -98,6 +114,8 @@ class AttendanceReportFilterForm(forms.Form):
                 "End date must be on or after the start date.",
             )
 
+        if not any(cleaned.get(field) for field in ("student", "section", "assignment", "all_records")):
+            raise forms.ValidationError("Choose a report scope: a student, class, or all authorized classes.")
         return cleaned
 
 
@@ -105,7 +123,7 @@ def _filtered_records(request, form):
     """Return records and sessions restricted to authorized assignments."""
 
     assignments = visible_assignments(request.user)
-    for field, model in (("assignment", TeachingAssignment), ("student", Student)):
+    for field, model in (("assignment", TeachingAssignment), ("student", Student), ("section", Section)):
         value = form.data.get(field, "")
         if (
             isinstance(value, str)
@@ -124,10 +142,10 @@ def _filtered_records(request, form):
 
     sessions = AttendanceSession.objects.filter(assignment__in=assignments)
 
-    if request.GET:
-        if not form.is_valid():
-            return records.none(), sessions.none()
+    if not form.is_valid():
+        return records.none(), sessions.none()
 
+    if form.is_bound:
         filters = form.cleaned_data
 
         if filters["start_date"]:
@@ -151,6 +169,8 @@ def _filtered_records(request, form):
             records = records.filter(Exists(matching))
         if filters["student"]:
             records = records.filter(student=filters["student"])
+        if filters["section"]:
+            records = records.filter(session__assignment__section=filters["section"])
 
     return records, sessions.filter(pk__in=records.values("session_id"))
 
@@ -217,12 +237,16 @@ def _row_totals(rows):
 @never_cache
 @requires("reports.generate")
 @require_GET
-def attendance_report(request):
+def attendance_report(request, *, filter_form=None):
     """Display an attendance report for authorized users."""
 
-    form = AttendanceReportFilterForm(
-        request.GET or None,
-        user=request.user,
+    form = (
+        filter_form
+        if filter_form is not None
+        else AttendanceReportFilterForm(
+            request.GET or None,
+            user=request.user,
+        )
     )
 
     records, sessions = _filtered_records(request, form)
@@ -239,6 +263,7 @@ def attendance_report(request):
 
     context = {
         "form": form,
+        "report_ready": form.is_valid(),
         "page_obj": page,
         "overall": overall,
         "present_count": totals["present"],
@@ -268,7 +293,7 @@ def _csv_label(value):
 
 def _export_fallback(request, form, records):
     if (form.is_bound and not form.is_valid()) or not records.exists():
-        return attendance_report(request)
+        return attendance_report(request, filter_form=form)
     return None
 
 
@@ -288,7 +313,7 @@ def attendance_report_csv(request):
     """Export matching authorized attendance report rows to CSV."""
 
     form = AttendanceReportFilterForm(
-        request.GET or None,
+        request.GET,
         user=request.user,
     )
 
@@ -349,7 +374,7 @@ def attendance_report_pdf(request):
     """Export matching authorized attendance report rows to PDF."""
 
     form = AttendanceReportFilterForm(
-        request.GET or None,
+        request.GET,
         user=request.user,
     )
 
