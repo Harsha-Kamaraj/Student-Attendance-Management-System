@@ -1,35 +1,42 @@
-{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+
   <title>{% block title %}Student Attendance Management System{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
   <style>
-    /* Keep the navbar usable on narrow screens. */
-    .navbar-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      flex-wrap: wrap;
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
-    .navbar-actions {
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+    body {
+      min-width: 320px;
+      overflow-x: hidden;
     }
 
-    .navbar-user {
-      min-width: 0;
+    img,
+    svg {
       max-width: 100%;
+      height: auto;
+    }
+
+    table {
+      width: 100%;
+    }
+
+    .table-responsive {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .navbar-text,
+    a {
       overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .navbar-brand {
@@ -62,23 +69,32 @@
         align-items: flex-start;
       }
 
-      .navbar-actions {
-        justify-content: flex-start;
+      .navbar-brand {
+        margin-bottom: 0.5rem;
+      }
+
+      .navbar .d-flex {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.5rem !important;
+      }
+
+      .navbar-text {
         width: 100%;
       }
 
-      .navbar-user {
-        font-size: 0.875rem;
+      main {
+        overflow-x: hidden;
       }
 
-      main.container {
-        padding-left: 1rem;
-        padding-right: 1rem;
+      .card,
+      .alert {
+        max-width: 100%;
       }
     }
   </style>
-  <script src="{% static 'js/tables.js' %}" defer></script>
 </head>
+
 <body>
   <nav class="navbar navbar-dark app-navbar">
     <div class="container navbar-content">
@@ -87,42 +103,40 @@
       </a>
 
       {% if user.is_authenticated %}
-        <div class="navbar-actions">
-          {% if unread_notification_count is not None %}
-            <a class="btn btn-outline-light btn-sm" href="{% url 'notification_list' %}">
-              Notifications
-              {% if unread_notification_count %}
-                <span class="badge text-bg-danger">{{ unread_notification_count }}</span>
-              {% endif %}
-            </a>
-          {% endif %}
+        <div class="d-flex align-items-center gap-3">
 
-          <span class="navbar-text navbar-user">
-            {{ user.username }} · {{ user.get_role_display }}
+          <span class="navbar-text text-white-50">
+            {{ user.get_role_display|upper }} · {{ user.username }}
           </span>
 
-          <form action="{% url 'logout' %}" method="post" class="m-0">
+          <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
+
             <button type="submit" class="btn btn-outline-light btn-sm">
               Log out
             </button>
           </form>
+
         </div>
       {% endif %}
+
     </div>
   </nav>
 
   <main class="container py-4">
-    {% for message in messages %}
-      <div
-        class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}"
-        role="alert"
-      >
-        {{ message }}
-      </div>
-    {% endfor %}
 
-    {% block content %}{% endblock %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+
   </main>
+
 </body>
 </html>
