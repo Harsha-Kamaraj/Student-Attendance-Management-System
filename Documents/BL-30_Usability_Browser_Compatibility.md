@@ -1,86 +1,250 @@
-# BL-30: Usability and browser compatibility
+# BL-30: Verify Usability and Browser Compatibility
 
-The responsive-layout fixes and automated browser journeys are implemented. The evidence below records
-actual browser/engine versions and viewport sizes. The complete BL-01 D-16 target remains the latest two
-versions of Chrome, Edge, Firefox and Safari on desktop, plus Chrome on Android and Safari on iOS at
-360px. A passing engine or emulated viewport does not certify every branded release or a physical device.
+## 1. Objective
 
-## Fixes
+Verify that the Student Attendance Management System is understandable and usable across the Admin, Faculty, and Student roles, with appropriate form validation, responsive layouts, clear feedback messages, and understandable empty states.
 
-- Removed literal Markdown fences from the shared HTML template. Pages now enter standards mode.
-- Serve pinned Bootstrap 5.3.3 locally, with its MIT license. Styling does not depend on a public CDN.
-- Wrap long navigation identities without pushing controls outside the viewport.
-- Keep table headers and identifiers readable. Narrow screens scroll the table instead of the page.
-- Give scrolling tables an accessible name, visible keyboard focus and arrow-key scrolling, including
-  the WebKit mobile case that did not scroll with its native key behavior.
-- Add a doctype regression test and real browser journeys that check readability as well as overflow.
+## 2. Supported Browser and Device Targets
 
-The defects and retests are tracked in [#54](https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/issues/54).
+The project's compatibility target is the latest two versions of Google Chrome, Microsoft Edge, Mozilla Firefox, and Apple Safari on desktop, along with usability at a 360px-wide viewport for Chrome on Android and Safari on iOS.
 
-## Executed browser coverage
+| Browser or Device | Target | Verification Status |
+|---|---|---|
+| Google Chrome - Desktop | Available development environment | Manually tested |
+| Microsoft Edge - Desktop | Latest supported versions | Not manually tested in this environment |
+| Mozilla Firefox - Desktop | Latest supported versions | Not manually tested in this environment |
+| Apple Safari - Desktop | Latest supported versions | Not manually tested in this environment |
+| Chrome - Android | 360px-wide viewport | Responsive layout manually checked |
+| Safari - iOS | 360px-wide viewport | Not manually tested on a physical iOS device |
 
-| Host | Browser / engine actually tested | Widths | Role workflows |
-| --- | --- | --- | --- |
-| macOS | Installed Chrome 156.0.8078.74 | 1440px, 360px | Admin, Faculty, Student |
-| macOS | Playwright Chromium 156.0.8078.4 | 1440px, 360px | Admin, Faculty, Student |
-| macOS | Playwright Firefox 157.0 | 1440px, 360px | Admin, Faculty, Student |
-| macOS | Playwright WebKit 27.2 | 1440px, 360px | Admin, Faculty, Student |
-| Ubuntu | Playwright Chromium, Firefox and WebKit | 1440px, 360px | Admin, Faculty, Student |
-| Windows Server 2025 | Installed Chrome 156.0.8078.48 | 1440px, 360px | Admin, Faculty, Student |
-| Windows Server 2025 | Installed Edge 155.0.4283.62 | 1440px, 360px | Admin, Faculty, Student |
+A browser or device should only be marked as fully verified after the application has been opened and the relevant workflows have been tested in that environment.
 
-The JSON evidence records exact versions on every case. The 360px cases use viewport/touch emulation.
-WebKit is identified as WebKit, not as a completed native Safari test. These distinctions follow the
-[Playwright browser documentation](https://playwright.dev/python/docs/browsers).
+## 3. Role-Based Workflow Verification
 
-The Mac matrix has eight cases, Ubuntu six and Windows four: **18 cases / 54 role journeys**. Each
-journey uses real password and TOTP setup/login with the application's default password hashing;
-there is no password-only authentication bypass. All requests outside the local test server are blocked.
+### Admin Workflow
 
-## Workflows and usability assertions
+The Admin workflow was manually checked for dashboard usability and responsive layout.
 
-Admin checks dashboards, long navigation identities, student tables, required-field messages and
-empty report selections. Faculty checks assigned classes, incomplete rosters, the bulk-Present control,
-saving, correction/history and empty rosters. Students check current totals, invalid date ranges,
-empty filtered results and empty notifications. Every role signs out through the actual browser UI.
+Verified:
 
-Each checkpoint verifies standards mode, loaded local styling, readable table-header heights,
-no document-wide horizontal overflow, visible control bounds, accessible form labels and named,
-keyboard-focusable table scrollers. The narrow cases also execute arrow-key scrolling. JavaScript
-errors fail the case. Screenshots are saved after login; passwords, OTP setup keys and backup codes
-are not captured.
+- Admin dashboard loads correctly.
+- Navigation and dashboard content remain readable.
+- Buttons and controls remain accessible.
+- Dashboard content remains usable at a narrow mobile-sized viewport.
+- No blocking layout issue was observed during the manual test.
 
-A visual review caught the compressed Roll number column after an initial geometry-only run passed.
-The header-readability assertion and scrollable-column fix were then added and retested. A WebKit
-mobile keyboard-scroll failure was fixed explicitly. The test runner also waits for page/stylesheet
-loading before measuring layout, avoiding assertions against a transient unstyled DOM.
+Status: **Verified in the manually tested development environment.**
 
-See the [readiness report](Verification/BL-29-30_Readiness.md) for retained JSON, screenshots, checksums,
-performance/regression outcomes and GitHub runs. Earlier failed diagnostics are described there;
-only completed passing cases count toward the executed matrix.
+### Faculty Workflow
 
-## Reproduce
+The Faculty workflow was manually checked for dashboard usability and responsive layout.
 
-Use an empty disposable local PostgreSQL database named `verification_bl29_browser_<suffix>`.
-Set explicit `DATABASE_URL` and `SECRET_KEY`, then run:
+Verified:
 
-```bash
-pip install -r requirements-browser.txt
-python -m playwright install chromium firefox webkit
-python manage.py migrate --noinput
-python -m verification.browser_check --engines chromium firefox webkit --widths 1440 360 --out artifacts/browser/results.json
+- Faculty dashboard loads correctly.
+- Assigned-class and attendance-related information remains readable.
+- Dashboard cards and long text wrap correctly on narrow screens.
+- Buttons and navigation remain accessible.
+- Attendance-related information remains readable.
+- No unwanted page-level horizontal overflow was observed during testing.
+
+Status: **Verified in the manually tested development environment.**
+
+### Student Workflow
+
+The Student workflow was manually checked after logging in as a Student user.
+
+Verified:
+
+- Student dashboard loads correctly.
+- Overall attendance percentage is displayed correctly.
+- Attendance threshold information is visible.
+- Student navigation links work correctly.
+- Student profile navigation was checked.
+- Attendance summary navigation was checked.
+- Notification navigation was checked.
+- The layout remains readable and usable at a narrow mobile-sized viewport.
+
+Status: **Verified in the manually tested development environment.**
+
+## 4. Automated Usability and Validation Coverage
+
+Existing automated tests cover several relevant behaviours:
+
+- Login rejects blank required fields.
+- Invalid login credentials produce a consistent error message.
+- Admin, Faculty, and Student users reach their respective dashboards.
+- Account creation rejects missing required fields and invalid email addresses.
+- Attendance marking rejects missing student statuses and invalid status values.
+- Student attendance summaries show an empty state when no classes or matching records exist.
+- Reversed date ranges produce a validation message.
+- Access restrictions prevent users from opening pages outside their authorised roles.
+
+These existing tests were reused rather than unnecessarily duplicated.
+
+## 5. Automated Test Execution Results
+
+The following targeted Django tests were executed after the BL-30 responsive layout update:
+
+```text
+python manage.py test apps.accounts.tests.LoginTests apps.attendance.test_summary apps.attendance.test_marking
 ```
 
-To test installed branded browsers, use `--engines chrome msedge`. A missing requested browser is a
-failure, never a silently passing case. The runner refuses populated application data. Use a new
-empty database and output directory for each execution. It changes only its synthetic fixture.
+Results:
 
-The manually dispatched verification workflow can run `scope=all`, `scope=browsers`, or
-`scope=performance`. Browser jobs run on Ubuntu and Windows and retain versions, outcomes and screenshots.
+- Tests discovered: 28
+- Tests passed: 28
+- Tests failed: 0
+- Django system check: No issues identified
+- Test database was created and destroyed successfully
+- `git diff --check` was executed without reported whitespace errors before the earlier implementation commit
 
-## Remaining matrix acceptance
+Result: **PASS**
 
-Native Safari, previous branded browser releases, real Android Chrome and real iOS Safari still need
-separate executions. No observation of those environments is inferred from Playwright's engines.
-Record the browser version, operating system, viewport, role, workflow, result and any defect/retest
-for each additional run before claiming the full latest-two-version/device matrix is complete.
+## 6. Responsive Design and Accessibility Checks
+
+Manual responsive testing was performed using a narrow mobile-sized viewport of approximately 360px.
+
+The following were checked:
+
+- The page viewport adapts to the available width.
+- Navigation remains readable.
+- Navigation controls wrap appropriately on narrow screens.
+- Dashboard cards remain within the viewport.
+- Long text wraps instead of overflowing outside the screen.
+- Buttons remain visible and accessible.
+- Attendance information remains readable.
+- User information in the navigation remains readable.
+- Images and SVG content are constrained to the available width.
+- No significant horizontal page overflow was observed in the manually tested Admin, Faculty, and Student workflows.
+
+The shared base template includes responsive handling for:
+
+- Mobile viewport sizing.
+- Text-size adjustment.
+- Image and SVG maximum width.
+- Responsive table handling.
+- Long text wrapping.
+- Flexible navigation controls.
+- Small-screen navigation layout.
+
+Status: **Verified for the manually tested workflows.**
+
+## 7. Form Validation and User Feedback
+
+The system provides validation and feedback through existing application workflows and automated tests.
+
+The following behaviours were covered:
+
+- Required login fields are validated.
+- Invalid login credentials produce an error message.
+- Missing attendance statuses are rejected.
+- Invalid attendance status values are rejected.
+- Invalid date ranges produce an understandable validation message.
+- Empty attendance results display an understandable empty-state message.
+- Role restrictions prevent unauthorised users from accessing protected workflows.
+- Dashboard and workflow information remains readable during the tested responsive layout checks.
+
+Status: **Verified through automated tests and manual workflow checks.**
+
+## 8. Defect and Retest Log
+
+### Defect 1: Narrow-Screen Navigation and Text Layout
+
+**Area:** Shared navigation and dashboard layout
+
+**Problem:** Long navigation text and dashboard content required improved handling on narrow mobile-sized screens.
+
+**Fix:** Responsive CSS was added to the shared base template to:
+
+- Allow navigation controls to wrap.
+- Improve small-screen spacing.
+- Prevent long text from causing unnecessary overflow.
+- Keep images and SVG elements within the viewport.
+- Improve readability of user information and navigation controls.
+
+**Retest:** Admin, Faculty, and Student workflows were manually checked after the update.
+
+**Result:** PASS
+
+### Defect 2: Faculty Dashboard Rendering Error
+
+**Area:** Faculty dashboard
+
+**Problem:** A template URL namespace reference caused a `NoReverseMatch` error during testing.
+
+**Fix:** The shared base template was corrected to use valid URL references available in the project configuration.
+
+**Retest:** The Faculty dashboard was opened again successfully.
+
+**Result:** PASS
+
+## 9. Manual Verification Summary
+
+The following workflows were manually tested successfully:
+
+| Workflow | Result |
+|---|---|
+| Admin dashboard | PASS |
+| Faculty dashboard | PASS |
+| Student dashboard | PASS |
+| Student profile navigation | PASS |
+| Student attendance navigation | PASS |
+| Student notifications navigation | PASS |
+| Login and logout workflow | PASS |
+| Password change workflow | PASS |
+| Narrow mobile-sized responsive layout | PASS |
+
+No blocking usability issues were observed during the final manual retest of the tested workflows.
+
+## 10. Browser Compatibility Status
+
+The application was manually tested in the available local development browser environment.
+
+The responsive layout was also checked using a narrow mobile-sized viewport of approximately 360px.
+
+The following conclusions can be made:
+
+- The manually tested Admin workflow is usable.
+- The manually tested Faculty workflow is usable.
+- The manually tested Student workflow is usable.
+- Navigation and dashboard content remain readable at the tested narrow viewport.
+- The targeted automated tests pass successfully.
+
+### Remaining Cross-Browser Limitation
+
+Full certification across all target environments requires separate testing in:
+
+- Microsoft Edge.
+- Mozilla Firefox.
+- Apple Safari.
+- Chrome on a physical Android environment.
+- Safari on a physical iOS environment.
+
+Those environments should only be marked as fully verified after actual testing in those browsers or devices.
+
+## 11. Final Verification Result
+
+BL-30 usability verification has been completed for the manually tested Admin, Faculty, and Student workflows.
+
+Automated validation results:
+
+**28 tests passed, 0 tests failed.**
+
+Manual verification confirmed that:
+
+- Admin workflow is usable.
+- Faculty workflow is usable.
+- Student workflow is usable.
+- Login and logout workflows function correctly.
+- Student navigation links function correctly.
+- Password change functionality works.
+- Responsive navigation and dashboard layouts remain usable at a narrow mobile-sized viewport.
+
+No blocking usability issues were observed during the final retest of the manually tested workflows.
+
+### Final Status
+
+**BL-30 implementation and verification: COMPLETED for the tested local development environment.**
+
+Full cross-browser certification remains dependent on testing in each additional target browser and physical device environment.

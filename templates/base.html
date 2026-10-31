@@ -4,10 +4,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
   <title>{% block title %}Student Attendance Management System{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
   <style>
+    /* Stop mobile browsers from enlarging text on rotation. */
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
     /* Keep the navbar usable on narrow screens. */
     .navbar-content {
       display: flex;
