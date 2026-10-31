@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Delete {{ section }} · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3 text-danger">Delete {{ section }}?</h1>
+{% if blocked %}
+  <div class="alert alert-warning">
+    {{ section }} cannot be deleted yet. It still has
+    {{ usage.home_students }} student(s) in this home section,
+    {{ usage.enrollments }} subject enrollment(s) and
+    {{ usage.sessions }} attendance session(s).
+    {% if usage.sessions %}Sections with attendance history are always kept.
+    {% else %}Move its students to another section and remove its enrollments first if it was created by mistake.{% endif %}
+  </div>
+  <a href="{% url 'section_detail' section.pk %}" class="btn btn-outline-secondary">Back</a>
+{% else %}
+  <div class="alert alert-danger">This permanently deletes the section and the subjects offered in it.</div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Confirm deletion</button>
+    <a href="{% url 'section_list' %}" class="btn btn-outline-secondary">Cancel</a>
+  </form>
+{% endif %}
+{% endblock %}

@@ -46,6 +46,60 @@ class SectionEnrollmentTests(TestCase):
         self.assertContains(response, "That section already exists")
         self.assertEqual(Section.objects.count(), 2)
 
+    def test_section_year_is_optional_and_part_of_the_name(self):
+        self.client.force_login(self.admin)
+        self.client.post(
+            reverse("section_create"), {"class_name": "B.Tech in CS 5th sem", "name": "k", "year": "2028"}
+        )
+        section = Section.objects.get(class_name="B.Tech in CS 5th sem", name="K")
+        self.assertEqual((section.year, str(section)), (2028, "B.Tech in CS 5th sem K (2028)"))
+        # The same dept, sem and section may exist for another batch year, but not twice without one.
+        self.client.post(
+            reverse("section_create"), {"class_name": "B.Tech in CS 5th sem", "name": "K", "year": "2029"}
+        )
+        self.client.post(reverse("section_create"), {"class_name": "B.Tech in CS 5th sem", "name": "K"})
+        response = self.client.post(
+            reverse("section_create"), {"class_name": "B.Tech in CS 5th sem", "name": "K"}
+        )
+        self.assertContains(response, "That section already exists")
+        self.assertEqual(Section.objects.filter(class_name="B.Tech in CS 5th sem").count(), 3)
+        response = self.client.post(
+            reverse("section_create"), {"class_name": "B.Tech in CS 5th sem", "name": "L", "year": "1999"}
+        )
+        self.assertContains(response, "Enter a year between 2000 and 2100")
+
+    def test_admin_edits_section_year(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse("section_edit", args=[self.section_a.pk]),
+            {"class_name": "B.Tech CSE Year 2", "name": "A", "year": "2028"},
+        )
+        self.assertRedirects(response, reverse("section_detail", args=[self.section_a.pk]))
+        self.section_a.refresh_from_db()
+        self.assertEqual(self.section_a.year, 2028)
+        self.assertTrue(AuditEntry.objects.filter(action="section.update").exists())
+
+    def test_unused_section_can_be_deleted_but_used_one_is_kept(self):
+        self.client.force_login(self.admin)
+        empty = Section.objects.create(class_name="Software Engineering", name="K")
+        TeachingAssignment.objects.create(section=empty, subject=self.subject)
+        response = self.client.post(reverse("section_delete", args=[empty.pk]))
+        self.assertRedirects(response, reverse("section_list"))
+        self.assertFalse(Section.objects.filter(pk=empty.pk).exists())
+        self.assertTrue(AuditEntry.objects.filter(action="section.delete").exists())
+
+        Enrollment.objects.create(student=self.student, assignment=self.assignment_a)
+        response = self.client.post(reverse("section_delete", args=[self.section_a.pk]))
+        self.assertContains(response, "cannot be deleted yet")
+        self.assertTrue(Section.objects.filter(pk=self.section_a.pk).exists())
+
+    def test_faculty_cannot_edit_or_delete_sections(self):
+        self.client.force_login(self.faculty)
+        for name in ("section_edit", "section_delete"):
+            with self.subTest(name=name):
+                self.assertEqual(self.client.post(reverse(name, args=[self.section_b.pk])).status_code, 403)
+        self.assertTrue(Section.objects.filter(pk=self.section_b.pk).exists())
+
     def test_admin_enrolls_student_and_sees_roster(self):
         self.client.force_login(self.admin)
         response = self.client.post(

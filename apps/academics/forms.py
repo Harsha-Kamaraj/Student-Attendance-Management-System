@@ -13,7 +13,7 @@ from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssi
 
 class StudentFieldsForm(BootstrapMixin, forms.Form):
     full_name = forms.CharField(max_length=150, label="Full name")
-    class_name = forms.ChoiceField(label="Class", choices=[])
+    class_name = forms.ChoiceField(label="Dept and sem", choices=[])
     home_section = forms.ModelChoiceField(
         queryset=Section.objects.all(), label="Section", empty_label="Select a section"
     )
@@ -22,8 +22,8 @@ class StudentFieldsForm(BootstrapMixin, forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         names = Section.objects.order_by("class_name").values_list("class_name", flat=True).distinct()
-        self.fields["class_name"].choices = [("", "Select a class"), *((name, name) for name in names)]
-        self.fields["home_section"].queryset = Section.objects.order_by("class_name", "name")
+        self.fields["class_name"].choices = [("", "Select a dept and sem"), *((name, name) for name in names)]
+        self.fields["home_section"].queryset = Section.objects.order_by("class_name", "name", "year")
 
     def clean_full_name(self):
         value = self.cleaned_data["full_name"].strip()
@@ -36,7 +36,7 @@ class StudentFieldsForm(BootstrapMixin, forms.Form):
         section = cleaned.get("home_section")
         class_name = cleaned.get("class_name")
         if section is not None and class_name and section.class_name != class_name:
-            self.add_error("home_section", "The section must belong to the selected class.")
+            self.add_error("home_section", "The section must belong to the selected dept and sem.")
         return cleaned
 
 
@@ -62,13 +62,19 @@ class StudentUpdateForm(StudentFieldsForm):
 class SectionForm(BootstrapMixin, forms.ModelForm):
     class Meta:
         model = Section
-        fields = ["class_name", "name"]
+        fields = ["class_name", "name", "year"]
 
     def clean_class_name(self):
         value = self.cleaned_data["class_name"].strip()
         if not value:
-            raise ValidationError("Class is required.")
+            raise ValidationError("Dept and sem is required.")
         return value
+
+    def clean_year(self):
+        year = self.cleaned_data.get("year")
+        if year is not None and not 2000 <= year <= 2100:
+            raise ValidationError("Enter a year between 2000 and 2100, or leave it blank.")
+        return year
 
     def clean_name(self):
         value = self.cleaned_data["name"].strip().upper()
@@ -78,13 +84,15 @@ class SectionForm(BootstrapMixin, forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        class_name, name = cleaned.get("class_name"), cleaned.get("name")
+        class_name, name, year = cleaned.get("class_name"), cleaned.get("name"), cleaned.get("year")
         if (
             class_name
             and name
-            and Section.objects.filter(class_name__iexact=class_name, name__iexact=name).exists()
+            and Section.objects.filter(class_name__iexact=class_name, name__iexact=name, year=year)
+            .exclude(pk=self.instance.pk)
+            .exists()
         ):
-            raise ValidationError("That section already exists in this class.")
+            raise ValidationError("That section already exists for this dept, sem and year.")
         return cleaned
 
 

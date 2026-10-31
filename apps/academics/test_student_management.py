@@ -81,7 +81,7 @@ class StudentManagementTests(TestCase):
         other = Section.objects.create(class_name="B.Tech ECE Year 2", name="A")
         self.client.force_login(self.admin)
         response = self.client.post(reverse("student_create"), self.form_data(home_section=str(other.pk)))
-        self.assertContains(response, "section must belong to the selected class")
+        self.assertContains(response, "section must belong to the selected dept and sem")
         self.assertFalse(Student.objects.filter(roll_number="21CS002").exists())
 
     def test_admin_can_edit_student_and_changes_persist(self):

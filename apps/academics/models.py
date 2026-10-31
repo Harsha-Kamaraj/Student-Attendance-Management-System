@@ -44,16 +44,25 @@ class Subject(models.Model):
 
 
 class Section(models.Model):
-    class_name = models.CharField(max_length=100, help_text="For example: B.Tech CSE Year 2")
-    name = models.CharField(max_length=20, help_text="For example: A")
+    class_name = models.CharField(
+        max_length=100, verbose_name="Dept and sem", help_text="For example: B.Tech in CS 5th sem"
+    )
+    name = models.CharField(max_length=20, verbose_name="Section", help_text="For example: K")
+    year = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name="Year", help_text="Batch year, for example: 2028. Optional."
+    )
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["class_name", "name"], name="section_unique_name"),
+            # A blank year counts as one value, so "CS 5th sem K" without a year stays unique.
+            models.UniqueConstraint(
+                fields=["class_name", "name", "year"], name="section_unique_name", nulls_distinct=False
+            ),
         ]
 
     def __str__(self):
-        return f"{self.class_name} {self.name}"
+        label = f"{self.class_name} {self.name}"
+        return f"{label} ({self.year})" if self.year else label
 
 
 class TeachingAssignment(models.Model):

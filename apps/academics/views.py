@@ -199,7 +199,7 @@ def student_delete(request, pk):
 @never_cache
 @requires("sections.manage")
 def section_list(request):
-    sections = Section.objects.order_by("class_name", "name")
+    sections = Section.objects.order_by("class_name", "name", "year")
     return render(request, "academics/section_list.html", {"sections": sections})
 
 
@@ -216,14 +216,74 @@ def section_create(request):
                     actor=request.user,
                     target_type="Section",
                     target_id=section.pk,
-                    new_value={"class_name": section.class_name, "name": section.name},
+                    new_value={"class_name": section.class_name, "name": section.name, "year": section.year},
                 )
         except IntegrityError:
-            form.add_error(None, "That section already exists in this class.")
+            form.add_error(None, "That section already exists for this dept, sem and year.")
         else:
             messages.success(request, "Class section created.")
             return redirect("section_detail", pk=section.pk)
     return render(request, "academics/section_form.html", {"form": form})
+
+
+@never_cache
+@requires("sections.manage")
+def section_edit(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    previous = {"class_name": section.class_name, "name": section.name, "year": section.year}
+    form = SectionForm(request.POST or None, instance=section)
+    if request.method == "POST" and form.is_valid():
+        try:
+            with transaction.atomic():
+                section = form.save()
+                audit.record(
+                    "section.update",
+                    actor=request.user,
+                    target_type="Section",
+                    target_id=section.pk,
+                    old_value=previous,
+                    new_value={"class_name": section.class_name, "name": section.name, "year": section.year},
+                )
+        except IntegrityError:
+            form.add_error(None, "That section already exists for this dept, sem and year.")
+        else:
+            messages.success(request, "Section updated.")
+            return redirect("section_detail", pk=section.pk)
+    return render(request, "academics/section_form.html", {"form": form, "section": section})
+
+
+def _section_usage(section):
+    """What still depends on a section; any of these blocks deleting it."""
+    return {
+        "home_students": section.home_students.count(),
+        "enrollments": Enrollment.objects.filter(assignment__section=section).count(),
+        "sessions": AttendanceSession.objects.filter(assignment__section=section).count(),
+    }
+
+
+@never_cache
+@requires("sections.manage")
+def section_delete(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    usage = _section_usage(section)
+    blocked = any(usage.values())
+    if request.method == "POST" and not blocked:
+        with transaction.atomic():
+            audit.record(
+                "section.delete",
+                actor=request.user,
+                target_type="Section",
+                target_id=section.pk,
+                old_value={"class_name": section.class_name, "name": section.name, "year": section.year},
+            )
+            section.delete()
+        messages.success(request, f"Section {section} deleted.")
+        return redirect("section_list")
+    return render(
+        request,
+        "academics/section_confirm_delete.html",
+        {"section": section, "usage": usage, "blocked": blocked},
+    )
 
 
 @never_cache

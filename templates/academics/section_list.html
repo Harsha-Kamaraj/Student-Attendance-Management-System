@@ -5,13 +5,17 @@
   <h1 class="h3 mb-0">Classes and sections</h1>
   <a class="btn btn-primary" href="{% url 'section_create' %}">Create section</a>
 </div>
-<div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0"><table class="table table-striped">
-  <thead><tr><th>Class</th><th>Section</th><th>Roster</th></tr></thead>
+<div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0"><table class="table table-striped align-middle">
+  <thead><tr><th>Dept and sem</th><th>Section</th><th>Year</th><th>Actions</th></tr></thead>
   <tbody>
     {% for section in sections %}
-      <tr><td>{{ section.class_name }}</td><td>{{ section.name }}</td>
-      <td><a href="{% url 'section_detail' section.pk %}">Open roster</a></td></tr>
-    {% empty %}<tr><td colspan="3">No sections. Create one to begin.</td></tr>{% endfor %}
+      <tr><td>{{ section.class_name }}</td><td>{{ section.name }}</td><td>{{ section.year|default:"—" }}</td>
+      <td class="text-nowrap">
+        <a href="{% url 'section_detail' section.pk %}">Open roster</a> ·
+        <a href="{% url 'section_edit' section.pk %}">Edit</a> ·
+        <a class="text-danger" href="{% url 'section_delete' section.pk %}">Delete</a>
+      </td></tr>
+    {% empty %}<tr><td colspan="4">No sections. Create one to begin.</td></tr>{% endfor %}
   </tbody>
 </table></div>
 {% endblock %}
