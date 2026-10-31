@@ -187,7 +187,8 @@ class LockoutTests(TestCase):
         self.student.refresh_from_db()
         self.assertIsNotNone(self.student.locked_until)
         response = self.login(PASSWORD)
-        self.assertContains(response, GENERIC_ERROR)
+        # After 5 failures in this browser the page explains the 15-minute pause instead.
+        self.assertContains(response, "paused for 15 minutes")
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_four_failures_do_not_lock(self):

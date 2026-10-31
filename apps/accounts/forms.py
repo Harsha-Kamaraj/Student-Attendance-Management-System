@@ -1,3 +1,5 @@
+import time
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.core.exceptions import ValidationError
@@ -17,15 +19,46 @@ class LoginForm(BootstrapMixin, AuthenticationForm):
     error_messages = {
         "invalid_login": "Invalid username or password.",  # SEC-02: same message for every failure
         "inactive": "This account is deactivated. Contact the Admin.",  # UC-01 3b
+        "too_many": (
+            "Too many failed attempts. Login for this account may now be paused for 15 minutes. "
+            "Wait and try again, or use Forgot password to ask the Admin for a reset."
+        ),
     }
+    # Counted per browser session, not per account, so the warning appears the same way whether
+    # or not the username exists and never reveals which accounts are real (SEC-02, SEC-03).
+    FAILURES_KEY = "login_failure_times"
+    FAILURE_WINDOW_SECONDS = 15 * 60
+    FAILURE_LIMIT = 5
 
     def clean(self):
+        session = getattr(self.request, "session", None)
         try:
-            return super().clean()
+            cleaned = super().clean()
         except ValidationError:
             if getattr(self.request, "login_failure_reason", None) == "deactivated":
                 raise ValidationError(self.error_messages["inactive"], code="inactive") from None
+            if session is not None and self._record_failure(session) >= self.FAILURE_LIMIT:
+                raise ValidationError(self.error_messages["too_many"], code="too_many") from None
             raise
+        if session is not None:
+            session.pop(self.FAILURES_KEY, None)
+        return cleaned
+
+    def _record_failure(self, session):
+        now = time.time()
+        recent = [t for t in session.get(self.FAILURES_KEY, []) if now - t < self.FAILURE_WINDOW_SECONDS]
+        recent.append(now)
+        session[self.FAILURES_KEY] = recent
+        return len(recent)
+
+
+class ForgotPasswordForm(BootstrapMixin, forms.Form):
+    username = forms.CharField(
+        max_length=150,
+        label="Username",
+        help_text="Your roll number (students) or faculty ID (faculty).",
+        widget=forms.TextInput(attrs={"autocomplete": "username", "autofocus": True}),
+    )
 
 
 class AccountCreateForm(BootstrapMixin, forms.ModelForm):

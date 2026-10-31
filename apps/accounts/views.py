@@ -1,8 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth import views as auth_views
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_not_required, login_required
 from django.core.exceptions import ValidationError
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.cache import never_cache
@@ -16,10 +17,15 @@ from apps.audit import services as audit
 
 from .credentials import delivery_context
 from .decorators import role_required
-from .forms import AccountCreateForm, ChangePasswordForm, LoginForm
+from .forms import AccountCreateForm, ChangePasswordForm, ForgotPasswordForm, LoginForm
 from .models import Role, User
 from .permissions import requires
-from .services import provision_account, reset_password
+from .services import (
+    email_admins_about_reset_request,
+    provision_account,
+    request_password_reset,
+    reset_password,
+)
 
 
 class LoginView(auth_views.LoginView):
@@ -37,10 +43,36 @@ class PasswordChangeView(auth_views.PasswordChangeView):
         response = super().form_valid(form)
         user = self.request.user
         user.must_change_password = False
-        user.save(update_fields=["must_change_password"])
+        user.password_reset_requested_at = None
+        user.save(update_fields=["must_change_password", "password_reset_requested_at"])
         audit.record("password.change", actor=user, target_type="User", target_id=user.pk)
         messages.success(self.request, "Your password has been changed.")
         return response
+
+
+# Per browser session, so one visitor cannot flood the Admins with requests for many usernames.
+FORGOT_PASSWORD_SESSION_LIMIT = 5
+
+
+@login_not_required
+@never_cache
+def forgot_password(request):
+    """Ask the Admin to reset a forgotten password (BL-01: only the Admin resets passwords).
+
+    Always shows the same confirmation, so the page never reveals whether a username exists.
+    """
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    form = ForgotPasswordForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        count = request.session.get("reset_requests", 0)
+        request.session["reset_requests"] = count + 1
+        if count < FORGOT_PASSWORD_SESSION_LIMIT:
+            user = request_password_reset(form.cleaned_data["username"])
+            if user is not None:
+                email_admins_about_reset_request(user)
+        return render(request, "accounts/forgot_password_sent.html")
+    return render(request, "accounts/forgot_password.html", {"form": form})
 
 
 @never_cache
@@ -78,6 +110,7 @@ def dashboard_admin(request):
         "faculty_count": Faculty.objects.count(),
         "section_count": Section.objects.count(),
         "session_count": AttendanceSession.objects.count(),
+        "reset_request_count": User.objects.filter(password_reset_requested_at__isnull=False).count(),
         **stats,
     }
     return render(request, "dashboard/admin.html", context)
@@ -120,7 +153,8 @@ def dashboard_student(request):
 @never_cache
 @requires("accounts.manage")
 def account_list(request):
-    users = User.objects.order_by("role", "username")
+    # Pending reset requests first, so the Admin sees them straight away.
+    users = User.objects.order_by(F("password_reset_requested_at").desc(nulls_last=True), "role", "username")
     return render(request, "accounts/account_list.html", {"users": users})
 
 

@@ -22,6 +22,9 @@
               {% if not account.is_active %}<span class="badge text-bg-secondary">Deactivated</span>
               {% elif account.must_change_password %}<span class="badge text-bg-warning">Temporary password</span>
               {% else %}<span class="badge text-bg-success">Active</span>{% endif %}
+              {% if account.password_reset_requested_at %}
+                <span class="badge text-bg-danger" title="Requested {{ account.password_reset_requested_at|date:'d M Y, H:i' }}">Reset requested</span>
+              {% endif %}
             </td>
             <td>{% if account.otp_confirmed %}Set up{% else %}<span class="text-body-secondary">Not set up</span>{% endif %}</td>
             <td class="text-end text-nowrap">

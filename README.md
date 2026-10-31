@@ -90,6 +90,19 @@ When upgrading an existing checkout, install `requirements-dev.txt` and run `pyt
 
 OTP regression checks: `python manage.py test apps.accounts.test_otp apps.accounts.test_otp_concurrency`. These enable OTP explicitly and cover the complete login flow, replay prevention, lockouts, recovery, CSRF, session invalidation, and concurrent requests against PostgreSQL. The test runner disables OTP for older tests that exercise other features with password-only test logins.
 
+## Forgot password and real email
+
+- **Forgot password?** on the login page lets a student, faculty member or Admin ask the Admin for a reset. Every other active Admin is emailed, the account shows **Reset requested** in **Accounts**, and the Admin dashboard counts waiting requests. The Admin then uses **Reset password**, which emails the user a new temporary password. The page gives the same reply for unknown usernames, repeat requests within 15 minutes send no extra email, and each request is audited.
+- After 5 failed logins in the same browser within 15 minutes, the login page says the account may be paused for 15 minutes (shown the same way for unknown usernames, SEC-02).
+
+**Sending real email (Gmail).** By default, development prints emails in the server terminal. To deliver them:
+
+1. On the Google account that will send the mail, turn on 2-Step Verification, then create an **App password** (Google Account → Security → App passwords).
+2. In your local `.env`, replace the email lines with the Gmail block shown in `.env.example`, using that address and the 16-character app password. Never commit `.env`.
+3. Restart the server and check delivery: `python manage.py sendtestemail you@example.com`.
+
+Login details, password resets, reset requests, emailed login codes and low-attendance alerts then go to real inboxes.
+
 ## Attendance percentages (BL-14)
 
 Students open **View my attendance percentages** from their dashboard (`/attendance/mine/`). Each subject shows attended/held counts and a percentage rounded half up to two decimals. Overall attendance pools the counts: `10/12 + 8/10 = 18/22 (81.82%)`. Subjects without recorded classes show **N/A – no classes yet**. Totals use current saved records and update automatically after new marks or valid corrections. See [`Documents/BL-14_Percentage_Calculation.md`](Documents/BL-14_Percentage_Calculation.md).

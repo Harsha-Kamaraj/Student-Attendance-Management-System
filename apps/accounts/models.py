@@ -34,6 +34,11 @@ class User(AbstractUser):
     locked_until = models.DateTimeField(
         null=True, blank=True, help_text="Login blocked until this time (SEC-03, SEC-32)."
     )
+    password_reset_requested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="The user asked the Admin for a password reset; cleared once the password changes.",
+    )
     # Two-factor login (BL-33, SEC-29 to SEC-32)
     otp_secret = models.CharField(
         max_length=64, blank=True, help_text="Authenticator app secret. Never shown after setup."

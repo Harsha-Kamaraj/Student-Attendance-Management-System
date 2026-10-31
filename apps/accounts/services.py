@@ -1,20 +1,27 @@
 """Account provisioning, password resets and login checks (BL-04)."""
 
+import logging
 import secrets
 from datetime import timedelta
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.debug import sensitive_variables
 
 from apps.audit import services as audit
 
 from .credentials import require_account_admin
-from .models import User
+from .models import Role, User
 
 MAX_FAILED_LOGINS = 5  # SEC-03
 LOCKOUT_DURATION = timedelta(minutes=15)  # SEC-03
+RESET_REQUEST_INTERVAL = timedelta(minutes=15)
+
+logger = logging.getLogger(__name__)
 TEMPORARY_PASSWORD_LENGTH = 12
 
 # Characters that are easy to tell apart when read aloud or copied by hand.
@@ -75,7 +82,16 @@ def reset_password(*, user, reset_by, temporary_only=False):
         user.must_change_password = True
         user.failed_login_count = 0
         user.locked_until = None
-        user.save(update_fields=["password", "must_change_password", "failed_login_count", "locked_until"])
+        user.password_reset_requested_at = None
+        user.save(
+            update_fields=[
+                "password",
+                "must_change_password",
+                "failed_login_count",
+                "locked_until",
+                "password_reset_requested_at",
+            ]
+        )
         audit.record("password.reset", actor=reset_by, target_type="User", target_id=user.pk)
     return temporary_password
 
@@ -126,3 +142,59 @@ def check_login(request, username, password):
             user.save(update_fields=["failed_login_count", "locked_until"])
         audit.record("login.success", actor=user, target_type="User", target_id=user.pk)
         return user
+
+
+def request_password_reset(username):
+    """Record a forgotten-password request for the Admins; there is no self-service reset (BL-01).
+
+    Returns the account to tell the Admins about, or None when nothing should be sent: unknown
+    or deactivated usernames, or a repeat request within 15 minutes. The caller always shows the
+    same reply, so the response never reveals whether an account exists (SEC-02).
+    """
+    username = User.normalize_username(username)
+    now = timezone.now()
+    with transaction.atomic():
+        user = User.objects.select_for_update().filter(username=username, is_active=True).first()
+        audit.record(
+            "password.reset_requested",
+            actor_username=username,
+            target_type="User",
+            target_id=user.pk if user else "",
+        )
+        if user is None:
+            return None
+        recent = user.password_reset_requested_at
+        if recent and now - recent < RESET_REQUEST_INTERVAL:
+            return None
+        user.password_reset_requested_at = now
+        user.save(update_fields=["password_reset_requested_at"])
+    return user
+
+
+def email_admins_about_reset_request(user):
+    """Email every other active Admin. Delivery failures are logged, never shown to the requester."""
+    admins = User.objects.filter(role=Role.ADMIN, is_active=True).exclude(pk=user.pk).exclude(email="")
+    link = f"{settings.SITE_URL.rstrip('/')}{reverse('account_list')}"
+    body = (
+        f"{user.username} ({user.get_role_display()}) has asked for a password reset.\n\n"
+        f"Open Accounts and choose Reset password next to {user.username}:\n{link}\n\n"
+        "A new temporary password is emailed to them automatically. "
+        "If you did not expect this request, you can ignore it."
+    )
+    sent = 0
+    for admin in admins:
+        try:
+            send_mail(
+                f"Password reset requested: {user.username}", body, settings.DEFAULT_FROM_EMAIL, [admin.email]
+            )
+        except Exception as exc:  # one failed delivery must not stop the others
+            logger.warning("Reset-request email to admin %s failed: %s", admin.pk, exc.__class__.__name__)
+            audit.record(
+                "password.reset_request_email_failed",
+                target_type="User",
+                target_id=admin.pk,
+                new_value={"error": exc.__class__.__name__},
+            )
+        else:
+            sent += 1
+    return sent

@@ -139,5 +139,14 @@
       {% endif %}
     {% endblock %}
   </main>
+  {% if request.method == "POST" %}
+    <script>
+      // This page answers a form submission. Rewriting the history entry as a plain visit means
+      // Refresh or Back reloads the page instead of asking to resubmit the form.
+      if (window.history.replaceState) {
+        window.history.replaceState(null, "", window.location.href);
+      }
+    </script>
+  {% endif %}
 </body>
 </html>
