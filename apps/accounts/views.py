@@ -3,7 +3,7 @@ from django.contrib.auth import logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_not_required, login_required
 from django.core.exceptions import ValidationError
-from django.db.models import F
+from django.db.models import Count, F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.cache import never_cache
@@ -48,6 +48,36 @@ class PasswordChangeView(auth_views.PasswordChangeView):
         audit.record("password.change", actor=user, target_type="User", target_id=user.pk)
         messages.success(self.request, "Your password has been changed.")
         return response
+
+
+@never_cache
+@login_required
+def my_profile(request):
+    """The signed-in user's own details, read-only; only the Admin edits accounts (BL-01)."""
+    user = request.user
+    context = {"account": user}
+    if user.role == Role.FACULTY:
+        faculty = Faculty.objects.filter(user=user).first()
+        context["faculty"] = faculty
+        context["classes"] = (
+            TeachingAssignment.objects.filter(faculty=faculty)
+            .select_related("section", "subject")
+            .annotate(student_count=Count("enrollments"))
+            .order_by("subject__code", "section__class_name", "section__name")
+            if faculty
+            else []
+        )
+    elif user.role == Role.STUDENT:
+        student = Student.objects.filter(user=user).select_related("home_section").first()
+        context["student"] = student
+        context["enrollments"] = (
+            Enrollment.objects.filter(student=student)
+            .select_related("assignment__section", "assignment__subject", "assignment__faculty")
+            .order_by("subject__code")
+            if student
+            else []
+        )
+    return render(request, "accounts/profile.html", context)
 
 
 # Per browser session, so one visitor cannot flood the Admins with requests for many usernames.

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}My profile · Student Attendance{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">My profile</h1>
+    <a class="btn btn-primary" href="{% url 'password_change' %}">Change password</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">Account</h2>
+        <div class="card-body">
+          <dl class="row mb-0">
+            {% if faculty %}
+              <dt class="col-sm-5">Name</dt><dd class="col-sm-7">{{ faculty.full_name }}</dd>
+            {% elif student %}
+              <dt class="col-sm-5">Name</dt><dd class="col-sm-7">{{ student.full_name }}</dd>
+            {% endif %}
+            <dt class="col-sm-5">Username</dt><dd class="col-sm-7"><code>{{ account.username }}</code></dd>
+            <dt class="col-sm-5">Role</dt><dd class="col-sm-7">{{ account.get_role_display }}</dd>
+            <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ account.email|default:"Not set" }}</dd>
+            <dt class="col-sm-5">Two-factor login</dt>
+            <dd class="col-sm-7">{% if account.otp_confirmed %}<span class="badge text-bg-success">Set up</span>{% else %}<span class="badge text-bg-secondary">Not set up</span>{% endif %}</dd>
+            <dt class="col-sm-5">Member since</dt><dd class="col-sm-7">{{ account.date_joined|date:"d M Y" }}</dd>
+            <dt class="col-sm-5">Last login</dt><dd class="col-sm-7">{{ account.last_login|date:"d M Y, H:i"|default:"—" }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    {% if faculty %}
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <h2 class="card-header section-header h6 mb-0">Faculty details</h2>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-5">Faculty ID</dt><dd class="col-sm-7">{{ faculty.faculty_id }}</dd>
+              <dt class="col-sm-5">Department</dt><dd class="col-sm-7">{{ faculty.department }}</dd>
+              <dt class="col-sm-5">Classes taught</dt><dd class="col-sm-7">{{ classes|length }}</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    {% elif student %}
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <h2 class="card-header section-header h6 mb-0">Student details</h2>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-5">Roll number</dt><dd class="col-sm-7">{{ student.roll_number }}</dd>
+              <dt class="col-sm-5">Class and section</dt><dd class="col-sm-7">{{ student.home_section|default:"Not assigned" }}</dd>
+              <dt class="col-sm-5">Subjects</dt><dd class="col-sm-7">{{ enrollments|length }}</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    {% elif account.role == "ADMIN" %}
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <h2 class="card-header section-header h6 mb-0">Admin access</h2>
+          <div class="card-body">
+            <p class="mb-0">You can manage accounts, students, faculty, classes, subjects, attendance settings,
+              reports and backups. Other Admins are listed under
+              <a href="{% url 'account_list' %}">Accounts and password resets</a>.</p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if faculty %}
+    <h2 class="h5 mt-4">Classes and subjects I teach</h2>
+    <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">
+      <table class="table table-striped align-middle">
+        <thead><tr><th>Subject</th><th>Class and section</th><th>Students</th></tr></thead>
+        <tbody>
+          {% for assignment in classes %}
+            <tr><td>{{ assignment.subject }}</td><td>{{ assignment.section }}</td><td>{{ assignment.student_count }}</td></tr>
+          {% empty %}<tr><td colspan="3">No classes are assigned to you yet. Contact the Admin.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% elif student %}
+    <h2 class="h5 mt-4">My subjects</h2>
+    <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">
+      <table class="table table-striped align-middle">
+        <thead><tr><th>Subject</th><th>Class and section</th><th>Teacher</th></tr></thead>
+        <tbody>
+          {% for enrollment in enrollments %}
+            <tr><td>{{ enrollment.assignment.subject }}</td><td>{{ enrollment.assignment.section }}</td>
+              <td>{{ enrollment.assignment.faculty.full_name|default:"Not assigned" }}</td></tr>
+          {% empty %}<tr><td colspan="3">No subject enrollments yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  <p class="form-text mt-3">These details are read-only. Ask the Admin if anything needs to change.</p>
+{% endblock %}

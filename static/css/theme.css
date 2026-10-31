@@ -192,3 +192,9 @@ body {
 .back-link {
   border-top: 1px solid var(--sam-border);
 }
+
+/* The signed-in name in the navbar opens My profile */
+.app-navbar a.navbar-user:hover,
+.app-navbar a.navbar-user:focus-visible {
+  text-decoration: underline !important;
+}

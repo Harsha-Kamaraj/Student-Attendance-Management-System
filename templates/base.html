@@ -104,9 +104,10 @@
             </a>
           {% endif %}
 
-          <span class="navbar-text navbar-user">
+          <a class="navbar-text navbar-user text-white text-decoration-none" href="{% url 'my_profile' %}"
+             title="My profile">
             {{ user.username }} · {{ user.get_role_display }}
-          </span>
+          </a>
 
           <form action="{% url 'logout' %}" method="post" class="m-0">
             {% csrf_token %}
