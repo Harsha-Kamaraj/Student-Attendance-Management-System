@@ -1,0 +1,283 @@
+{
+  "measured_at": "2026-10-30T15:51:18.511070+00:00",
+  "source_revision": {
+    "head": "5c956ae9f7155c188e01bca157b5613baf66f348",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "4dbbc8c37ffb5b2bbcc670ccf16689a904889c5fa047fdf6955d7f69253ad10a"
+  },
+  "plan_id": "f608a840-9935-4168-80a8-56ba2469f620",
+  "boundary": "Sequential BL-29 diagnostic including commit callbacks; not load acceptance",
+  "operations": [
+    {
+      "route": "dashboard_admin",
+      "ok": true,
+      "seconds": 0.07505516699893633,
+      "query_count": 11,
+      "queries": {
+        "SELECT": {
+          "count": 2,
+          "seconds": 0.0005746660026488826
+        },
+        "SELECT django_session": {
+          "count": 1,
+          "seconds": 0.00020283400226617232
+        },
+        "SELECT accounts_user": {
+          "count": 1,
+          "seconds": 0.00014662500325357541
+        },
+        "SELECT attendance_attendancethreshold": {
+          "count": 1,
+          "seconds": 0.000240790999669116
+        },
+        "SELECT attendance_attendancerecord": {
+          "count": 1,
+          "seconds": 0.05925812500208849
+        },
+        "SELECT academics_student": {
+          "count": 1,
+          "seconds": 0.00018575000285636634
+        },
+        "SELECT academics_faculty": {
+          "count": 1,
+          "seconds": 9.91669949144125e-05
+        },
+        "SELECT academics_section": {
+          "count": 1,
+          "seconds": 8.291700214613229e-05
+        },
+        "SELECT attendance_attendancesession": {
+          "count": 1,
+          "seconds": 0.00040337500104214996
+        },
+        "UPDATE django_session": {
+          "count": 1,
+          "seconds": 0.000243041999056004
+        }
+      }
+    },
+    {
+      "route": "dashboard_faculty",
+      "ok": true,
+      "seconds": 0.011753416998544708,
+      "query_count": 11,
+      "queries": {
+        "SELECT": {
+          "count": 2,
+          "seconds": 0.00015333400369854644
+        },
+        "SELECT django_session": {
+          "count": 1,
+          "seconds": 0.00012316699576331303
+        },
+        "SELECT accounts_user": {
+          "count": 1,
+          "seconds": 0.0001253340014955029
+        },
+        "SELECT attendance_attendancethreshold": {
+          "count": 1,
+          "seconds": 9.416700049769133e-05
+        },
+        "SELECT attendance_attendancerecord": {
+          "count": 1,
+          "seconds": 0.0066362910001771525
+        },
+        "SELECT academics_teachingassignment": {
+          "count": 2,
+          "seconds": 0.00032279200240736827
+        },
+        "SELECT academics_enrollment": {
+          "count": 1,
+          "seconds": 0.00023858399799792096
+        },
+        "SELECT attendance_attendancesession": {
+          "count": 1,
+          "seconds": 0.00024070899962680414
+        },
+        "UPDATE django_session": {
+          "count": 1,
+          "seconds": 0.00018391699995845556
+        }
+      }
+    },
+    {
+      "route": "dashboard_student",
+      "ok": true,
+      "seconds": 0.005400624999310821,
+      "query_count": 10,
+      "queries": {
+        "SELECT": {
+          "count": 2,
+          "seconds": 0.00016412500553997234
+        },
+        "SELECT django_session": {
+          "count": 1,
+          "seconds": 0.00013020900223637
+        },
+        "SELECT accounts_user": {
+          "count": 1,
+          "seconds": 0.00012962500477442518
+        },
+        "SELECT academics_student": {
+          "count": 1,
+          "seconds": 0.00012791699555236846
+        },
+        "SELECT attendance_attendancerecord": {
+          "count": 1,
+          "seconds": 0.0012754159979522228
+        },
+        "SELECT academics_subject": {
+          "count": 1,
+          "seconds": 0.00020937500084983185
+        },
+        "SELECT attendance_attendancethreshold": {
+          "count": 1,
+          "seconds": 0.00010416599980089813
+        },
+        "SELECT notifications_notification": {
+          "count": 1,
+          "seconds": 0.00010304099851055071
+        },
+        "UPDATE django_session": {
+          "count": 1,
+          "seconds": 0.00017233300604857504
+        }
+      }
+    },
+    {
+      "route": "attendance_summary",
+      "ok": true,
+      "seconds": 0.007633957997313701,
+      "query_count": 10,
+      "queries": {
+        "SELECT": {
+          "count": 2,
+          "seconds": 0.00014299999020295218
+        },
+        "SELECT django_session": {
+          "count": 1,
+          "seconds": 0.00012312499893596396
+        },
+        "SELECT accounts_user": {
+          "count": 1,
+          "seconds": 0.00012316599895711988
+        },
+        "SELECT academics_student": {
+          "count": 1,
+          "seconds": 0.00010654100333340466
+        },
+        "SELECT attendance_attendancerecord": {
+          "count": 1,
+          "seconds": 0.0009534170021652244
+        },
+        "SELECT academics_subject": {
+          "count": 2,
+          "seconds": 0.000545457995031029
+        },
+        "SELECT notifications_notification": {
+          "count": 1,
+          "seconds": 0.00010008399840444326
+        },
+        "UPDATE django_session": {
+          "count": 1,
+          "seconds": 0.0001919170026667416
+        }
+      }
+    },
+    {
+      "route": "attendance_mark",
+      "ok": true,
+      "seconds": 0.03760204099671682,
+      "query_count": 30,
+      "queries": {
+        "SELECT": {
+          "count": 2,
+          "seconds": 0.0001405000002705492
+        },
+        "SELECT django_session": {
+          "count": 1,
+          "seconds": 0.00010325000039301813
+        },
+        "SELECT accounts_user": {
+          "count": 2,
+          "seconds": 0.0002922500061686151
+        },
+        "SELECT academics_teachingassignment": {
+          "count": 5,
+          "seconds": 0.0006594569931621663
+        },
+        "SELECT attendance_correctionwindow": {
+          "count": 2,
+          "seconds": 0.00029504200210794806
+        },
+        "SELECT academics_enrollment": {
+          "count": 2,
+          "seconds": 0.000574541998503264
+        },
+        "SELECT attendance_attendancesession": {
+          "count": 1,
+          "seconds": 0.00015129199891816825
+        },
+        "SELECT academics_faculty": {
+          "count": 1,
+          "seconds": 8.750000415602699e-05
+        },
+        "INSERT attendance_attendancesession": {
+          "count": 1,
+          "seconds": 0.00021079099678900093
+        },
+        "INSERT attendance_attendancerecord": {
+          "count": 1,
+          "seconds": 0.0006415410025510937
+        },
+        "INSERT audit_auditentry": {
+          "count": 1,
+          "seconds": 0.00031633400067221373
+        },
+        "SELECT attendance_attendancethreshold": {
+          "count": 1,
+          "seconds": 7.908300176495686e-05
+        },
+        "SELECT academics_student": {
+          "count": 1,
+          "seconds": 0.00044012499711243436
+        },
+        "SELECT attendance_attendancerecord": {
+          "count": 1,
+          "seconds": 0.012959458006662317
+        },
+        "SELECT notifications_shortageflag": {
+          "count": 1,
+          "seconds": 0.00023529199825134128
+        },
+        "INSERT notifications_shortageflag": {
+          "count": 1,
+          "seconds": 0.0005764170055044815
+        },
+        "SELECT academics_subject": {
+          "count": 2,
+          "seconds": 0.00019558399799279869
+        },
+        "INSERT notifications_notification": {
+          "count": 1,
+          "seconds": 0.0007764589972794056
+        },
+        "SELECT notifications_notification": {
+          "count": 1,
+          "seconds": 0.0005375420005293563
+        },
+        "SELECT academics_section": {
+          "count": 1,
+          "seconds": 9.429099736735225e-05
+        },
+        "UPDATE django_session": {
+          "count": 1,
+          "seconds": 0.00016412499826401472
+        }
+      }
+    }
+  ],
+  "new_notifications": 60,
+  "locmem_emails": 60,
+  "passed": true
+}

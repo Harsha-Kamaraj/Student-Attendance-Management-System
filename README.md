@@ -100,6 +100,14 @@ Admin and Faculty open **Attendance history and corrections** from their dashboa
 
 Each correction and its editor, timestamp, old/new status and reason are saved atomically. Percentages and dashboards reflect the saved correction immediately. Students see their own updated totals, while staff history remains restricted to Admin and authorized Faculty. Run `python manage.py migrate` before using these pages. See [`Documents/BL-16-18_Implementation.md`](Documents/BL-16-18_Implementation.md).
 
+## Attendance reports and exports (BL-20, BL-21)
+
+Admin and Faculty open **Attendance reports** from their dashboard. Select both date bounds and a
+student, class/section, class-and-subject, or **All my authorized classes**, then choose **Generate report**.
+CSV and PDF downloads become available for a valid selection with data. Blank/invalid selections do
+not generate downloads. Faculty reports always remain limited to their own teaching assignments,
+including when selecting a section shared with another teacher.
+
 ## Low-attendance notifications and the below-threshold list (BL-23, BL-24)
 
 - **Students** get one in-app notification (**Notifications** in the navigation bar) and one email each time a subject or overall percentage falls below the threshold. Nothing more is sent while it stays below; recovering to the threshold or above clears it, and a later drop notifies again. The check runs after every attendance save, correction and threshold change. If email fails, the in-app notification is still delivered and the failure is logged.

@@ -1,5 +1,8 @@
 # BL-29 / BL-31 — Execution record
 
+This is the original PR #50 execution record. See the [follow-up](BL-29-31_Followup.md) for later
+query optimizations, report-validation corrections and retests; the original observations below are retained.
+
 Date: 29 October 2026. Scope: #29 performance/capacity/availability and #31 integration/security/regression. #30's browser-version/device/usability matrix remains assigned separately. Tests use fictional accounts and locally captured email.
 
 ## Capacity and performance

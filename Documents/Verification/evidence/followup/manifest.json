@@ -1,0 +1,67 @@
+{
+  "application_revision": {
+    "head": "27b5329592a9a5343a270cb6f041f0788d54e79a",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "f812b6060a79d71d9fe0884d3c3651bb50ec2f5f8b1d8195fe36c02c6f41f122"
+  },
+  "regression_note": "The final suite ran before committing the identical application/test files as 27b5329. Default application password hashers were used. No application/test edits occurred during the run.",
+  "profiles_note": "Before/after profiles cover the isolated query optimization at 5c956ae. Later report-scope changes are covered by final-performance.json at 27b5329. Sequential profile timings are not concurrent acceptance measurements.",
+  "files": {
+    "baseline-plan.json": {
+      "source_bytes_sha256": "69b9f6e3487d90533a896277d36b54c864b2d5f97505094ff4b52c78328b2a8f",
+      "retained_sha256": "69b9f6e3487d90533a896277d36b54c864b2d5f97505094ff4b52c78328b2a8f",
+      "json_values_preserved": true
+    },
+    "baseline-seed.json": {
+      "source_bytes_sha256": "deabe54add1aa4133f6cb22948b961695783d63f715ccbb6f3d6db38ab925b38",
+      "retained_sha256": "deabe54add1aa4133f6cb22948b961695783d63f715ccbb6f3d6db38ab925b38",
+      "json_values_preserved": true
+    },
+    "baseline-performance.json": {
+      "source_bytes_sha256": "b872c2d0ec6374629e5076b38e7f71e8769964ad76b69fc1fa049517c12abdf3",
+      "retained_sha256": "b6bb26cc760c0788355f1dd84147fbd7c09021e83a74b13f89fdd26c40f1be87",
+      "json_values_preserved": true
+    },
+    "final-plan.json": {
+      "source_bytes_sha256": "04b6fad085698135c0c304ff38b93245e373adb9f15fdd6a4a28cc3c6eb8a610",
+      "retained_sha256": "04b6fad085698135c0c304ff38b93245e373adb9f15fdd6a4a28cc3c6eb8a610",
+      "json_values_preserved": true
+    },
+    "final-seed.json": {
+      "source_bytes_sha256": "a783ce780754d0a3c9f4479c53c45fcae5bb3a312976c0459629bc7101f085d2",
+      "retained_sha256": "a783ce780754d0a3c9f4479c53c45fcae5bb3a312976c0459629bc7101f085d2",
+      "json_values_preserved": true
+    },
+    "final-performance.json": {
+      "source_bytes_sha256": "d794fde312ac0bf22ca14e9273ad2c3cd997ada63537ff90507d5cc063011e2c",
+      "retained_sha256": "a16bfbd1d2ce62bae7be55f3349f810e291d765bfb6b0b098525cfec23ea2448",
+      "json_values_preserved": true
+    },
+    "profile-before.json": {
+      "source_bytes_sha256": "668fafba2a1b4746cea9bcbfe492686dcc4568a40e11e816c7f0814e2170bc64",
+      "retained_sha256": "668fafba2a1b4746cea9bcbfe492686dcc4568a40e11e816c7f0814e2170bc64",
+      "json_values_preserved": true
+    },
+    "profile-after.json": {
+      "source_bytes_sha256": "47bc2a72659077894a17d56123a7553047850092f23ef69520d26550674b5be1",
+      "retained_sha256": "47bc2a72659077894a17d56123a7553047850092f23ef69520d26550674b5be1",
+      "json_values_preserved": true
+    },
+    "regression.json": {
+      "source_bytes_sha256": "671485b367504c483a16b0d4a2c2c54827a2c624cc686af73977fc99725d1fd0",
+      "retained_sha256": "1dd14ea76e0e1f5ec59cea69136527cc67ae8991836fb7b311c408b4edd9f19d",
+      "json_values_preserved": true
+    },
+    "availability-month.json": {
+      "source_bytes_sha256": "383ceddf9ea71b488cf46730d1f54fa733e2b31f5191a3bf5f7ef08bb88cad32",
+      "retained_sha256": "2663ba1bc9fb44cd99766041e97a0e483df70b975956243957b9da112b647472",
+      "json_values_preserved": true
+    },
+    "availability-local.jsonl": {
+      "retained_sha256": "113622a5ab86e0b50820092c37d2f6890442ac64636e44e691dacbe04e5165b2"
+    },
+    "static-checks.json": {
+      "retained_sha256": "3ab8f8abe53b0423402cf666cea987d609b689233dbc0ba60cd96ea5116c711e"
+    }
+  }
+}

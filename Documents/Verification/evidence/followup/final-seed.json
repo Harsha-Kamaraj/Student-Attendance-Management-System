@@ -1,0 +1,80 @@
+{
+  "outcome": "seeded",
+  "dataset_id": "f0ca733e-62f3-4144-a0e9-26a75dbb0762",
+  "database_name": "verification_bl29_release_local",
+  "seed_plan_id": "17de27a0-ebbe-4f45-a949-fc04dfbbebea",
+  "seeded_at": "2026-10-31T01:07:50.506112+00:00",
+  "plan_declared_at": "2026-10-31T01:07:41.106317+00:00",
+  "source_revision": {
+    "head": "27b5329592a9a5343a270cb6f041f0788d54e79a",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "f812b6060a79d71d9fe0884d3c3651bb50ec2f5f8b1d8195fe36c02c6f41f122"
+  },
+  "dataset": {
+    "students": 1000,
+    "faculty": 60,
+    "administrators": 1,
+    "sections": 17,
+    "subjects": 5,
+    "assignments": 85,
+    "teaching_days": 250,
+    "classes_per_teaching_day": 3,
+    "sessions": 12750,
+    "attendance_records": 750000,
+    "semester_teaching_days": 125,
+    "largest_section_roster": 60
+  },
+  "actual_counts": {
+    "students": 1000,
+    "faculty": 60,
+    "users": 1061,
+    "sections": 17,
+    "subjects": 5,
+    "assignments": 85,
+    "enrollments": 5000,
+    "sessions": 12750,
+    "attendance_records": 750000,
+    "notifications": 470,
+    "shortage_flags": 2820
+  },
+  "seed_seconds": 8.1395909999992,
+  "benchmark_day": "2026-10-31",
+  "calendar": {
+    "first": "2026-01-13",
+    "last": "2026-10-30",
+    "teaching_days": 250,
+    "span_calendar_days": 291,
+    "semester_start": "2026-06-08",
+    "semester_end": "2026-10-30"
+  },
+  "fixture_notes": [
+    "Exactly 750 saved classes per student across five subjects over 250 Mon–Sat teaching days.",
+    "First 60 students have 113/150 per subject: first measured absence triggers a subject shortage.",
+    "Other students vary between 113,112,150,0 present per 150; prior flags are synthetic.",
+    "Fictional .invalid identities use unusable passwords; sessions are prepared later.",
+    "No user data, credentials, tokens or services outside this verification database are changed."
+  ],
+  "environment": {
+    "python": "3.14.6",
+    "django": "5.2.18",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "logical_cpus": 10,
+    "postgresql": "PostgreSQL 18.4 (Homebrew) on aarch64-apple-darwin25.4.0, compiled by Apple clang version 21.0.0 (clang-2100.0.123.102), 64-bit",
+    "postgresql_settings": {
+      "max_connections": "100",
+      "shared_buffers": "128MB",
+      "work_mem": "4MB",
+      "max_parallel_workers_per_gather": "2"
+    },
+    "database": {
+      "host": "localhost",
+      "port": "5432",
+      "name": "verification_bl29_release_local"
+    },
+    "database_bytes": 134362815,
+    "otp_required": true,
+    "csrf_enforced": true,
+    "mail_backend": "django.core.mail.backends.locmem.EmailBackend",
+    "deployment": "one Python process, 50 threads, loopback PostgreSQL; in-process Django request stack"
+  }
+}
