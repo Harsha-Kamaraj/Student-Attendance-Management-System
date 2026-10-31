@@ -180,9 +180,10 @@ def journey(browser, base, fixture, width, number, folder, *, mobile):
         admin.goto(base + "/attendance/reports/")
         expect(admin.get_by_text("Choose a report scope and date range", exact=False)).to_be_visible()
         checkpoint(admin, "admin_report_form")
-        future = (timezone.localdate() + timedelta(days=10)).isoformat()
-        admin.locator('input[name="start_date"]').fill(future)
-        admin.locator('input[name="end_date"]').fill(future)
+        # Date pickers refuse future days, so an old day with no attendance gives the empty report.
+        empty_day = (timezone.localdate() - timedelta(days=3650)).isoformat()
+        admin.locator('input[name="start_date"]').fill(empty_day)
+        admin.locator('input[name="end_date"]').fill(empty_day)
         admin.locator('select[name="section"]').select_option(str(fixture.section.pk))
         admin.get_by_role("button", name="Generate report", exact=True).click()
         expect(
@@ -240,14 +241,14 @@ def journey(browser, base, fixture, width, number, folder, *, mobile):
         student.goto(base + "/attendance/mine/")
         expect(student.get_by_text("100.00%", exact=False).first).to_be_visible()
         checkpoint(student, "student_summary", screenshot=True)
-        student.locator('input[name="start_date"]').fill(future)
-        student.locator('input[name="end_date"]').fill(day.isoformat())
+        student.locator('input[name="start_date"]').fill(day.isoformat())
+        student.locator('input[name="end_date"]').fill(empty_day)
         student.get_by_role("button", name="Apply", exact=True).click()
         expect(
             student.get_by_text("End date must be on or after the start date.", exact=True)
         ).to_be_visible()
         checkpoint(student, "student_invalid_dates")
-        student.locator('input[name="end_date"]').fill(future)
+        student.locator('input[name="start_date"]').fill(empty_day)
         student.get_by_role("button", name="Apply", exact=True).click()
         expect(
             student.get_by_text("No attendance records match these filters.", exact=True).first

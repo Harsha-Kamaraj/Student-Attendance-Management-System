@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load attendance_extras %}
 
 {% block title %}Mark attendance · Student Attendance{% endblock %}
 
@@ -13,6 +14,7 @@
       <div class="mb-3">
         <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
         {{ field }}
+        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
         {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
       </div>
     {% endfor %}
@@ -20,7 +22,7 @@
   </form>
 
   {% if selected %}
-    <h2 class="h5">{{ selected.assignment }} — {{ selected.date }} — Period {{ selected.period }}</h2>
+    <h2 class="h5">{{ selected.assignment.subject }} · {{ selected.assignment.section }} — {{ selected.date }} — {{ selected.period|period_label }}</h2>
     {% if existing %}
       <div class="alert alert-info" role="status">This attendance session is already saved. Corrections use the separate correction workflow.</div>
       <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">

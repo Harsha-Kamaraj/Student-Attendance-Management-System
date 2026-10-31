@@ -4,6 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 
+from apps.academics.forms import AssignmentChoiceField, limit_to_today
 from apps.academics.models import Student, TeachingAssignment
 from apps.accounts.forms import BootstrapMixin
 from apps.accounts.permissions import (
@@ -12,7 +13,7 @@ from apps.accounts.permissions import (
     visible_students,
 )
 
-from .models import MAX_PERIODS_PER_DAY, Status
+from .models import PERIOD_CHOICES, Status
 
 
 class AttendanceHistoryFilterForm(BootstrapMixin, forms.Form):
@@ -29,17 +30,18 @@ class AttendanceHistoryFilterForm(BootstrapMixin, forms.Form):
         ),
     )
 
-    assignment = forms.ModelChoiceField(
+    assignment = AssignmentChoiceField(
         queryset=TeachingAssignment.objects.none(),
-        label="Class / section and subject",
+        label="Subject and class",
         required=False,
-        empty_label="All assigned classes and subjects",
+        empty_label="All my subjects and classes",
     )
 
+    # Not shown: the search box above finds students. Kept so links can still select one student exactly.
     student = forms.ModelChoiceField(
         queryset=Student.objects.none(),
         required=False,
-        empty_label="All students",
+        widget=forms.HiddenInput,
     )
 
     start_date = forms.DateField(
@@ -56,10 +58,7 @@ class AttendanceHistoryFilterForm(BootstrapMixin, forms.Form):
         required=False,
         coerce=int,
         empty_value=None,
-        choices=[
-            ("", "All periods"),
-            *((number, number) for number in range(1, MAX_PERIODS_PER_DAY + 1)),
-        ],
+        choices=[("", "All periods"), *PERIOD_CHOICES],
     )
 
     status = forms.ChoiceField(
@@ -74,11 +73,12 @@ class AttendanceHistoryFilterForm(BootstrapMixin, forms.Form):
             visible_assignments(user)
             .select_related("section", "subject")
             .order_by(
+                "subject__code",
                 "section__class_name",
                 "section__name",
-                "subject__code",
             )
         )
+        limit_to_today(self.fields["start_date"], self.fields["end_date"])
 
         # Keep students with historical attendance available even if
         # their previous enrollment has been removed.

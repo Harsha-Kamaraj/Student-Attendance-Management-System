@@ -5,23 +5,22 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+from apps.academics.forms import AssignmentChoiceField, limit_to_today
 from apps.academics.models import Enrollment, Subject, TeachingAssignment
 from apps.accounts.forms import BootstrapMixin
 from apps.accounts.models import Role
 from apps.accounts.permissions import visible_assignments
 
-from .models import MAX_PERIODS_PER_DAY, AttendanceThreshold
+from .models import BREAKS_NOTE, PERIOD_CHOICES, AttendanceThreshold
 from .services import OUTSIDE_WINDOW_MESSAGE, earliest_faculty_date
 
 
 class AttendanceSelectionForm(BootstrapMixin, forms.Form):
-    assignment = forms.ModelChoiceField(
-        queryset=TeachingAssignment.objects.none(), label="Class and subject", empty_label="Select a class"
+    assignment = AssignmentChoiceField(
+        queryset=TeachingAssignment.objects.none(), label="Subject and class", empty_label="Select a subject"
     )
     date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}), initial=timezone.localdate)
-    period = forms.TypedChoiceField(
-        coerce=int, choices=[(i, f"Period {i}") for i in range(1, MAX_PERIODS_PER_DAY + 1)]
-    )
+    period = forms.TypedChoiceField(coerce=int, choices=PERIOD_CHOICES, help_text=BREAKS_NOTE)
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,8 +28,12 @@ class AttendanceSelectionForm(BootstrapMixin, forms.Form):
         self.fields["assignment"].queryset = (
             visible_assignments(user)
             .select_related("section", "subject")
-            .order_by("section__class_name", "section__name", "subject__code")
+            .order_by("subject__code", "section__class_name", "section__name")
         )
+        limit_to_today(self.fields["date"])
+        if user.role == Role.FACULTY:
+            # Faculty may only record within the correction window, so earlier days are greyed out too.
+            self.fields["date"].widget.attrs["min"] = earliest_faculty_date().isoformat()
 
     def clean_date(self):
         day = self.cleaned_data["date"]
@@ -61,6 +64,7 @@ class AttendanceSummaryFilterForm(BootstrapMixin, forms.Form):
         self.fields["subject"].queryset = Subject.objects.filter(
             models.Q(pk__in=enrolled) | models.Q(pk__in=recorded)
         ).order_by("code")
+        limit_to_today(self.fields["start_date"], self.fields["end_date"])
 
     def clean(self):
         cleaned = super().clean()

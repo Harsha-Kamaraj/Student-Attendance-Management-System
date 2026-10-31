@@ -7,6 +7,26 @@ from apps.academics.models import Student, TeachingAssignment
 
 MAX_PERIODS_PER_DAY = 6
 
+# College timetable: one-hour periods from 8:00, short break 10:00-10:30, lunch 12:30-1:15.
+PERIOD_TIMES = {
+    1: "8:00–9:00 am",
+    2: "9:00–10:00 am",
+    3: "10:30–11:30 am",
+    4: "11:30 am–12:30 pm",
+    5: "1:15–2:15 pm",
+    6: "2:15–3:15 pm",
+}
+BREAKS_NOTE = "Short break 10:00–10:30 am · Lunch 12:30–1:15 pm"
+
+
+def period_label(period):
+    """'Period 3 (10:30–11:30 am)'; falls back to the bare number if no time is configured."""
+    times = PERIOD_TIMES.get(period)
+    return f"Period {period} ({times})" if times else f"Period {period}"
+
+
+PERIOD_CHOICES = [(number, period_label(number)) for number in range(1, MAX_PERIODS_PER_DAY + 1)]
+
 # Default only: the Admin-configured value is persisted by CorrectionWindow.
 CORRECTION_WINDOW_DAYS = 2
 

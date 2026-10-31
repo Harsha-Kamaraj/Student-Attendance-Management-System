@@ -130,6 +130,14 @@
     {% endfor %}
 
     {% block content %}{% endblock %}
+
+    {% block back_link %}
+      {% if user.is_authenticated %}
+        <div class="back-link mt-4 pt-3">
+          <a class="btn btn-outline-primary" href="{% url 'dashboard' %}">&larr; Back to dashboard</a>
+        </div>
+      {% endif %}
+    {% endblock %}
   </main>
 </body>
 </html>

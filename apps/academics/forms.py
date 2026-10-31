@@ -4,11 +4,34 @@ import re
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from apps.accounts.forms import BootstrapMixin
 from apps.accounts.models import User
 
 from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssignment
+
+
+class AssignmentChoiceField(forms.ModelChoiceField):
+    """Teaching-assignment dropdown labelled by subject name, e.g. "CS101 – Programming (B.Tech CSE A)".
+
+    Pass ``show_section=False`` where the section is already fixed by the page.
+    """
+
+    def __init__(self, *args, show_section=True, **kwargs):
+        self.show_section = show_section
+        super().__init__(*args, **kwargs)
+
+    def label_from_instance(self, obj):
+        subject = f"{obj.subject.code} – {obj.subject.name}"
+        return f"{subject} ({obj.section})" if self.show_section else subject
+
+
+def limit_to_today(*fields):
+    """Grey out future days in the browser's date picker; server-side checks still apply."""
+    today = timezone.localdate().isoformat()
+    for field in fields:
+        field.widget.attrs["max"] = today
 
 
 class StudentFieldsForm(BootstrapMixin, forms.Form):
@@ -98,7 +121,9 @@ class SectionForm(BootstrapMixin, forms.ModelForm):
 
 class EnrollmentForm(BootstrapMixin, forms.Form):
     student = forms.ModelChoiceField(queryset=Student.objects.none())
-    assignment = forms.ModelChoiceField(queryset=TeachingAssignment.objects.none(), label="Subject")
+    assignment = AssignmentChoiceField(
+        queryset=TeachingAssignment.objects.none(), label="Subject", show_section=False
+    )
 
     def __init__(self, *args, section, **kwargs):
         super().__init__(*args, **kwargs)

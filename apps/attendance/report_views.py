@@ -24,6 +24,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from apps.academics.forms import AssignmentChoiceField, limit_to_today
 from apps.academics.models import Section, Student, TeachingAssignment
 from apps.accounts.permissions import (
     get_visible_or_deny,
@@ -49,10 +50,11 @@ class AttendanceReportFilterForm(forms.Form):
         required=True,
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
     )
-    assignment = forms.ModelChoiceField(
+    assignment = AssignmentChoiceField(
         queryset=None,
         required=False,
-        empty_label="Choose a class and subject",
+        label="Subject",
+        empty_label="All subjects",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     status = forms.ChoiceField(
@@ -65,20 +67,21 @@ class AttendanceReportFilterForm(forms.Form):
     student = forms.ModelChoiceField(
         queryset=Student.objects.none(),
         required=False,
-        empty_label="Choose a student",
+        empty_label="All students",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     section = forms.ModelChoiceField(
         queryset=Section.objects.none(),
         required=False,
         label="Class / section",
-        empty_label="Choose a class / section",
+        empty_label="Any class / section",
+        help_text="Pick a class to report all its students and subjects.",
         widget=forms.Select(attrs={"class": "form-select"}),
     )
     all_records = forms.BooleanField(
         required=False,
-        label="All my authorized classes",
-        help_text="Select this, or choose a student, class / section, or class and subject.",
+        label="Every class I can see",
+        help_text="Tick this to report all classes you are allowed to view, instead of picking one.",
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
     )
 
@@ -90,15 +93,19 @@ class AttendanceReportFilterForm(forms.Form):
         ).order_by("roll_number")
         self.fields["section"].queryset = Section.objects.filter(
             pk__in=visible_assignments(user).values("section_id")
-        ).order_by("class_name", "name")
+        ).order_by("class_name", "name", "year")
+        limit_to_today(self.fields["start_date"], self.fields["end_date"])
+        self.order_fields(
+            ["start_date", "end_date", "section", "assignment", "student", "status", "all_records"]
+        )
 
         self.fields["assignment"].queryset = (
             visible_assignments(user)
             .select_related("section", "subject")
             .order_by(
+                "subject__code",
                 "section__class_name",
                 "section__name",
-                "subject__code",
             )
         )
 
@@ -115,7 +122,10 @@ class AttendanceReportFilterForm(forms.Form):
             )
 
         if not any(cleaned.get(field) for field in ("student", "section", "assignment", "all_records")):
-            raise forms.ValidationError("Choose a report scope: a student, class, or all authorized classes.")
+            raise forms.ValidationError(
+                "Choose a report scope: a class / section, a subject, a student, "
+                "or tick Every class I can see."
+            )
         return cleaned
 
 

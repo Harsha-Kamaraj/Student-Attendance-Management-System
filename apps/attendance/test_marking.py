@@ -58,8 +58,24 @@ class MarkingTests(TestCase):
     def test_faculty_sees_only_assigned_classes(self):
         self.client.force_login(self.faculty_user)
         response = self.client.get(reverse("attendance_mark"))
-        self.assertContains(response, str(self.assignment))
-        self.assertNotContains(response, str(self.other_assignment))
+        # Dropdown options name the subject, then the section.
+        self.assertContains(response, "CS101 – Programming (CSE Year 2 A)")
+        self.assertNotContains(response, "CS101 – Programming (CSE Year 2 B)")
+
+    def test_periods_show_timetable_and_dates_stop_at_today(self):
+        self.client.force_login(self.faculty_user)
+        response = self.client.get(reverse("attendance_mark"))
+        self.assertContains(response, "Period 1 (8:00–9:00 am)")
+        self.assertContains(response, "Period 6 (2:15–3:15 pm)")
+        self.assertContains(response, "Lunch 12:30–1:15 pm")
+        self.assertContains(response, f'max="{timezone.localdate().isoformat()}"')
+        # Faculty cannot pick days before their correction window either.
+        self.assertContains(response, 'min="')
+
+    def test_back_to_dashboard_is_on_pages_but_not_dashboards(self):
+        self.client.force_login(self.faculty_user)
+        self.assertContains(self.client.get(reverse("attendance_mark")), "Back to dashboard")
+        self.assertNotContains(self.client.get(reverse("dashboard_faculty")), "Back to dashboard")
 
     def test_correct_active_roster_is_displayed(self):
         self.client.force_login(self.faculty_user)
