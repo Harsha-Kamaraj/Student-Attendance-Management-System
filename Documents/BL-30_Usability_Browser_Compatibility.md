@@ -1,237 +1,86 @@
-\# BL-30: Verify Usability and Browser Compatibility
-
-
-
-\## 1. Objective
-
-
-
-Verify that the Student Attendance Management System is understandable and usable across the Admin, Faculty, and Student roles, with appropriate form validation, responsive layouts, clear feedback messages, and understandable empty states.
-
-
-
-\## 2. Supported Browser and Device Targets
-
-
-
-The project's compatibility target, as defined in the existing decision log, is the latest two versions of Chrome, Microsoft Edge, Firefox, and Safari on desktop, plus usability at a 360px viewport on Chrome for Android and Safari on iOS.
-
-
-
-| Browser or device | Target | Verification status |
-
-|---|---|---|
-
-| Google Chrome — desktop | Latest two versions | Pending manual verification |
-
-| Microsoft Edge — desktop | Latest two versions | Pending manual verification |
-
-| Mozilla Firefox — desktop | Latest two versions | Pending manual verification |
-
-| Apple Safari — desktop | Latest two versions | Pending manual verification |
-
-| Chrome — Android | 360px-wide viewport | Pending manual verification |
-
-| Safari — iOS | 360px-wide viewport | Pending manual verification |
-
-
-
-A browser or device is considered verified only after the application has been opened and the relevant workflows have been tested in that environment.
-
-
-
-\## 3. Role-Based Workflow Verification
-
-
-
-\### Admin
-
-\- Open the Admin dashboard.
-
-\- Navigate to account and academic management pages.
-
-\- Check form labels, required-field validation, tables, buttons, and feedback messages.
-
-\- Verify that empty lists provide understandable feedback.
-
-\- Check that management actions produce clear success or error messages.
-
-
-
-\### Faculty
-
-\- Open the Faculty dashboard.
-
-\- View assigned classes and enrolled students.
-
-\- Open the attendance-marking page.
-
-\- Verify that missing attendance statuses and invalid submissions produce understandable errors.
-
-\- Check that saved attendance produces clear feedback.
-
-\- Verify table usability and empty-roster messaging.
-
-
-
-\### Student
-
-\- Open the Student dashboard.
-
-\- Open the attendance summary.
-
-\- Verify the display of attendance percentages and subject details.
-
-\- Apply subject and date filters.
-
-\- Confirm that invalid date ranges produce understandable errors.
-
-\- Confirm that filters returning no records display a clear empty-state message.
-
-
-
-\## 4. Automated Usability and Validation Coverage
-
-
-
-Existing automated tests cover several relevant behaviours:
-
-
-
-\- Login rejects blank required fields.
-
-\- Invalid login credentials produce a consistent error message.
-
-\- Admin, Faculty, and Student users reach their respective dashboards.
-
-\- Account creation rejects missing required fields and invalid email addresses.
-
-\- Attendance marking rejects missing student statuses and invalid status values.
-
-\- Student attendance summaries show an empty state when no classes or matching records exist.
-
-\- Reversed date ranges produce a validation message.
-
-\- Access restrictions prevent users from opening pages outside their authorised roles.
-
-
-
-These existing tests should be reused rather than duplicated.
-
-
-
-\## 5. Responsive Design and Accessibility Checks
-
-
-
-During manual verification:
-
-
-
-\- Confirm that the page viewport adapts to the device width.
-
-\- Check that navigation, buttons, forms, and messages remain readable at 360px.
-
-\- Check that tables do not force the entire page to overflow horizontally.
-
-\- Confirm that form labels identify their associated inputs.
-
-\- Confirm that validation errors are visible and understandable.
-
-\- Confirm that success and error messages are noticeable.
-
-\- Check that empty lists and reports explain when no data is available.
-
-
-
-\## 6. Defect and Retest Log
-
-
-
-Record each defect found during verification with its page, browser/device, steps to reproduce, expected result, actual result, fix, and retest outcome.
-
-
-
-No defect should be marked as fixed without verifying the relevant workflow again.
-
-
-
-\## 7. Final Verification Results
-
-
-
-The final report must record:
-
-\- Automated tests executed and their results.
-
-\- Manual workflows verified for each role.
-
-\- Browser versions and viewport sizes actually tested.
-
-\- Defects discovered and their fixes.
-
-\- Retest results and any remaining limitations.
-
-
-
-Browser compatibility must not be marked fully verified until the target environments have been tested.
-## 8. Test Execution Results
-
-
-
-\### Automated Tests
-
-
-
-The following targeted Django tests were executed after the responsive navigation update:
-
-
-
-```text
-
-python manage.py test apps.accounts.tests.LoginTests apps.attendance.test\_summary apps.attendance.test\_marking
-
+# BL-30: Usability and browser compatibility
+
+The responsive-layout fixes and automated browser journeys are implemented. The evidence below records
+actual browser/engine versions and viewport sizes. The complete BL-01 D-16 target remains the latest two
+versions of Chrome, Edge, Firefox and Safari on desktop, plus Chrome on Android and Safari on iOS at
+360px. A passing engine or emulated viewport does not certify every branded release or a physical device.
+
+## Fixes
+
+- Removed literal Markdown fences from the shared HTML template. Pages now enter standards mode.
+- Serve pinned Bootstrap 5.3.3 locally, with its MIT license. Styling does not depend on a public CDN.
+- Wrap long navigation identities without pushing controls outside the viewport.
+- Keep table headers and identifiers readable. Narrow screens scroll the table instead of the page.
+- Give scrolling tables an accessible name, visible keyboard focus and arrow-key scrolling, including
+  the WebKit mobile case that did not scroll with its native key behavior.
+- Add a doctype regression test and real browser journeys that check readability as well as overflow.
+
+The defects and retests are tracked in [#54](https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/issues/54).
+
+## Executed browser coverage
+
+| Host | Browser / engine actually tested | Widths | Role workflows |
+| --- | --- | --- | --- |
+| macOS | Installed Chrome 156.0.8078.74 | 1440px, 360px | Admin, Faculty, Student |
+| macOS | Playwright Chromium 156.0.8078.4 | 1440px, 360px | Admin, Faculty, Student |
+| macOS | Playwright Firefox 157.0 | 1440px, 360px | Admin, Faculty, Student |
+| macOS | Playwright WebKit 27.2 | 1440px, 360px | Admin, Faculty, Student |
+| Ubuntu | Playwright Chromium, Firefox and WebKit | 1440px, 360px | Admin, Faculty, Student |
+| Windows Server 2025 | Installed Chrome 156.0.8078.48 | 1440px, 360px | Admin, Faculty, Student |
+| Windows Server 2025 | Installed Edge 155.0.4283.62 | 1440px, 360px | Admin, Faculty, Student |
+
+The JSON evidence records exact versions on every case. The 360px cases use viewport/touch emulation.
+WebKit is identified as WebKit, not as a completed native Safari test. These distinctions follow the
+[Playwright browser documentation](https://playwright.dev/python/docs/browsers).
+
+The Mac matrix has eight cases, Ubuntu six and Windows four: **18 cases / 54 role journeys**. Each
+journey uses real password and TOTP setup/login with the application's default password hashing;
+there is no password-only authentication bypass. All requests outside the local test server are blocked.
+
+## Workflows and usability assertions
+
+Admin checks dashboards, long navigation identities, student tables, required-field messages and
+empty report selections. Faculty checks assigned classes, incomplete rosters, the bulk-Present control,
+saving, correction/history and empty rosters. Students check current totals, invalid date ranges,
+empty filtered results and empty notifications. Every role signs out through the actual browser UI.
+
+Each checkpoint verifies standards mode, loaded local styling, readable table-header heights,
+no document-wide horizontal overflow, visible control bounds, accessible form labels and named,
+keyboard-focusable table scrollers. The narrow cases also execute arrow-key scrolling. JavaScript
+errors fail the case. Screenshots are saved after login; passwords, OTP setup keys and backup codes
+are not captured.
+
+A visual review caught the compressed Roll number column after an initial geometry-only run passed.
+The header-readability assertion and scrollable-column fix were then added and retested. A WebKit
+mobile keyboard-scroll failure was fixed explicitly. The test runner also waits for page/stylesheet
+loading before measuring layout, avoiding assertions against a transient unstyled DOM.
+
+See the [readiness report](Verification/BL-29-30_Readiness.md) for retained JSON, screenshots, checksums,
+performance/regression outcomes and GitHub runs. Earlier failed diagnostics are described there;
+only completed passing cases count toward the executed matrix.
+
+## Reproduce
+
+Use an empty disposable local PostgreSQL database named `verification_bl29_browser_<suffix>`.
+Set explicit `DATABASE_URL` and `SECRET_KEY`, then run:
+
+```bash
+pip install -r requirements-browser.txt
+python -m playwright install chromium firefox webkit
+python manage.py migrate --noinput
+python -m verification.browser_check --engines chromium firefox webkit --widths 1440 360 --out artifacts/browser/results.json
 ```
 
+To test installed branded browsers, use `--engines chrome msedge`. A missing requested browser is a
+failure, never a silently passing case. The runner refuses populated application data. Use a new
+empty database and output directory for each execution. It changes only its synthetic fixture.
 
+The manually dispatched verification workflow can run `scope=all`, `scope=browsers`, or
+`scope=performance`. Browser jobs run on Ubuntu and Windows and retain versions, outcomes and screenshots.
 
-Results:
+## Remaining matrix acceptance
 
-\- Tests discovered: 28
-
-\- Tests passed: 28
-
-\- Tests failed: 0
-
-\- Django system check: No issues identified
-
-\- `git diff --check`: Passed with no reported errors
-
-
-
-\### Responsive Navigation Update
-
-
-
-The shared base template was updated to improve navigation layout on narrow screens. Flex wrapping, spacing, and small-screen layout adjustments were introduced for the navigation controls.
-
-
-
-The targeted automated tests passed after the update. Manual verification at the target viewport sizes and across the supported browsers remains pending.
-
-
-
-\### Remaining Verification
-
-
-
-The latest two versions of Chrome, Microsoft Edge, Firefox, and Safari on desktop, along with Chrome on Android and Safari on iOS at a 360px viewport, must be tested before full browser compatibility can be confirmed.
-
-
-
-The Admin, Faculty, and Student workflows must also be manually checked for layout usability, form validation, readable messages, and understandable empty states.
-
-
-
-No browser or device is marked as manually verified until testing has actually been completed.
-
+Native Safari, previous branded browser releases, real Android Chrome and real iOS Safari still need
+separate executions. No observation of those environments is inferred from Playwright's engines.
+Record the browser version, operating system, viewport, role, workflow, result and any defect/retest
+for each additional run before claiming the full latest-two-version/device matrix is complete.

@@ -49,6 +49,31 @@ The measurement uses the in-process Django request stack and loopback PostgreSQL
 
 The manually dispatched **BL-29 and BL-31 verification** GitHub Actions workflow runs static checks, the complete suite and the same capacity benchmark on its isolated PostgreSQL service and uploads its JSON evidence. Defining the workflow does not mean a CI run has passed.
 
+It also has Windows Server 2025 / PostgreSQL 17 regression and performance coverage, Ubuntu browser-engine
+journeys, and native installed Windows Chrome/Edge journeys. Run `scope=all` for the complete pipeline;
+`scope=browsers` or `scope=performance` reruns only the affected group. Keep actual execution results,
+not just the workflow definition. The [BL-29/30 readiness report](../Documents/Verification/BL-29-30_Readiness.md)
+records the completed runs and their environment boundaries.
+
+## Browser and mobile-layout checks (BL-30)
+
+Install `requirements-browser.txt` and `python -m playwright install chromium firefox webkit`.
+Use a separate **empty** disposable local database named `verification_bl29_browser_<suffix>`, set
+`DATABASE_URL` and `SECRET_KEY`, run migrations, then execute:
+
+```bash
+python -m verification.browser_check --engines chromium firefox webkit --widths 1440 360 --out artifacts/browser/results.json
+```
+
+The runner starts a local HTTP server, loads synthetic data and exercises real password/TOTP and role
+workflows. External requests are blocked, so the checked Bootstrap and table-navigation assets must
+load locally. Screenshots exclude login/OTP secret pages. Use a new output directory per run.
+`--engines chrome msedge` tests installed branded browsers; it does not install them. Engine/viewport
+coverage does not replace native Safari, historical-release or physical-device acceptance.
+
+For deployment, run `python manage.py collectstatic --noinput` and configure the web server to serve
+`STATIC_ROOT` at `/static/`. Development's `runserver` serves the source assets automatically.
+
 ## Monthly availability
 
 `GET /health/` returns generic no-cache JSON: HTTP 200 when the database is reachable and recovery is not holding maintenance, otherwise HTTP 503. It exposes no database errors or account information and does not load authenticated sessions.
