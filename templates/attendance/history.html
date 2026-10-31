@@ -39,7 +39,7 @@
               <td>{{ record.session.assignment.subject }}</td>
               <td>{{ record.session.date|date:"d M Y" }}</td>
               <td>{{ record.session.period }}</td>
-              <td>{{ record.get_status_display }}</td>
+              <td>{% include "attendance/includes/status_badge.html" with label=record.get_status_display %}</td>
               <td>{% if record.session.recorded_by_code %}{{ record.session.recorded_by_code }}{% elif record.session.recorded_by %}{{ record.session.recorded_by.username }}{% else %}Unavailable{% endif %}{% if record.session.recorded_by and not record.session.recorded_by.is_active %}<br><span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
               <td><a href="{% url 'attendance_correct' record.pk %}">Correct</a><br><a href="{% url 'attendance_changes' record.pk %}">View changes</a></td>
             </tr>

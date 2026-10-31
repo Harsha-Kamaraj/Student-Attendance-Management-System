@@ -6,7 +6,7 @@
   <dt class="col-sm-3">Student</dt><dd class="col-sm-9">{{ record.student }}{% if not record.student.user.is_active %} (Inactive){% endif %}</dd>
   <dt class="col-sm-3">Subject / class</dt><dd class="col-sm-9">{{ record.session.assignment.subject }} / {{ record.session.assignment.section }}</dd>
   <dt class="col-sm-3">Session</dt><dd class="col-sm-9">{{ record.session.date }} · Period {{ record.session.period }}</dd>
-  <dt class="col-sm-3">Current status</dt><dd class="col-sm-9">{{ record.get_status_display }}</dd>
+  <dt class="col-sm-3">Current status</dt><dd class="col-sm-9">{% include "attendance/includes/status_badge.html" with label=record.get_status_display %}</dd>
 </dl>
 {% if user.role == 'ADMIN' %}
   <p class="alert alert-info">Admin corrections require a reason and are logged as overrides.</p>

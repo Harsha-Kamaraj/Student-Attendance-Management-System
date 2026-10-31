@@ -11,7 +11,7 @@
   <div class="card card-body mb-4">
     <h2 class="h5">{{ record.student.roll_number }} · {{ record.student.full_name }}{% if not record.student.user.is_active %} <span class="badge text-bg-secondary">Inactive</span>{% endif %}</h2>
     <p class="mb-1">{{ record.session.assignment.subject }} · {{ record.session.assignment.section }}</p>
-    <p class="mb-1">{{ record.session.date|date:"d M Y" }} · Period {{ record.session.period }} · Current status: <strong>{{ record.get_status_display }}</strong></p>
+    <p class="mb-1">{{ record.session.date|date:"d M Y" }} · Period {{ record.session.period }} · Current status: {% include "attendance/includes/status_badge.html" with label=record.get_status_display %}</p>
     <p class="mb-2">Originally recorded by {% if record.session.recorded_by_code %}{{ record.session.recorded_by_code }}{% elif record.session.recorded_by %}{{ record.session.recorded_by.username }}{% else %}Unavailable{% endif %}{% if record.session.recorded_by and not record.session.recorded_by.is_active %} <span class="badge text-bg-secondary">Inactive</span>{% endif %}.</p>
     <a href="{% url 'attendance_correct' record.pk %}">Correct this record</a>
   </div>
@@ -25,8 +25,8 @@
             <tr>
               <td>{{ change.timestamp|timezone:"Asia/Kolkata"|date:"d M Y H:i:s" }}</td>
               <td>{{ change.actor_username|default:"Unavailable" }}</td>
-              <td>{{ change.old_status_label }}</td>
-              <td>{{ change.new_status_label }}</td>
+              <td>{% include "attendance/includes/status_badge.html" with label=change.old_status_label %}</td>
+              <td>{% include "attendance/includes/status_badge.html" with label=change.new_status_label %}</td>
               <td class="text-break">{{ change.reason|default:"Not provided" }}</td>
               <td>{% if change.is_admin_override %}Yes{% else %}No{% endif %}</td>
             </tr>
