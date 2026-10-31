@@ -46,6 +46,10 @@ def create_fixture():
 
 
 def check_layout(page):
+    # A form submit may commit its navigation before the stylesheet finishes.
+    # Measure the rendered page after load, rather than the transient unstyled DOM.
+    page.wait_for_load_state("load")
+    page.wait_for_function("getComputedStyle(document.querySelector('.navbar')).display === 'flex'")
     facts = page.evaluate("""() => {
       const visible = e => e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden';
       const inputs = [...document.querySelectorAll('input:not([type=hidden]),select,textarea')]
@@ -259,6 +263,20 @@ def journey(browser, base, fixture, width, number, folder, *, mobile):
         result["status"] = "passed"
     except Exception as error:
         result.update(status="failed", failed_stage=current["stage"], error_type=type(error).__name__)
+        if isinstance(error, AssertionError):
+            # Only our static assertion messages are retained; never raw page HTML.
+            messages = {
+                "The doctype must enable standards mode.",
+                "The local Bootstrap stylesheet must load.",
+                "The page overflows horizontally.",
+                "A visible form control has no accessible label.",
+                "A form control extends outside the viewport.",
+                "Table headers are compressed into unreadable columns.",
+                "A scrolling table is not keyboard accessible and labeled.",
+                "Markdown fences must not render in the page.",
+            }
+            if str(error) in messages:
+                result["error"] = str(error)
         # OTP setup and backup-code pages must never be captured, even on failure.
         page = current["page"]
         if page and "/otp/" not in page.url and "/login/" not in page.url:
