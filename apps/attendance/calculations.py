@@ -5,6 +5,7 @@ records are not absences: inactive students and students enrolled later must not
 be charged for classes that were held without them on the submitted roster.
 """
 
+from collections import defaultdict
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -126,20 +127,17 @@ def attendance_shortage_statistics(*, assignments=None, threshold=None):
             held=Count("pk"),
         )
     )
-    subject_shortages = sum(
-        1 for row in subject_groups if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
-    )
-
-    overall_groups = (
-        records.order_by()
-        .values("student_id")
-        .annotate(
-            attended=Count("pk", filter=Q(status=Status.PRESENT)),
-            held=Count("pk"),
-        )
-    )
+    # Pool the same scoped subject counts instead of scanning all attendance a
+    # second time. Both dashboard metrics now describe one database snapshot.
+    overall = defaultdict(lambda: [0, 0])
+    subject_shortages = 0
+    for row in subject_groups:
+        attended, held = row["attended"], row["held"]
+        overall[row["student_id"]][0] += attended
+        overall[row["student_id"]][1] += held
+        subject_shortages += held > 0 and attended * 100 < threshold * held
     students_below_overall = sum(
-        1 for row in overall_groups if row["held"] > 0 and row["attended"] * 100 < threshold * row["held"]
+        1 for attended, held in overall.values() if held > 0 and attended * 100 < threshold * held
     )
     return {
         "threshold": threshold,

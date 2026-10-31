@@ -31,6 +31,20 @@ python -m verification.performance run --plan artifacts/plan.json --seed artifac
 
 Declare the plan before seeding or measuring. A changed application revision requires a new plan and dataset. The seed contains 1,000 students, 60 faculty and 750,000 attendance records. The run uses 50 distinct persisted authenticated sessions, CSRF checks, 30 synchronized request rounds and three marking/report repetitions. Do not run other CPU-intensive checks during measurement.
 
+At least 30 rounds **and three marking/report repetitions** are required for a full performance result.
+Shorter runs are diagnostics, not acceptance evidence. The runner checks the declared workload and binds
+the seed manifest to its plan, database and application revision.
+
+To diagnose query overhead, create a separate fresh fixture using the plan/migrate/seed steps above, then run:
+
+```bash
+python -m verification.profile_requests --plan artifacts/plan.json --seed artifacts/seed.json --out artifacts/profile.json
+```
+
+This sequential profile records query counts by operation/table, without SQL parameters or credentials.
+It includes a real 60-student submission and its 60 notification callbacks, so it consumes the fresh fixture.
+Use a new empty database and seed for the concurrent benchmark; profile timings are not load-test results.
+
 The measurement uses the in-process Django request stack and loopback PostgreSQL. OTP is enabled but the synthetic sessions have already passed OTP. Timings include middleware, queries, rendering and commit callbacks; mail is captured in memory. They exclude password/OTP setup, network/proxy delay, browser assets and an external SMTP provider. These results describe this local configuration; repeat the plan on the intended deployment before accepting deployment latency.
 
 The manually dispatched **BL-29 and BL-31 verification** GitHub Actions workflow runs static checks, the complete suite and the same capacity benchmark on its isolated PostgreSQL service and uploads its JSON evidence. Defining the workflow does not mean a CI run has passed.
@@ -49,3 +63,7 @@ python -m verification.availability summarize --log artifacts/availability.jsonl
 The agreed window is 08:00–18:00 Asia/Kolkata, Monday–Saturday, with a monthly 99% target. Missing slots remain unknown. A partial month, incomplete coverage or future observations cannot produce a pass. Duplicate failures win. Optional `--maintenance maintenance.json` accepts an array of objects containing timezone-aware `start`, `end`, `announced_at` and a nonempty `reason`; maintenance announced after its start is rejected. Keep the original announcement evidence with the monitoring records. A local smoke probe or recovery test cannot establish monthly availability.
 
 See [the protocol](../Documents/Verification/BL-29_Protocol.md), [execution report](../Documents/Verification/BL-29-31_Results.md) and [defect retests](../Documents/Verification/BL-29-31_Defects.md).
+
+The [verification follow-up](../Documents/Verification/BL-29-31_Followup.md) records the code
+optimizations and local retest after PR #50. Deployment latency, the earlier Windows latency failure,
+and monthly uptime must not be inferred from a passing Mac benchmark.

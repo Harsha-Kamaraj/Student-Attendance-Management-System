@@ -1,19 +1,83 @@
 """Protect evidence statistics and the disposable database boundary for BL-29."""
 
+from copy import deepcopy
 from datetime import date
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
 from verification.performance import (
     VerificationError,
+    check_seed_manifest,
+    checked_plan,
     database_guard,
+    declare_plan,
     latency_statistics,
     percentile,
     teaching_days_before,
+    write_json,
 )
 
 
 class PerformanceEvidenceTests(SimpleTestCase):
+    def test_short_smoke_run_cannot_claim_full_sampling(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "plan.json"
+            plan = declare_plan(path, rounds=30, repeats=1)
+            self.assertFalse(plan["full_sampling_plan"])
+            self.assertEqual(checked_plan(path), plan)
+
+    def test_altered_workload_and_false_completeness_are_rejected(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "plan.json"
+            plan = declare_plan(path)
+            for field, value in (
+                ("rounds", 0),
+                ("rounds", True),
+                ("routes", ["dashboard_student"]),
+                ("users", {"student": 1}),
+            ):
+                changed = deepcopy(plan)
+                changed["workloads"]["common_requests"][field] = value
+                write_json(path, changed, replace=True)
+                with self.subTest(field=field), self.assertRaises(VerificationError):
+                    checked_plan(path)
+            changed = deepcopy(plan)
+            changed["workloads"]["marking"]["repeats"] = 1
+            changed["workloads"]["semester_report"]["repeats"] = 1
+            write_json(path, changed, replace=True)
+            with self.assertRaises(VerificationError):
+                checked_plan(path)
+
+    def test_source_change_requires_a_new_plan(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "plan.json"
+            declare_plan(path)
+            with patch("verification.performance.source_revision", return_value={"head": "different"}):
+                with self.assertRaises(VerificationError):
+                    checked_plan(path)
+
+    def test_seed_from_another_plan_or_source_is_rejected(self):
+        plan = {
+            "dataset": {"students": 1000},
+            "plan_id": "one",
+            "source_revision": {"head": "abc"},
+            "declared_at": "2026-10-30T10:00:00+00:00",
+        }
+        seed = {
+            "database_name": "verification_bl29_fixture",
+            "dataset": plan["dataset"],
+            "seed_plan_id": plan["plan_id"],
+            "source_revision": plan["source_revision"],
+            "plan_declared_at": plan["declared_at"],
+        }
+        check_seed_manifest(plan, seed, seed["database_name"])
+        for field in seed:
+            with self.subTest(field=field), self.assertRaises(VerificationError):
+                check_seed_manifest(plan, seed | {field: "wrong"}, seed["database_name"])
+
     def test_failed_requests_never_count_towards_response_time_target(self):
         samples = [{"seconds": 0.01, "ok": False}] + [{"seconds": 1.0, "ok": True} for _ in range(19)]
         result = latency_statistics(samples, 2)

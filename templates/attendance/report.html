@@ -36,6 +36,7 @@
       Clear filters
     </a>
 
+    {% if report_ready and page_obj.object_list %}
     <a href="{% url 'attendance_report_csv' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
        class="btn btn-success">
       Download CSV
@@ -45,9 +46,11 @@
        class="btn btn-danger">
       Download PDF
     </a>
+    {% endif %}
   </div>
 </form>
 
+{% if report_ready %}
 <div class="row g-3 mb-4">
   <div class="col-sm-6 col-lg-3">
     <div class="card h-100">
@@ -174,4 +177,7 @@
   </p>
 {% endif %}
 
+{% else %}
+  <p class="text-body-secondary">Choose a report scope and date range, then generate the report.</p>
+{% endif %}
 {% endblock %}

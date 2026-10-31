@@ -144,7 +144,7 @@ def write_json(path, value, *, replace=False):
 
 
 def declare_plan(path, *, rounds=30, repeats=3):
-    if rounds < 1 or not 1 <= repeats <= 6:
+    if type(rounds) is not int or rounds < 1 or type(repeats) is not int or not 1 <= repeats <= 6:
         raise VerificationError("Use at least one round and 1–6 marking/report repeats.")
     plan = read_json(PLAN_TEMPLATE)
     plan.update(
@@ -153,7 +153,7 @@ def declare_plan(path, *, rounds=30, repeats=3):
     plan["workloads"]["common_requests"]["rounds"] = rounds
     plan["workloads"]["marking"]["repeats"] = repeats
     plan["workloads"]["semester_report"]["repeats"] = repeats
-    plan["full_sampling_plan"] = rounds >= 30
+    plan["full_sampling_plan"] = rounds >= 30 and repeats >= 3
     write_json(path, plan)
     return plan
 
@@ -164,6 +164,19 @@ def checked_plan(path):
     for field in ("protocol", "targets", "dataset"):
         if plan.get(field) != template[field]:
             raise VerificationError(f"Plan {field} must match the reviewed BL-29 protocol.")
+    try:
+        rounds = plan["workloads"]["common_requests"]["rounds"]
+        repeats = plan["workloads"]["marking"]["repeats"]
+    except (KeyError, TypeError) as error:
+        raise VerificationError("Plan must retain the declared workloads.") from error
+    if type(rounds) is not int or rounds < 1 or type(repeats) is not int or not 1 <= repeats <= 6:
+        raise VerificationError("Use at least one round and 1–6 marking/report repeats.")
+    expected = template["workloads"]
+    expected["common_requests"]["rounds"] = rounds
+    expected["marking"]["repeats"] = repeats
+    expected["semester_report"]["repeats"] = repeats
+    if plan["workloads"] != expected or plan.get("full_sampling_plan") != (rounds >= 30 and repeats >= 3):
+        raise VerificationError("Workload or sampling completeness differs from the reviewed protocol.")
     if not plan.get("declared_at") or not plan.get("plan_id"):
         raise VerificationError("Create the dated plan with the plan command before loading or measuring.")
     if plan.get("source_revision") != source_revision():
@@ -171,6 +184,17 @@ def checked_plan(path):
             "Application revision changed: declare a new plan before measuring this revision."
         )
     return plan
+
+
+def check_seed_manifest(plan, seed, database):
+    if (
+        seed.get("database_name") != database
+        or seed.get("dataset") != plan["dataset"]
+        or seed.get("seed_plan_id") != plan["plan_id"]
+        or seed.get("source_revision") != plan["source_revision"]
+        or seed.get("plan_declared_at") != plan["declared_at"]
+    ):
+        raise VerificationError("Seed manifest must match the declared plan, source revision and database.")
 
 
 def setup_django():
