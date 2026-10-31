@@ -1,0 +1,85 @@
+{
+  "protocol": "BL29-v1",
+  "references": [
+    "BL-01 D-16",
+    "NFR-01",
+    "NFR-06",
+    "NFR-08",
+    "PT_01",
+    "PT_02",
+    "PT_03",
+    "PT_04"
+  ],
+  "targets": {
+    "common_requests_at_or_below_seconds": 2.0,
+    "common_requests_required_fraction": 0.95,
+    "mark_60_students_max_seconds": 3.0,
+    "semester_section_report_max_seconds": 10.0,
+    "concurrent_authenticated_users": 50,
+    "monthly_institutional_availability_fraction": 0.99
+  },
+  "dataset": {
+    "students": 1000,
+    "faculty": 60,
+    "administrators": 1,
+    "sections": 17,
+    "subjects": 5,
+    "assignments": 85,
+    "teaching_days": 250,
+    "classes_per_teaching_day": 3,
+    "sessions": 12750,
+    "attendance_records": 750000,
+    "semester_teaching_days": 125,
+    "largest_section_roster": 60
+  },
+  "workloads": {
+    "common_requests": {
+      "rounds": 30,
+      "users": {
+        "admin": 1,
+        "faculty": 10,
+        "student": 39
+      },
+      "routes": [
+        "dashboard_admin",
+        "dashboard_faculty",
+        "dashboard_student",
+        "attendance_summary"
+      ],
+      "student_route_selection": "alternate dashboard and report across rounds",
+      "warmup_requests_per_user": 1,
+      "synchronization": "50-worker barrier before every timed round"
+    },
+    "marking": {
+      "repeats": 3,
+      "students_per_submission": 60,
+      "foreground_users": 1,
+      "background_users": 49,
+      "route": "attendance_mark",
+      "status": "Absent",
+      "first_submission_expected_new_notifications": 60,
+      "first_submission_expected_locmem_emails": 60,
+      "callbacks": "normal autocommit, including notification on_commit callbacks before response completion"
+    },
+    "semester_report": {
+      "repeats": 3,
+      "foreground_users": 1,
+      "background_users": 49,
+      "route": "attendance_report_csv",
+      "scope": "F000 owns all five subjects in one 60-student section; last 125 teaching days",
+      "expected_student_subject_rows": 300,
+      "expected_records_summarized": 22500
+    }
+  },
+  "measurement_boundary": "Django Client in-process request stack, one process and 50 threads, authenticated persisted sessions with OTP already verified, CSRF enforced; excludes network, proxy, browser assets, password/OTP setup and external SMTP",
+  "mail_backend": "django.core.mail.backends.locmem.EmailBackend",
+  "availability": "Monthly 99% institutional-hours availability requires dated monitoring evidence; local benchmark does not establish it",
+  "plan_id": "acfea5b6-f604-48f0-b0b6-98b30e872331",
+  "declared_at": "2026-10-31T04:15:53.138494+00:00",
+  "source_revision": {
+    "head": "42f07469b08e31f93f48ceca8a1ff8048d010526",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "e1e3cb705bd4b45cdc38037b1ab3c18800c34bdc3d6f4c129158594e930fe9b5"
+  },
+  "full_sampling_plan": true
+}

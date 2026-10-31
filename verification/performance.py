@@ -99,7 +99,7 @@ def source_revision():
 
     try:
         head = git("rev-parse", "HEAD").decode().strip()
-        diff = git("diff", "HEAD", "--", "apps", "config", "templates", "requirements.txt")
+        diff = git("diff", "HEAD", "--", "apps", "config", "templates", "static", "requirements.txt")
         files = git(
             "ls-files",
             "-z",
@@ -110,6 +110,7 @@ def source_revision():
             "apps",
             "config",
             "templates",
+            "static",
             "requirements.txt",
             "requirements-dev.txt",
         ).split(b"\0")
