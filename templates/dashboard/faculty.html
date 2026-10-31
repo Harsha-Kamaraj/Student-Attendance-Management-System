@@ -3,23 +3,44 @@
 {% block title %}Faculty dashboard · Student Attendance{% endblock %}
 
 {% block content %}
-  <h1 class="h3">Faculty dashboard</h1>
-  <p><a href="{% url 'my_classes' %}">My classes</a></p>
-  <p><a href="{% url 'student_list' %}">View students in my classes</a></p>
-  <p><a href="{% url 'subject_list' %}">Subjects</a></p>
-  <p><a href="{% url 'attendance_mark' %}">Mark attendance</a></p>
-  <p><a href="{% url 'attendance_history' %}">Attendance history and corrections</a></p>
-  <p><a href="{% url 'shortage_list' %}">Students below threshold in my subjects</a></p>
-  <h2 class="h5 mt-4">My teaching overview</h2>
-  <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Classes</div><div class="fs-3">{{ class_count }}</div></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Subjects</div><div class="fs-3">{{ subject_count }}</div></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Students</div><div class="fs-3">{{ student_count }}</div></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Attendance sessions</div><div class="fs-3">{{ session_count }}</div></div></div></div>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Faculty dashboard</h1>
+    <a class="btn btn-primary" href="{% url 'attendance_mark' %}">Mark attendance</a>
   </div>
-  <div class="alert alert-warning" role="status">
-    <strong>Attendance threshold: {{ threshold }}%</strong><br>
-    Students below threshold in your assigned classes: {{ students_below_overall }}<br>
-    Subject-level shortage cases in your assigned classes: {{ subject_shortages }}
+  <h2 class="h5">My teaching overview</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Classes</div><div class="stat-value">{{ class_count }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Subjects</div><div class="stat-value">{{ subject_count }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Students</div><div class="stat-value">{{ student_count }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Attendance sessions</div><div class="stat-value">{{ session_count }}</div></div></div></div>
+  </div>
+  <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+    <div>
+      <strong>Attendance threshold: {{ threshold }}%</strong><br>
+      Students below threshold in your assigned classes: {{ students_below_overall }}<br>
+      Subject-level shortage cases in your assigned classes: {{ subject_shortages }}
+    </div>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'shortage_list' %}">Students below threshold in my subjects</a>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">Teaching</h2>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action" href="{% url 'my_classes' %}">My classes</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'student_list' %}">View students in my classes</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'subject_list' %}">Subjects</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">Attendance</h2>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action" href="{% url 'attendance_history' %}">Attendance history and corrections</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'attendance_report' %}">Attendance reports</a>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}

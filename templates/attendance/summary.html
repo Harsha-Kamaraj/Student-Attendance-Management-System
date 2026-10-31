@@ -34,9 +34,10 @@
   {% if filters_applied and not summary.overall.held %}
     <div class="alert alert-info" role="status">No attendance records match these filters.</div>
   {% endif %}
-  <div class="card mb-4"><div class="card-body">
+  <div class="card stat-card{% if overall_below %} stat-warn{% endif %} mb-4"><div class="card-body">
     <h2 class="h5">Overall attendance</h2>
-    <p class="fs-4 mb-0">{{ summary.overall.display }}</p>
+    <p class="stat-value mb-0">{{ summary.overall.display }}</p>
+    {% if overall_below %}<p class="text-shortage mb-0">Below the {{ threshold }}% threshold</p>{% endif %}
   </div></div>
   <h2 class="h5">Attendance by subject</h2>
   <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">
@@ -46,8 +47,8 @@
         {% if filters_applied and not summary.overall.held %}
           <tr><td colspan="2">No attendance records match these filters.</td></tr>
         {% else %}
-          {% for row in summary.subjects %}
-            <tr><th scope="row">{{ row.subject }}</th><td>{{ row.display }}</td></tr>
+          {% for row, below in subject_rows %}
+            <tr><th scope="row">{{ row.subject }}</th><td>{% if below %}<span class="text-shortage">{{ row.display }} ▲ Below {{ threshold }}%</span>{% else %}{{ row.display }}{% endif %}</td></tr>
           {% empty %}
             <tr><td colspan="2">N/A — no classes yet</td></tr>
           {% endfor %}

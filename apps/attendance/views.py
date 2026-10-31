@@ -166,6 +166,12 @@ def attendance_summary(request):
             start_date=data["start_date"],
             end_date=data["end_date"],
         )
+    threshold = AttendanceThreshold.current_value()
+    subject_rows = []
+    overall_below = False
+    if summary:
+        subject_rows = [(row, row.is_below_threshold(threshold)) for row in summary.subjects]
+        overall_below = summary.overall.is_below_threshold(threshold)
     return render(
         request,
         "attendance/summary.html",
@@ -173,6 +179,9 @@ def attendance_summary(request):
             "student": student,
             "form": form,
             "summary": summary,
+            "subject_rows": subject_rows,
+            "overall_below": overall_below,
+            "threshold": threshold,
             "filters_applied": bool(request.GET),
         },
     )
