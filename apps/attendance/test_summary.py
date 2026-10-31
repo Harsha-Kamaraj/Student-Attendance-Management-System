@@ -55,6 +55,14 @@ class StudentAttendanceSummaryTests(TestCase):
         self.assertContains(page, "1/1 (100.00%)", count=2)
         self.assertIn("no-store", page["Cache-Control"])
 
+    def test_below_threshold_figures_are_highlighted(self):
+        self.submit()
+        self.assertNotContains(self.client.get(self.url), "Below 75%")
+        self.client.force_login(self.other_student.user)
+        page = self.client.get(self.url)
+        self.assertContains(page, "0/1 (0.00%) ▲ Below 75%")
+        self.assertContains(page, "Below the 75% threshold")
+
     def test_query_parameters_cannot_select_another_student(self):
         self.submit()
         self.client.force_login(self.other_student.user)
