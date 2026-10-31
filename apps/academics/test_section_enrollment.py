@@ -10,6 +10,7 @@ from apps.attendance.models import AttendanceRecord, AttendanceSession
 from apps.audit.models import AuditEntry
 
 from .models import Enrollment, Section, Student, Subject, TeachingAssignment
+from .tests import make_faculty, make_student
 
 PASSWORD = "Attend#2026"
 
@@ -185,3 +186,29 @@ class SectionEnrollmentTests(TestCase):
                 )
         self.assertFalse(Section.objects.filter(class_name="Unwanted").exists())
         self.assertFalse(Enrollment.objects.exists())
+
+
+class StudentListSubjectsTests(TestCase):
+    def test_faculty_see_only_subjects_they_teach_each_student(self):
+        teacher, other = make_faculty("F001"), make_faculty("F002")
+        student = make_student("S001")
+        section = Section.objects.create(class_name="B.Tech in CS 5th sem", name="K", year=2028)
+        mine = TeachingAssignment.objects.create(
+            section=section, subject=Subject.objects.create(code="CS101", name="Programming"), faculty=teacher
+        )
+        theirs = TeachingAssignment.objects.create(
+            section=section, subject=Subject.objects.create(code="MA101", name="Mathematics"), faculty=other
+        )
+        for assignment in (mine, theirs):
+            Enrollment.objects.create(student=student, assignment=assignment)
+
+        self.client.force_login(teacher.user)
+        response = self.client.get(reverse("student_list"))
+        self.assertContains(response, "Class and section")
+        self.assertContains(response, "CS101 – Programming")
+        self.assertNotContains(response, "MA101")
+
+        self.client.force_login(User.objects.create_user(username="ADMIN9", role=Role.ADMIN))
+        response = self.client.get(reverse("student_list"))
+        self.assertContains(response, "CS101 – Programming")
+        self.assertContains(response, "MA101 – Mathematics")

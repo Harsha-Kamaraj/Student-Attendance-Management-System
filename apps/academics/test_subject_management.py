@@ -51,13 +51,18 @@ class CreateAndViewTests(SubjectTestBase):
         self.client.post(reverse("subject_create"), {"code": "PH101", "name": "Physics"})
         self.assertTrue(Subject.objects.filter(code="PH101").exists())
 
-    def test_admin_and_faculty_see_the_list(self):
-        for username in ("ADMIN1", "F001"):
-            with self.subTest(user=username):
-                self.login(username)
-                response = self.client.get(reverse("subject_list"))
-                self.assertContains(response, "CS101")
-                self.assertContains(response, "CS102")
+    def test_admin_sees_every_subject_and_faculty_only_their_own(self):
+        self.login("ADMIN1")
+        response = self.client.get(reverse("subject_list"))
+        self.assertContains(response, "CS101")
+        self.assertContains(response, "CS102")
+        self.assertContains(response, "Add subject")
+        self.login("F001")
+        response = self.client.get(reverse("subject_list"))
+        self.assertContains(response, "My subjects")
+        self.assertContains(response, "CS101")
+        self.assertNotContains(response, "CS102")
+        self.assertNotContains(response, "Add subject")
 
     def test_student_cannot_view_or_create_subjects(self):
         self.login("21CS001")

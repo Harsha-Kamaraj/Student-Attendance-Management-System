@@ -20,7 +20,15 @@ def notification_list(request):
     notifications = Notification.objects.filter(recipient=request.user)
     page = Paginator(notifications, 25).get_page(request.GET.get("page"))
     unread_ids = [n.pk for n in page if n.read_at is None]
-    response = render(request, "notifications/list.html", {"page_obj": page, "unread_ids": set(unread_ids)})
+    response = render(
+        request,
+        "notifications/list.html",
+        {
+            "page_obj": page,
+            "unread_ids": set(unread_ids),
+            "threshold": AttendanceThreshold.current_value(),
+        },
+    )
     if unread_ids:
         Notification.objects.filter(pk__in=unread_ids, recipient=request.user).update(read_at=timezone.now())
     return response

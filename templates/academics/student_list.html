@@ -9,16 +9,17 @@
 </div>
 <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">
   <table class="table table-striped align-middle">
-    <thead><tr><th>Roll number</th><th>Name</th><th>Home class / section</th><th>Status</th><th></th></tr></thead>
+    <thead><tr><th>Roll number</th><th>Name</th><th>Class and section</th><th>Subjects</th><th>Status</th><th></th></tr></thead>
     <tbody>
       {% for student in students %}
       <tr>
         <td>{{ student.roll_number }}</td><td>{{ student.full_name }}</td>
         <td>{{ student.home_section|default:"Not assigned" }}</td>
+        <td>{% for enrollment in student.visible_enrollments %}{{ enrollment.subject.code }} – {{ enrollment.subject.name }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-body-secondary">None</span>{% endfor %}</td>
         <td>{% if student.user.is_active %}Active{% else %}Inactive{% endif %}</td>
         <td><a href="{% url 'student_detail' student.pk %}">View</a></td>
       </tr>
-      {% empty %}<tr><td colspan="5">No visible student records.</td></tr>{% endfor %}
+      {% empty %}<tr><td colspan="6">No visible student records.</td></tr>{% endfor %}
     </tbody>
   </table>
 </div>

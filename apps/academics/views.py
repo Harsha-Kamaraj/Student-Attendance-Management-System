@@ -4,7 +4,7 @@ subjects (BL-09 / UC-04), teaching assignments (BL-11 / UC-03, UC-05)."""
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_variables
@@ -43,7 +43,18 @@ from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssi
 @never_cache
 @requires("students.view")
 def student_list(request):
-    students = visible_students(request.user).select_related("user", "home_section").order_by("roll_number")
+    # Subjects column: Faculty see only the subjects they teach the student; the Admin sees all.
+    subjects = (
+        Enrollment.objects.filter(assignment__in=visible_assignments(request.user))
+        .select_related("subject")
+        .order_by("subject__code")
+    )
+    students = (
+        visible_students(request.user)
+        .select_related("user", "home_section")
+        .prefetch_related(Prefetch("enrollments", queryset=subjects, to_attr="visible_enrollments"))
+        .order_by("roll_number")
+    )
     return render(request, "academics/student_list.html", {"students": students})
 
 
@@ -376,6 +387,9 @@ def _subject_usage(subject):
 @requires("subjects.create")
 def subject_list(request):
     subjects = Subject.objects.order_by("code")
+    if request.user.role == Role.FACULTY:
+        # Faculty see only the subjects they are assigned to teach.
+        subjects = subjects.filter(assignments__in=visible_assignments(request.user)).distinct()
     editable = {s.pk for s in subjects if can_edit_subject(request.user, s)}
     return render(request, "academics/subject_list.html", {"subjects": subjects, "editable": editable})
 

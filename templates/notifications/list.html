@@ -6,6 +6,11 @@
   <a href="{% url 'dashboard' %}">Back to dashboard</a>
 </div>
 {% if page_obj.object_list %}
+  <p class="text-body-secondary">
+    The attendance threshold is currently <strong>{{ threshold }}%</strong>.
+    Each alert shows the threshold that applied when it was sent; you are alerted again only after
+    recovering and dropping below it once more.
+  </p>
   <div class="list-group mb-3">
     {% for notification in page_obj %}
       <div class="list-group-item{% if notification.pk in unread_ids %} list-group-item-warning{% endif %}">
