@@ -100,6 +100,14 @@ Admin and Faculty open **Attendance history and corrections** from their dashboa
 
 Each correction and its editor, timestamp, old/new status and reason are saved atomically. Percentages and dashboards reflect the saved correction immediately. Students see their own updated totals, while staff history remains restricted to Admin and authorized Faculty. Run `python manage.py migrate` before using these pages. See [`Documents/BL-16-18_Implementation.md`](Documents/BL-16-18_Implementation.md).
 
+## Attendance reports and exports (BL-20, BL-21)
+
+Admin and Faculty open **Attendance reports** from their dashboard. Select both date bounds and a
+student, class/section, class-and-subject, or **All my authorized classes**, then choose **Generate report**.
+CSV and PDF downloads become available for a valid selection with data. Blank/invalid selections do
+not generate downloads. Faculty reports always remain limited to their own teaching assignments,
+including when selecting a section shared with another teacher.
+
 ## Low-attendance notifications and the below-threshold list (BL-23, BL-24)
 
 - **Students** get one in-app notification (**Notifications** in the navigation bar) and one email each time a subject or overall percentage falls below the threshold. Nothing more is sent while it stays below; recovering to the threshold or above clears it, and a later drop notifies again. The check runs after every attendance save, correction and threshold change. If email fails, the in-app notification is still delivered and the failure is logged.
@@ -107,6 +115,49 @@ Each correction and its editor, timestamp, old/new status and reason are saved a
 - **Monday email:** schedule `python manage.py send_weekly_shortage_emails` for Mondays at 08:00 IST (cron example in the implementation note). Faculty with an empty list get no email, and re-running in the same week sends no duplicates.
 
 Run `python manage.py migrate` before using these pages. See [`Documents/BL-23-24_Implementation.md`](Documents/BL-23-24_Implementation.md).
+
+## Email login details (BL-34 / issue #42)
+
+Adding a student or faculty member sends their username, a fresh temporary password and the login link to their own email address only. Password resets also email the account owner. The Admin sees a masked delivery result; if delivery fails, the saved account remains available and the temporary password appears once on the response page for private handover. Successful emails do not show the password on the Admin page. Users must still complete OTP and change the temporary password at first login.
+
+**Accounts → Resend login details** is available for active accounts still using a temporary password. It generates a new password and invalidates the earlier one; existing passwords cannot be recovered from their hashes. After a user has chosen their own password, use **Reset password** instead. Only Admins may create, reset or resend credentials. Attempts and outcomes are audited without the password, message body or provider exception text.
+
+Set `SITE_URL` in `.env` to the application's public origin, for example `https://attendance.example.edu`. Production requires HTTPS; links never use the request's Host header. Configure the existing SMTP `EMAIL_*` settings and `DEFAULT_FROM_EMAIL` for real delivery. `EMAIL_TIMEOUT` bounds the synchronous send; a successful send means the mail backend accepted the message, not proof that it reached an inbox.
+
+With `DEBUG=True`, the console backend prints a development preview and the UI explicitly says no email was delivered. Use fictional accounts and do not retain these previews in logs. Credential emails refuse the console backend in production and refuse file-based/dummy backends; failure falls back to the one-time password display. No plaintext credential queue or stored email body is created. If a process stops after saving the account and before responding/sending, the Admin can issue new login details from Accounts.
+
+See [`Documents/BL-34_Implementation.md`](Documents/BL-34_Implementation.md). Tests: `python manage.py test apps.accounts.test_credential_email`.
+
+## Backup and recovery (BL-26 / BL-27)
+
+These features are independent of low-attendance notifications and lists (BL-23/24).
+Admins open **Backup and recovery** from their dashboard (`/backups/`).
+
+- **Back up now** creates an authenticated-encrypted snapshot of users, academics, attendance, application settings, permissions and audit history. Files are private (`0600`) in `BACKUP_DIRECTORY` (`0700`, default `var/backups`, excluded from Git). A failed backup never overwrites an older one.
+- **Configure schedule** enables a daily time in IST. The server scheduler must invoke `run_scheduled_backups` every minute (see below). Missed runs catch up once; failures retry after 15 minutes. The page shows the next attempt, last scheduled success and failures.
+- **Download encrypted file** lets the Admin keep an off-server copy. **Import a saved backup** validates a downloaded `.sambak` file and adds it to the catalogue without changing application data.
+- **Restore** requires the Admin's current password and explicit confirmation. Integrity and schema checks run first; a safety backup is required before replacement. Restore commits all data together or rolls back. Live requests are blocked during recovery, and an active request causes restore to ask the Admin to retry.
+- Existing audit events and the backup catalogue/schedule survive restore. Missing audit events from the snapshot are appended. All sessions end, and previously issued email/backup codes are invalidated; sign in with an account/password from the snapshot and a fresh authenticator code or new email code. Admin OTP reset can issue a replacement set of backup codes.
+
+After installing dependencies and running migrations, generate a Fernet key and put it in the local `.env` as `BACKUP_ENCRYPTION_KEY`. Keep a secure copy of the key separately from backup files. A missing key disables backup creation; there is no unencrypted fallback.
+
+Configure the **server's** task scheduler to run the following every minute, as the application OS user. Example crontab (replace paths for your deployment):
+
+```cron
+* * * * * cd /srv/attendance && /srv/attendance/.venv/bin/python manage.py run_scheduled_backups >> /srv/attendance-backup-scheduler.log 2>&1
+```
+
+Setting a time in the web page does not install a system scheduler. To check one tick manually:
+
+```bash
+python manage.py run_scheduled_backups
+```
+
+For recovery onto a replacement server, deploy the same application release and migrations, configure PostgreSQL and the original encryption key, create a temporary Admin and complete OTP setup, then import and restore a saved encrypted file. Restoring replaces the temporary Admin too; use an Admin account from the snapshot afterward. Backups from a different migration/schema version are rejected. `.env`, encryption keys, application source, sessions and external files are not part of the data snapshot.
+
+Snapshots are processed in memory with a configurable 256 MiB file limit; provision sufficient worker memory and request timeouts. Backup operations require a direct or session-pooled PostgreSQL connection because maintenance locks span transactions. Do not use transaction-pooling mode. Database table locks also protect consistency from external writers; run recovery during a maintenance window and stop external jobs that write application data.
+
+Tests: `python manage.py test apps.backups` (uses only disposable test databases and temporary encrypted storage).
 
 ## Configuration variables
 

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load tz %}
+{% block title %}Restore backup · Student Attendance{% endblock %}
+{% block content %}
+<div class="col-lg-7">
+  <h1 class="h3">Restore this backup?</h1>
+  <p>Snapshot: <strong>{{ backup.snapshot_at|timezone:"Asia/Kolkata"|date:"d M Y H:i:s" }} IST</strong><br><small>{{ backup.pk }}</small></p>
+  <div class="alert alert-warning" role="alert">This replaces current accounts, classes, attendance and settings with the snapshot. Changes made after the snapshot will be undone.</div>
+  <p>A safety backup of current data is created first. Existing audit history and your backup schedule are kept. If validation or restore fails, current application data stays unchanged.</p>
+  <p>Everyone will be signed out. Use the passwords and authenticator setup from the backup to sign in again. Previously issued email and backup codes will stop working; use a fresh app code or request a new email code.</p>
+  <form method="post" novalidate>{% csrf_token %}{% include "includes/form_fields.html" %}
+    <button class="btn btn-danger">Restore backup</button> <a class="btn btn-link" href="{% url 'backup_list' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

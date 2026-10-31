@@ -9,9 +9,11 @@ __pycache__/
 # Django
 /staticfiles/
 /media/
+/var/backups/
 
 # Tools
 .ruff_cache/
+/artifacts/
 
 # Editors and operating systems
 .DS_Store

@@ -1,0 +1,75 @@
+{
+  "measured_at": "2026-10-31T04:17:16.185951+00:00",
+  "source_revision": {
+    "head": "42f07469b08e31f93f48ceca8a1ff8048d010526",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "fb2a92c509955f7bbe0ed61b5b4c600691541a5b1e9849f1d1e2b4e0a772afe7"
+  },
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "144 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "manage.py",
+        "check"
+      ],
+      "exit_code": 0,
+      "stdout": "System check identified no issues (0 silenced).\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "manage.py",
+        "makemigrations",
+        "--check",
+        "--dry-run"
+      ],
+      "exit_code": 0,
+      "stdout": "No changes detected\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "exit_code": 0,
+      "stdout": "No broken requirements found.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "collectstatic_log": "\n130 static files copied to '/tmp/attendance-ready-static'.\n"
+}

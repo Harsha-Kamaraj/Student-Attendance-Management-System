@@ -1,0 +1,14 @@
+{
+  "performance-run-b-summary.json": {
+    "original_artifact_sha256": "e7571a0b5c31974af087ab79cd07bc7cecbaeb38b46fbf07a42d13b144f608a3",
+    "original_artifact_bytes": 598682,
+    "representation": "summary; omitted fields and counts are explicit in the summary"
+  },
+  "performance-run-c.json": {
+    "original_artifact_sha256": "7ef12f7a0ed681d97718c3ba972645bd4e91c510ba94c6040514a827e79b5832",
+    "original_artifact_bytes": 598697,
+    "representation": "complete original JSON values; each measured request sample formatted on one line",
+    "measured_sample_count": 1800,
+    "round_trip_equality_verified": true
+  }
+}

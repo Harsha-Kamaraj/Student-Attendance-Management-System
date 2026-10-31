@@ -1,0 +1,94 @@
+{
+  "application_revision": {
+    "head": "daebfc104614c5dbd140c10f62c154e21fa80ab8",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "bdc7df231cce73c8a5e046c09a9f76891f416e47214c2b735e31c50dd356f320"
+  },
+  "regression_note": "Final suite and performance run executed at daebfc1 after merging main 60cdba8 (PR #52). Default application password hashers were used. No application/test edits occurred during either run. Earlier results at 27b5329 are retained in Git commit 365f11d.",
+  "profiles_note": "Before/after profiles cover the isolated query optimization at 5c956ae. Final performance includes the report-scope fix and merged PR #52 at daebfc1. Sequential profile timings are not concurrent acceptance measurements.",
+  "files": {
+    "baseline-plan.json": {
+      "source_bytes_sha256": "69b9f6e3487d90533a896277d36b54c864b2d5f97505094ff4b52c78328b2a8f",
+      "retained_sha256": "69b9f6e3487d90533a896277d36b54c864b2d5f97505094ff4b52c78328b2a8f",
+      "json_values_preserved": true
+    },
+    "baseline-seed.json": {
+      "source_bytes_sha256": "deabe54add1aa4133f6cb22948b961695783d63f715ccbb6f3d6db38ab925b38",
+      "retained_sha256": "deabe54add1aa4133f6cb22948b961695783d63f715ccbb6f3d6db38ab925b38",
+      "json_values_preserved": true
+    },
+    "baseline-performance.json": {
+      "source_bytes_sha256": "b872c2d0ec6374629e5076b38e7f71e8769964ad76b69fc1fa049517c12abdf3",
+      "retained_sha256": "b6bb26cc760c0788355f1dd84147fbd7c09021e83a74b13f89fdd26c40f1be87",
+      "json_values_preserved": true
+    },
+    "final-plan.json": {
+      "source_bytes_sha256": "7006babb38c886ba120c67074621fb46eb45cc388122b71adb270e0bacd8bb82",
+      "retained_sha256": "7006babb38c886ba120c67074621fb46eb45cc388122b71adb270e0bacd8bb82",
+      "json_values_preserved": true
+    },
+    "final-seed.json": {
+      "source_bytes_sha256": "5c9d879de409e97069f4a380e2c4847af07a6a34ef43bdd3c8ff38f1848bc4cf",
+      "retained_sha256": "5c9d879de409e97069f4a380e2c4847af07a6a34ef43bdd3c8ff38f1848bc4cf",
+      "json_values_preserved": true
+    },
+    "final-performance.json": {
+      "source_bytes_sha256": "92232b5c83bd5ff1cef6090739cf0d4217dbc55efd0c2d1443206cd15e42a02b",
+      "retained_sha256": "923960dfbc17f9321b3abce85184fd60364abeafc2e7ed4cbf68913cb9eac35f",
+      "json_values_preserved": true
+    },
+    "profile-before.json": {
+      "source_bytes_sha256": "668fafba2a1b4746cea9bcbfe492686dcc4568a40e11e816c7f0814e2170bc64",
+      "retained_sha256": "668fafba2a1b4746cea9bcbfe492686dcc4568a40e11e816c7f0814e2170bc64",
+      "json_values_preserved": true
+    },
+    "profile-after.json": {
+      "source_bytes_sha256": "47bc2a72659077894a17d56123a7553047850092f23ef69520d26550674b5be1",
+      "retained_sha256": "47bc2a72659077894a17d56123a7553047850092f23ef69520d26550674b5be1",
+      "json_values_preserved": true
+    },
+    "regression.json": {
+      "source_bytes_sha256": "85b577abf851247554db94a15b015fa7078bae8c0eda8c28a0c2e32262d3bdfc",
+      "retained_sha256": "dae731a23fe31efb9e4059b3eab2dd15e258879635c2ec706f815421af177443",
+      "json_values_preserved": true
+    },
+    "availability-month.json": {
+      "source_bytes_sha256": "383ceddf9ea71b488cf46730d1f54fa733e2b31f5191a3bf5f7ef08bb88cad32",
+      "retained_sha256": "2663ba1bc9fb44cd99766041e97a0e483df70b975956243957b9da112b647472",
+      "json_values_preserved": true
+    },
+    "availability-local.jsonl": {
+      "retained_sha256": "113622a5ab86e0b50820092c37d2f6890442ac64636e44e691dacbe04e5165b2"
+    },
+    "static-checks.json": {
+      "retained_sha256": "203ff2e113fe57566a8be74d1e220e33049c26065209377119282b9e3fb9f6b3"
+    },
+    "github-tests.json": {
+      "source_bytes_sha256": "7df574973b77280ce52f0f47a8079e712e734b3a5350de09d19c2dab587b1129",
+      "retained_sha256": "e6eb90ca28c754644110e195c69151b37cdeffc075b504c5fd4094aec7081a49",
+      "json_values_preserved": true
+    },
+    "github-plan.json": {
+      "source_bytes_sha256": "7c74a20fe412b3688414a34576509e4bac6eb8bf93ddc5b5104fc0180828134a",
+      "retained_sha256": "7c74a20fe412b3688414a34576509e4bac6eb8bf93ddc5b5104fc0180828134a",
+      "json_values_preserved": true
+    },
+    "github-performance.json": {
+      "source_bytes_sha256": "1c22c4c52baf1b500258f8995c1e599e26bdb562d7df0de394c9890be4dd5bec",
+      "retained_sha256": "df7f63f93cea3178bb15dd8ee7071570adeffd0fd76892f2567e96654ceda4ce",
+      "json_values_preserved": true
+    },
+    "github-seed.json": {
+      "source_bytes_sha256": "75e7a311f5c2c1075e59c9cbaeba4b68b4fe96a143c13c744e576a08b74986de",
+      "retained_sha256": "75e7a311f5c2c1075e59c9cbaeba4b68b4fe96a143c13c744e576a08b74986de",
+      "json_values_preserved": true
+    }
+  },
+  "github_verification": {
+    "run_id": 41153839750,
+    "url": "https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/actions/runs/41153839750",
+    "conclusion": "success",
+    "source_commit": "27b5329592a9a5343a270cb6f041f0788d54e79a",
+    "boundary": "Independent Ubuntu run before the later PR #52 navigation merge. Final integrated Mac measurements are in final-performance.json."
+  }
+}

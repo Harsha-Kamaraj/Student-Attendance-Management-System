@@ -1,0 +1,120 @@
+{
+  "application_revision": {
+    "head": "42f07469b08e31f93f48ceca8a1ff8048d010526",
+    "application_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "application_tree_sha256": "fb2a92c509955f7bbe0ed61b5b4c600691541a5b1e9849f1d1e2b4e0a772afe7"
+  },
+  "files": {
+    "mac-browser.json": {
+      "source_sha256": "6a12afdf6970c53fd812a65bb0d46097bed969f2c51192072724b678c01b3688",
+      "retained_sha256": "21e60bee1f0094efada90f62db3018761cdd3f7351447e976ee4f8672c1fa143",
+      "json_values_preserved": true
+    },
+    "mac-plan.json": {
+      "source_sha256": "5b7462d77a5372f957c37ae30636c2d5f5b176ab5cc824c9bf139620bb1e96e2",
+      "retained_sha256": "5b7462d77a5372f957c37ae30636c2d5f5b176ab5cc824c9bf139620bb1e96e2",
+      "json_values_preserved": true
+    },
+    "mac-seed.json": {
+      "source_sha256": "6918ba3f803814f33e738ea547ee04031f189eab54db0396e46a290026928ad4",
+      "retained_sha256": "6918ba3f803814f33e738ea547ee04031f189eab54db0396e46a290026928ad4",
+      "json_values_preserved": true
+    },
+    "mac-performance.json": {
+      "source_sha256": "a06f30b95c7d8dc07d0a8adece6cb0b0adcd9923f963136b35c089e7a99fbaab",
+      "retained_sha256": "c2a3b7f7f05d142cceb703c0e52a34d0904e919d27060444267f0d4818e2286a",
+      "json_values_preserved": true
+    },
+    "targeted-tests.json": {
+      "source_sha256": "c79bfb1103c5b1352213e232735769deebc9e2717ce1dc0aa3b1670fc17e5b49",
+      "retained_sha256": "8a7dc10ea794ab122bd8260399ffebf5e2dddf1c0debfe770ecf351f28eb32de",
+      "json_values_preserved": true
+    },
+    "before-mobile-table.png": {
+      "retained_sha256": "4a2ccc1615b8ce65dece82064af36f230f997224ac37b92aabb525614bc8942a"
+    },
+    "after-mobile-table.png": {
+      "retained_sha256": "45741301f55bdf61d17732be1dc3701bdfdd862f0ac2dfd37dfb0054b5f2f44d"
+    },
+    "mobile-admin.png": {
+      "retained_sha256": "c2637a799b802ec292a71046a5ffdd47332d501531bd77bc25273d2545c4f043"
+    },
+    "mobile-student.png": {
+      "retained_sha256": "2526207de057473d9206d7629f372d39d630422968048a150ac3d99ce4825b85"
+    },
+    "static-checks.json": {
+      "retained_sha256": "39767daa411312cc20bf41a8350a756cbbf0b6b277ec095a8c12b36572ccb6f0"
+    },
+    "linux-plan.json": {
+      "source_sha256": "1f3cf28c56761771e7b7b83fa0451fb5a0e147ed837e5462bd7601671c089b6b",
+      "retained_sha256": "1f3cf28c56761771e7b7b83fa0451fb5a0e147ed837e5462bd7601671c089b6b",
+      "json_values_preserved": true
+    },
+    "linux-seed.json": {
+      "source_sha256": "f37dd2b0a3fef3f244bc7db9d7e1427a1ab93f253e5979708e4e9958c6963fe5",
+      "retained_sha256": "f37dd2b0a3fef3f244bc7db9d7e1427a1ab93f253e5979708e4e9958c6963fe5",
+      "json_values_preserved": true
+    },
+    "linux-performance.json": {
+      "source_sha256": "60bc3d211726c1fa0218aa2c6245d0ee273aac623421aae1ca5207cbbb26681a",
+      "retained_sha256": "336fd3bf2760f64facc474b090c60af5bea0c36578ce3cb5e50d2eaea89ff399",
+      "json_values_preserved": true
+    },
+    "linux-tests.json": {
+      "source_sha256": "922b3395bcbbe828134158f5909988a33c385e73cdf2b8279b6dd4dc30f14a4a",
+      "retained_sha256": "77767c25e6b522d9d6d24feba41d8eedac0e2c633e3750fa8f6d083a007fdec4",
+      "json_values_preserved": true
+    },
+    "windows-plan.json": {
+      "source_sha256": "820ed6edb276ab48fcfb52739deb83ebefd206e31f38a4aeba8ba2d878629e5d",
+      "retained_sha256": "8ecbf5a68d6a556e68e8ab1b89f7232994101eb03d7367764af0d41f80810c1d",
+      "json_values_preserved": true
+    },
+    "windows-seed.json": {
+      "source_sha256": "89e73e7af6307a72770d2bb1c1b3e940ef10dff2754bd7d35daf821dd628b12a",
+      "retained_sha256": "8509d2613ec39fc9f8e48dc02487a366d2a669321244ac415a0e95429c1cd44c",
+      "json_values_preserved": true
+    },
+    "windows-performance.json": {
+      "source_sha256": "def590e2261531a9a044b579db0c04da8b9050a57801efc769db21d1ef3e8f9f",
+      "retained_sha256": "a035300ffee8515134ac2cf481de2cf3c4478016be64ebf346ad98133078c494",
+      "json_values_preserved": true
+    },
+    "windows-tests.json": {
+      "source_sha256": "b4d80bb080bc8618d128d297bd064afd78a7a9d2dfe591fc49b8a932387b07cd",
+      "retained_sha256": "1a966c3dbf3f3ba3713f1609d66bf6baf9a6bcf3665069f1b6e72f95c8967bcf",
+      "json_values_preserved": true
+    },
+    "linux-browser.json": {
+      "source_sha256": "cd133780c5a36c9576891844512ff22ee6669a580a64794b1c0aea3478e707e2",
+      "retained_sha256": "c1bed8eb32e949ff9dfed16ffe241d333d21db055e219dd4acdffedc536d3435",
+      "json_values_preserved": true
+    },
+    "windows-browser.json": {
+      "source_sha256": "92156274a2b322951af8c47b8e0e202a900f8f997b304119d304e161dd7fc0ca",
+      "retained_sha256": "a4a881228f7c0d417ec6ab53f22d96759baabff8a3ea19358a9d4e6e5d4467b9",
+      "json_values_preserved": true
+    },
+    "windows-edge-mobile.png": {
+      "retained_sha256": "15d6c06212b89cdc3768d6fc6c33d7c06c08aa9fbaecbd655f779cd3a56598cf"
+    }
+  },
+  "notes": [
+    "The Mac matrix used all role workflows with real OTP; 360px cases emulate viewport/touch, not physical phones.",
+    "Mac data files are bound to the measured source tree; later report-only commits do not change application code.",
+    "The before screenshot is a diagnostic retained to show the readability defect; it is not a passing release screenshot.",
+    "The first mixed run exposed a browser-runner load-timing issue; it was corrected, and the complete four-job run above passed. Earlier failed diagnostics are not counted as passing coverage."
+  ],
+  "github_verification": {
+    "run_id": 41167521444,
+    "source_commit": "42f0746",
+    "conclusion": "success",
+    "jobs": [
+      "Linux regression/performance",
+      "Windows regression/performance",
+      "Ubuntu browser engines",
+      "Windows native Chrome/Edge"
+    ],
+    "url": "https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/actions/runs/41167521444"
+  }
+}

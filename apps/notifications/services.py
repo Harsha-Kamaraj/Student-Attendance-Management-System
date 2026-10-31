@@ -136,13 +136,17 @@ def evaluate_students(student_ids=None, *, threshold=None):
     notifications = []
     for sid, items in by_student.items():
         items.sort(key=lambda item: (item[0] is None, item[0].code if item[0] else ""))
-        notification = Notification.objects.create(
+        notification = Notification(
             recipient=locked[sid].user,  # only the affected student (SEC-25)
             title=f"Low attendance: below {threshold}%",
             body=_student_message(items, threshold),
         )
         notifications.append(notification)
-        transaction.on_commit(partial(send_notification_email, notification.pk))
+    Notification.objects.bulk_create(notifications)
+    # A class can cross the threshold for 60 students at once. Insert the batch
+    # together and reload recipients once after commit, rather than once per
+    # student. Each recipient still receives a separate, private email.
+    transaction.on_commit(partial(send_notification_emails, tuple(note.pk for note in notifications)))
     return notifications
 
 
@@ -153,9 +157,16 @@ def _log_email_failure(action, *, target_type, target_id, error):
 
 def send_notification_email(notification_id):
     """Email one in-app notification to its recipient. Failures are logged, never raised (AR-13)."""
-    notification = Notification.objects.select_related("recipient").filter(pk=notification_id).first()
-    if notification is None:
-        return False
+    return bool(send_notification_emails([notification_id]))
+
+
+def send_notification_emails(notification_ids):
+    """Read committed recipients in one query; isolate delivery failure per recipient."""
+    notifications = Notification.objects.select_related("recipient").filter(pk__in=notification_ids)
+    return sum(_send_notification_email(notification) for notification in notifications)
+
+
+def _send_notification_email(notification):
     address = notification.recipient.email
     if not address:
         _log_email_failure(

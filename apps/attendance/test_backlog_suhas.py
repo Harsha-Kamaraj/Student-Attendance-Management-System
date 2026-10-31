@@ -133,6 +133,23 @@ class BacklogFeatureTests(TestCase):
         self.assertContains(student_page, "Attendance threshold")
         self.assertContains(student_page, "Your overall attendance is below the threshold.")
 
+    def test_dashboard_pools_unequal_subject_counts_in_one_scoped_query(self):
+        day = datetime.date(2026, 10, 1)
+        for period, status in enumerate((Status.PRESENT, Status.PRESENT, Status.ABSENT), start=1):
+            self.add_record(self.student, self.assignment, day, status, period=period)
+        self.add_record(self.student, self.other_assignment, day, Status.PRESENT)
+        # 2/3 and 1/1 pool to exactly 3/4, not the average of subject percentages.
+        with self.assertNumQueries(1):
+            stats = attendance_shortage_statistics(threshold=75)
+        self.assertEqual(stats, {"threshold": 75, "subject_shortages": 1, "students_below_overall": 0})
+        with self.assertNumQueries(1):
+            scoped = attendance_shortage_statistics(
+                assignments=TeachingAssignment.objects.filter(pk=self.assignment.pk), threshold=75
+            )
+        self.assertEqual(scoped["subject_shortages"], 1)
+        self.assertEqual(scoped["students_below_overall"], 1)
+        self.assertEqual(attendance_shortage_statistics(threshold=80)["students_below_overall"], 1)
+
     def test_attendance_summary_recalculates_after_record_correction(self):
         record = self.add_record(self.student, self.assignment, datetime.date(2026, 10, 1), Status.ABSENT)
         before = student_attendance_summary(self.student)

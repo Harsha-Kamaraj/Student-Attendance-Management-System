@@ -38,10 +38,12 @@ INSTALLED_APPS = [
     "apps.attendance",
     "apps.audit",
     "apps.notifications",
+    "apps.backups",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.backups.middleware.RestoreMaintenanceMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -116,6 +118,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = Path(env("STATIC_ROOT", default=str(BASE_DIR / "staticfiles")))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -138,3 +141,10 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
+SITE_URL = env("SITE_URL", default="http://127.0.0.1:8000" if DEBUG else "")
+
+# Encrypted backups (BL-26/27). Keep the key separately from copies of the backup files.
+BACKUP_DIRECTORY = Path(env("BACKUP_DIRECTORY", default=str(BASE_DIR / "var" / "backups")))
+BACKUP_ENCRYPTION_KEY = env("BACKUP_ENCRYPTION_KEY", default="")
+BACKUP_MAX_BYTES = env.int("BACKUP_MAX_BYTES", default=256 * 1024 * 1024)
+BACKUP_LOCK_TIMEOUT_SECONDS = env.int("BACKUP_LOCK_TIMEOUT_SECONDS", default=10)

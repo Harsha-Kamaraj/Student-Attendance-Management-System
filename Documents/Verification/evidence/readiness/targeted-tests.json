@@ -1,0 +1,38 @@
+{
+  "started_at": "2026-10-31T04:03:25.922531+00:00",
+  "finished_at": "2026-10-31T04:03:26.225540+00:00",
+  "tests_run": 20,
+  "successful": true,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "password_hashers": [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher"
+  ],
+  "results": [
+    {"test": "tests.test_document_mode.DocumentModeTests.test_public_and_login_pages_begin_with_a_real_html_doctype", "status": "passed", "seconds": 0.010772},
+    {"test": "tests.test_availability.ReadinessTests.test_database_or_maintenance_outage_returns_generic_503", "status": "passed", "seconds": 0.000959},
+    {"test": "tests.test_availability.ReadinessTests.test_public_readiness_checks_database_without_private_details", "status": "passed", "seconds": 0.00591},
+    {"test": "tests.test_availability.ReadinessTests.test_readiness_is_public_even_during_otp_or_forced_password_change", "status": "passed", "seconds": 0.006705},
+    {"test": "tests.test_availability.ReadinessTests.test_readiness_never_loads_authenticated_cookie_from_an_unavailable_database", "status": "passed", "seconds": 0.003514},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_altered_workload_and_false_completeness_are_rejected", "status": "passed", "seconds": 0.066129},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_database_guard_refuses_real_remote_and_non_postgres_databases", "status": "passed", "seconds": 0.000146},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_failed_requests_never_count_towards_response_time_target", "status": "passed", "seconds": 3.4e-05},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_percentile_uses_upper_tail_and_rejects_invalid_samples", "status": "passed", "seconds": 3.9e-05},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_representative_calendar_has_250_mon_sat_days_in_one_year", "status": "passed", "seconds": 0.000116},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_seed_from_another_plan_or_source_is_rejected", "status": "passed", "seconds": 3.4e-05},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_short_smoke_run_cannot_claim_full_sampling", "status": "passed", "seconds": 0.074838},
+    {"test": "tests.test_performance.PerformanceEvidenceTests.test_source_change_requires_a_new_plan", "status": "passed", "seconds": 0.04344},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_complete_observed_month_can_pass_and_measured_downtime_can_fail", "status": "passed", "seconds": 0.024106},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_duplicate_probe_failure_wins_without_double_counting", "status": "passed", "seconds": 0.012983},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_invalid_timestamps_status_and_probe_credentials_are_rejected", "status": "passed", "seconds": 0.015518},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_missing_samples_are_unknown_even_when_observed_samples_are_all_up", "status": "passed", "seconds": 0.00587},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_only_preannounced_maintenance_is_excluded_without_overlap_double_counting", "status": "passed", "seconds": 0.014713},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_slots_use_ist_business_hours_and_exclude_sundays", "status": "passed", "seconds": 0.001556},
+    {"test": "tests.test_availability.MonthlyAvailabilityTests.test_unfinished_month_and_future_samples_cannot_produce_pass", "status": "passed", "seconds": 0.007837}
+  ]
+}

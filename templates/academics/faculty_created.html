@@ -2,6 +2,8 @@
 {% block title %}Faculty created · Student Attendance{% endblock %}
 {% block content %}
 <h1 class="h3">Faculty account created</h1>
+{% include "accounts/includes/credential_delivery.html" %}
+{% if temporary_password %}
 <p>Give these credentials privately to <strong>{{ member.full_name }}</strong>.</p>
 <dl class="row border rounded p-3">
   <dt class="col-sm-3">Username</dt><dd class="col-sm-9">{{ member.faculty_id }}</dd>
@@ -9,5 +11,6 @@
   <dd class="col-sm-9"><code data-testid="temporary-password">{{ temporary_password }}</code></dd>
 </dl>
 <div class="alert alert-warning">This password is shown only once. The faculty member must change it at first login.</div>
+{% endif %}
 <a class="btn btn-primary" href="{% url 'faculty_detail' member.pk %}">View faculty member</a>
 {% endblock %}

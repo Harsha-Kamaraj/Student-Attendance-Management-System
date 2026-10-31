@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-29T13:30:25.103Z",
+  "browser": "153.0.8010.12",
+  "node": "v22.18.0",
+  "otpEnabled": true,
+  "scope": "BL-31 functional integration; excludes BL-30 browser/device usability matrix",
+  "passwordOnlyGate": true,
+  "markingNotificationScope": true,
+  "correctedReportsAndDownloads": true,
+  "authorizationAndCsrf": true,
+  "encryptedRecoveryAndFreshOtp": true,
+  "javascriptErrors": [],
+  "completedAt": "2026-10-29T13:32:32.3741826Z",
+  "duration_seconds": 127.271
+}

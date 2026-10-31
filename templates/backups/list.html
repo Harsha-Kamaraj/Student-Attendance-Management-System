@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load tz %}
+{% block title %}Backup and recovery · Student Attendance{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+  <div><h1 class="h3">Backup and recovery</h1><p class="text-body-secondary mb-0">Encrypted snapshots of accounts, attendance and application settings.</p></div>
+  <a href="{% url 'dashboard_admin' %}">Back to dashboard</a>
+</div>
+{% if configuration_error %}<div class="alert alert-warning" role="alert">{{ configuration_error }}</div>{% endif %}
+<div class="row g-3 mb-4">
+  <div class="col-md-6"><section class="card card-body h-100">
+    <h2 class="h5">Create a backup</h2>
+    <p>Existing backups remain available if a new backup fails. Download an encrypted copy and keep it in a safe location outside this server.</p>
+    <form method="post" action="{% url 'backup_create' %}">{% csrf_token %}<button class="btn btn-primary"{% if configuration_error %} disabled{% endif %}>Back up now</button></form>
+    <a class="mt-3" href="{% url 'backup_import' %}">Import a saved backup</a>
+  </section></div>
+  <div class="col-md-6"><section class="card card-body h-100">
+    <h2 class="h5">Daily schedule</h2>
+    {% if schedule.enabled %}
+      <p>Every day at <strong>{{ schedule.time|time:"H:i" }} IST</strong>.<br>Next attempt: {{ schedule.next_run_at|timezone:"Asia/Kolkata"|date:"d M Y H:i" }} IST.</p>
+    {% else %}<p>Scheduled backups are disabled.</p>{% endif %}
+    {% if schedule.last_success_at %}<p>Last scheduled success: {{ schedule.last_success_at|timezone:"Asia/Kolkata"|date:"d M Y H:i" }} IST.</p>{% endif %}
+    {% if schedule.last_error %}<p class="text-danger" role="alert">{{ schedule.last_error }} The scheduler will retry after 15 minutes.</p>{% endif %}
+    {% if schedule.enabled and not schedule.last_attempt_at %}<p class="text-body-secondary">No scheduled attempt has run yet.</p>{% endif %}
+    <a href="{% url 'backup_schedule' %}">Configure schedule</a>
+  </section></div>
+</div>
+<h2 class="h5">Backup history</h2>
+<div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0"><table class="table align-middle">
+  <thead><tr><th>Created (IST)</th><th>Type / requested by</th><th>Status</th><th>Size</th><th>Actions</th></tr></thead>
+  <tbody>{% for backup in page_obj %}
+  <tr>
+    <td>{{ backup.created_at|timezone:"Asia/Kolkata"|date:"d M Y H:i:s" }}<br><small class="text-body-secondary">{{ backup.pk }}</small></td>
+    <td>{{ backup.get_kind_display }}<br>{{ backup.requested_by }}</td>
+    <td>{{ backup.get_status_display }}{% if backup.error %}<p class="text-danger mb-0">{{ backup.error }}</p>{% endif %}</td>
+    <td>{% if backup.status == "complete" %}{{ backup.size|filesizeformat }}{% else %}—{% endif %}</td>
+    <td>{% if backup.status == "complete" %}<a href="{% url 'backup_download' backup.pk %}">Download encrypted file</a><br><a href="{% url 'backup_restore' backup.pk %}">Restore…</a>
+    <details class="mt-1"><summary>Checksum</summary><code class="text-break">{{ backup.checksum }}</code></details>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="5">No backups yet. Create your first backup above.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if page_obj.has_other_pages %}<nav class="d-flex gap-3" aria-label="Backup history pages">
+  {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+</nav>{% endif %}
+{% endblock %}
