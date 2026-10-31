@@ -138,6 +138,44 @@ body {
   --bs-list-group-action-active-bg: var(--sam-soft);
 }
 
+/* Dashboard summary figures */
+.stat-card {
+  border-left: 4px solid var(--sam-primary);
+}
+
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+}
+
+.stat-card .stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--sam-primary);
+}
+
+.stat-card.stat-warn {
+  border-left-color: var(--sam-warn);
+}
+
+.stat-card.stat-warn .stat-value,
+.text-shortage {
+  color: var(--sam-warn);
+}
+
+.text-shortage {
+  font-weight: 600;
+}
+
+/* Dashboard link groups */
+.card-header.section-header {
+  background-color: var(--sam-soft);
+  border-bottom-color: var(--sam-border);
+  font-weight: 600;
+}
+
 /* Tables */
 .table {
   --bs-table-striped-bg: rgba(161, 98, 7, 0.05);

@@ -6,28 +6,59 @@
   <h1 class="h3">Admin dashboard</h1>
   <p class="text-body-secondary">Current system overview</p>
   <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Students</div><div class="fs-3">{{ student_count }}</div></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Faculty</div><div class="fs-3">{{ faculty_count }}</div></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Sections</div><div class="fs-3">{{ section_count }}</div></div></div></div>
-    <div class="col-sm-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="text-body-secondary">Attendance sessions</div><div class="fs-3">{{ session_count }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Students</div><div class="stat-value">{{ student_count }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Faculty</div><div class="stat-value">{{ faculty_count }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Sections</div><div class="stat-value">{{ section_count }}</div></div></div></div>
+    <div class="col-sm-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Attendance sessions</div><div class="stat-value">{{ session_count }}</div></div></div></div>
   </div>
-  <div class="alert alert-warning" role="status">
-    <strong>Attendance threshold: {{ threshold }}%</strong><br>
-    Students below threshold overall: {{ students_below_overall }}<br>
-    Subject-level shortage cases: {{ subject_shortages }}
+  <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+    <div>
+      <strong>Attendance threshold: {{ threshold }}%</strong><br>
+      Students below threshold overall: {{ students_below_overall }}<br>
+      Subject-level shortage cases: {{ subject_shortages }}
+    </div>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'shortage_list' %}">Students below threshold</a>
   </div>
-  <div class="list-group" style="max-width: 28rem">
-    <a class="list-group-item list-group-item-action" href="{% url 'account_create' %}">Create Admin account</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'account_list' %}">Accounts and password resets</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'student_list' %}">Manage students</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'faculty_list' %}">Manage faculty</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'section_list' %}">Manage classes, sections and enrollment</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'subject_list' %}">Manage subjects</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'attendance_mark' %}">Record missed attendance (reason required)</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'shortage_list' %}">Students below threshold</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'threshold_settings' %}">Configure attendance threshold</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'attendance_history' %}">Attendance history and corrections</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'correction_window_settings' %}">Configure faculty correction window</a>
-    <a class="list-group-item list-group-item-action" href="{% url 'backup_list' %}">Backup and recovery</a>
+  <div class="row g-3">
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">People and accounts</h2>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action" href="{% url 'student_list' %}">Manage students</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'faculty_list' %}">Manage faculty</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'account_list' %}">Accounts and password resets</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'account_create' %}">Create Admin account</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">Classes and subjects</h2>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action" href="{% url 'section_list' %}">Manage classes, sections and enrollment</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'subject_list' %}">Manage subjects</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">Attendance</h2>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action" href="{% url 'attendance_history' %}">Attendance history and corrections</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'attendance_mark' %}">Record missed attendance (reason required)</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'attendance_report' %}">Attendance reports</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="card h-100">
+        <h2 class="card-header section-header h6 mb-0">Settings and recovery</h2>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action" href="{% url 'threshold_settings' %}">Configure attendance threshold</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'correction_window_settings' %}">Configure faculty correction window</a>
+          <a class="list-group-item list-group-item-action" href="{% url 'backup_list' %}">Backup and recovery</a>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}
