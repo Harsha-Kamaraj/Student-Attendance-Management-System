@@ -57,9 +57,15 @@ def check_layout(page):
         .filter(visible).filter(e => !e.closest('.table-responsive')).filter(e => {
           const r=e.getBoundingClientRect(); return r.left < -1 || r.right > innerWidth + 1;
         });
+      const tallHeaders = [...document.querySelectorAll('th')].filter(e => visible(e)
+        && e.getBoundingClientRect().height > 4 * parseFloat(getComputedStyle(e).lineHeight));
+      const inaccessibleScrollers = [...document.querySelectorAll('.table-responsive')]
+        .filter(e => e.scrollWidth > e.clientWidth + 1)
+        .filter(e => e.tabIndex < 0 || !e.getAttribute('aria-label'));
       return {mode:document.compatMode,width:innerWidth,scroll_width:document.documentElement.scrollWidth,
         navbar_display:getComputedStyle(document.querySelector('.navbar')).display,
         unlabeled_controls:unlabeled.length,offscreen_controls:outside.length,
+        unreadable_headers:tallHeaders.length,inaccessible_scrollers:inaccessibleScrollers.length,
         literal_fences:document.body.innerText.includes('```')};
     }""")
     assert facts["mode"] == "CSS1Compat", "The doctype must enable standards mode."
@@ -67,6 +73,8 @@ def check_layout(page):
     assert facts["scroll_width"] <= facts["width"] + 1, "The page overflows horizontally."
     assert facts["unlabeled_controls"] == 0, "A visible form control has no accessible label."
     assert facts["offscreen_controls"] == 0, "A form control extends outside the viewport."
+    assert facts["unreadable_headers"] == 0, "Table headers are compressed into unreadable columns."
+    assert facts["inaccessible_scrollers"] == 0, "A scrolling table is not keyboard accessible and labeled."
     assert not facts["literal_fences"], "Markdown fences must not render in the page."
     return facts
 
@@ -195,6 +203,13 @@ def journey(browser, base, fixture, width, number, folder, *, mobile):
         faculty.get_by_role("button", name="Save complete attendance", exact=True).click()
         expect(faculty.get_by_text("This attendance session is already saved.", exact=False)).to_be_visible()
         checkpoint(faculty, "faculty_saved_roster", screenshot=True)
+        if width <= 360:
+            scroller = faculty.locator(".table-responsive").first
+            scroller.focus()
+            scroller.press("ArrowRight")
+            faculty.wait_for_function("element => element.scrollLeft > 0", arg=scroller.element_handle())
+            scroller.evaluate("element => element.scrollLeft = 0")
+            result["keyboard_table_scroll"] = True
 
         def saved_record():
             session = AttendanceSession.objects.get(assignment=fixture.assignment, date=day, period=period)
