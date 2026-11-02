@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-11-02",
+  "source_commit": "c9fca9090e81401f178de34654ccbda1fbcff0f2",
+  "ci": {
+    "run_id": 41185965165,
+    "url": "https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/actions/runs/41185965165",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-31T08:46:33Z",
+    "updated_at": "2026-10-31T08:49:53Z",
+    "job_id": 124492832565,
+    "safe_log_extract": [
+      "2026-10-31T08:46:58.9340795Z All checks passed!",
+      "2026-10-31T08:46:58.9495432Z 145 files already formatted",
+      "2026-10-31T08:47:00.1158611Z System check identified no issues (0 silenced).",
+      "2026-10-31T08:47:00.5618641Z No changes detected",
+      "2026-10-31T08:47:00.6668274Z ##[group]Run python manage.py test",
+      "2026-10-31T08:49:50.3366697Z Ran 478 tests in 168.206s",
+      "2026-10-31T08:49:50.3366973Z OK (skipped=3)",
+      "2026-10-31T08:49:50.4424767Z Found 478 test(s).",
+      "2026-10-31T08:49:50.4425034Z System check identified no issues (0 silenced)."
+    ]
+  },
+  "browser_run": {
+    "run_id": 41186435045,
+    "url": "https://github.com/Harsha-Kamaraj/Student-Attendance-Management-System/actions/runs/41186435045",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-10-31T08:53:39Z",
+    "scope": "browsers only; full regression and performance jobs skipped"
+  },
+  "note": "Read existing GitHub records only. No tests rerun. Per-test retained Windows suite comes from earlier source 42f07469; current source standard CI has aggregate outcomes only."
+}

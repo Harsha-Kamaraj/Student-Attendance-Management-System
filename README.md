@@ -69,7 +69,7 @@ Open http://127.0.0.1:8000/login/ and log in with the Admin account you just cre
 ## Accounts and login
 
 - There is no self-registration. The Admin adds students at **Manage students** and faculty at **Manage faculty**; each gets a login (username = roll number or faculty ID). Further Admin accounts are created at **Create Admin account** (`/users/create/`).
-- The system shows a one-time temporary password to the Admin, who passes it to the user. The user must change it at first login.
+- New student/faculty credentials are emailed only to the account owner; the Admin sees masked delivery status. If delivery fails, only the original response offers a private one-time handover. Admin-account creation retains Admin handover. Every user must change the temporary password at first login.
 - Passwords need at least 8 characters with an upper-case letter, a lower-case letter, a digit and a special character.
 - After 5 wrong passwords in a row, login is blocked for 15 minutes. The Admin can reset a password (`/users/`), which also removes the block.
 - Logins, account creation, password changes and resets are recorded in the audit log.
@@ -216,3 +216,7 @@ Built-in project settings that come from the agreed requirements:
 ## Adding a dependency
 
 Install it in the virtual environment, then add it with an exact version (`package==x.y.z`) to `requirements.txt` (needed to run the app) or `requirements-dev.txt` (development tools only).
+
+## Part 3 testing documents
+
+The updated test-case catalogue and four required testing reports are in [docs](docs/README.md). Their execution dates, source revisions and evidence limits are stated explicitly. Credential delivery uses owner-only email where configured; a private one-time Admin handover is the failure fallback, as described in the BL-34 section.
