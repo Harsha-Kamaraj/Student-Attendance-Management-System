@@ -1,0 +1,113 @@
+1
+00:00:00,000 --> 00:00:09,000
+Student Attendance Management System — Sprint 2
+Harsha K • Pradhyut • Suhas
+
+2
+00:00:09,000 --> 00:00:12,500
+Secure access
+Password and one-time code. A dashboard for every role.
+
+3
+00:00:12,500 --> 00:00:18,230
+Faculty signs in with a password and an authenticator code.
+
+4
+00:00:18,230 --> 00:00:22,524
+Two-factor verification protects access before the dashboard opens.
+
+5
+00:00:22,524 --> 00:00:26,500
+The faculty dashboard shows assigned classes and attendance shortages.
+
+6
+00:00:26,500 --> 00:00:30,000
+Record and correct
+Save the roster, correct a mark and trace every change.
+
+7
+00:00:30,000 --> 00:00:36,658
+Choose an assigned subject, the session date and the teaching period.
+
+8
+00:00:36,658 --> 00:00:42,300
+Mark the full roster: S001 Absent, S002 Absent and S004 Present.
+
+9
+00:00:42,300 --> 00:00:48,439
+Save attendance. Reloading confirms that the marks are stored.
+
+10
+00:00:48,439 --> 00:00:58,529
+A verified correction changes S001 from Absent to Present.
+
+11
+00:00:58,529 --> 00:01:04,533
+The history preserves the editor, old and new status, time and reason.
+
+12
+00:01:04,533 --> 00:01:08,033
+Reports and exports
+Filter the saved records and download shareable reports.
+
+13
+00:01:08,033 --> 00:01:14,124
+Build a report for the recorded date and the assigned class.
+
+14
+00:01:14,124 --> 00:01:19,166
+After correction: 3 marks, 2 Present, 1 Absent — 66.67% attendance.
+
+15
+00:01:19,166 --> 00:01:28,767
+The same filtered results can be downloaded as CSV and PDF.
+
+16
+00:01:28,767 --> 00:01:32,267
+Student insights
+Updated percentages, date filters and shortage notifications.
+
+17
+00:01:32,267 --> 00:01:37,462
+The student dashboard reflects the saved correction immediately.
+
+18
+00:01:37,462 --> 00:01:45,637
+S001 now has 75/101 in CS101 and 77/104 overall — 74.04%.
+
+19
+00:01:45,637 --> 00:01:49,853
+Filter to the demonstration date to verify the corrected mark.
+
+20
+00:01:49,853 --> 00:01:55,027
+For this date, the student attended 1 of 1 classes: 100.00%.
+
+21
+00:01:55,027 --> 00:02:01,000
+In-app alerts explain when attendance falls below the 75% threshold.
+
+22
+00:02:01,000 --> 00:02:04,500
+Monitor and protect
+Find attendance shortages and create an encrypted backup.
+
+23
+00:02:04,500 --> 00:02:09,670
+Admin has a system-wide view of students, classes and attendance.
+
+24
+00:02:09,670 --> 00:02:18,088
+The shortage list identifies students needing follow-up, overall and by subject.
+
+25
+00:02:18,088 --> 00:02:21,346
+Create an encrypted snapshot of accounts, attendance and application settings.
+
+26
+00:02:21,346 --> 00:02:29,500
+The completed backup is listed and can be downloaded for safekeeping.
+
+27
+00:02:29,500 --> 00:02:38,500
+Thank you. Harsha K • Pradhyut • Suhas

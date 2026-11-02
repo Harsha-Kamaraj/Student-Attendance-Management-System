@@ -1,0 +1,62 @@
+{
+  "recording_date": "2026-11-02",
+  "application_commit": "82790bd",
+  "isolated_fictional_data": true,
+  "marks": {
+    "S002": "A",
+    "S004": "P",
+    "S001": "P"
+  },
+  "s001_subject": {
+    "present": 75,
+    "held": 101,
+    "percentage": "74.26%"
+  },
+  "s001_overall": {
+    "present": 77,
+    "held": 104,
+    "percentage": "74.04%"
+  },
+  "correction_audit": {
+    "actor": "F001",
+    "old": {
+      "status": "A"
+    },
+    "new": {
+      "status": "P"
+    },
+    "reason": "Presence confirmed against the class register."
+  },
+  "csv_rows": 3,
+  "report_totals": {
+    "present": 2,
+    "absent": 1,
+    "held": 3,
+    "percentage": "66.67%"
+  },
+  "pdf_signature_valid": true,
+  "student_notifications": 1,
+  "encrypted_backup_size_and_checksum_verified": true,
+  "browser": {
+    "javascript_errors": [],
+    "chapters": 5,
+    "date": "2026-11-02",
+    "browser": "156.0.8078.4",
+    "csv_bytes": 340,
+    "pdf_bytes": 2735,
+    "backup_bytes": 81356
+  },
+  "video": {
+    "duration_seconds": 158.5,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "codec": "H.264",
+    "audio": "AAC stereo 48 kHz",
+    "burned_in_explanatory_subtitles": true,
+    "decode_verified": true,
+    "music_source": "Instrumental soundtrack reused from the repository Sprint 1 reference; crossfaded and normalized.",
+    "mean_volume_db": -25.1,
+    "max_volume_db": -12.6
+  }
+}
