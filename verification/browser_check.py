@@ -205,6 +205,11 @@ def journey(browser, base, fixture, width, number, folder, *, mobile):
         expect(faculty.get_by_role("radio", name="ITS001 Present", exact=True)).to_be_checked()
         expect(faculty.get_by_role("radio", name="ITS002 Present", exact=True)).to_be_checked()
         faculty.get_by_role("radio", name="ITS002 Absent", exact=True).check()
+        # UT_06_6: filling unmarked students must preserve an explicit absence.
+        faculty.get_by_role("button", name="Mark remaining as Present", exact=True).click()
+        expect(faculty.get_by_role("radio", name="ITS001 Present", exact=True)).to_be_checked()
+        expect(faculty.get_by_role("radio", name="ITS002 Absent", exact=True)).to_be_checked()
+        checkpoint(faculty, "faculty_fill_preserves_explicit_marks")
         faculty.get_by_role("button", name="Save complete attendance", exact=True).click()
         expect(faculty.get_by_text("This attendance session is already saved.", exact=False)).to_be_visible()
         checkpoint(faculty, "faculty_saved_roster", screenshot=True)

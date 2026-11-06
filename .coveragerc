@@ -1,0 +1,14 @@
+[run]
+branch = True
+source = apps,config
+relative_files = True
+data_file = artifacts/part3/.coverage
+omit =
+    */migrations/*
+    */test_*.py
+    */tests.py
+    config/test_runner.py
+
+[report]
+precision = 2
+show_missing = True

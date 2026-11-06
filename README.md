@@ -196,6 +196,10 @@ All accounts use the password `Attend#2026` (for example `ADMIN1`, `F001`, `S001
 
 ## Running tests and checks
 
+The [Part 3 testing reports](docs/README.md) contain the 6 November 2026 execution results,
+four PDF reports, the updated 207-case catalogue, and measured line/branch coverage.
+See the [test-plan update](Documents/Part3_Test_Plan_Update.md) for scope and acceptance limits.
+
 ```bash
 python manage.py test              # all tests (uses a temporary test database)
 ruff check .                       # code problems
