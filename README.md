@@ -101,6 +101,14 @@ OTP regression checks: `python manage.py test apps.accounts.test_otp apps.accoun
 2. In your local `.env`, replace the email lines with the Gmail block shown in `.env.example`, using that address and the 16-character app password. Never commit `.env`.
 3. Restart the server and check delivery: `python manage.py sendtestemail you@example.com`.
 
+For a guided local setup, activate the project virtual environment and run
+`python scripts/configure_gmail.py`, or on Windows open
+[`scripts/Configure-Gmail.cmd`](scripts/Configure-Gmail.cmd). Start with a configured
+local `.env` (copy `.env.example` if needed). The helper asks for the sending address
+and hides the App password as you type, changes only email settings, and offers one
+test email to a recipient you choose. Enter `skip` to save without sending. Restart
+the server afterwards. The helper never commits `.env`; the file remains ignored by Git.
+
 Login details, password resets, reset requests, emailed login codes and low-attendance alerts then go to real inboxes.
 
 ## Attendance percentages (BL-14)
