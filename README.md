@@ -3,6 +3,8 @@ Software Engineering Project
 
 A web application for recording, correcting and reporting student attendance, with Admin, Faculty and Student roles. Requirements, use cases, test plan and security requirements are in [`Documents/`](Documents/); the agreed attendance rules are in [`Documents/BL-01_Decision_Log.md`](Documents/BL-01_Decision_Log.md).
 
+**Evaluating or demonstrating the system?** Start with the [demonstration and handover guide](Documents/BL-32_Demo_and_Handover.md): clean setup, demo accounts, a tested 15-minute demo script, a user guide for each role, requirement completion and known limitations.
+
 ## Session security (BL-06)
 
 - Signed-in users log out with the CSRF-protected **Log out** button in the navigation bar (`POST /logout/`). Logout invalidates the current Django session and redirects to `/login/`.
