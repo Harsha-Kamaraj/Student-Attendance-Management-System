@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Source for use_flow_diagram.pdf. Associations match the actors in Use_Case_Flow.docx (BL-01). -->
+<!-- Source for use_flow_diagram.pdf. Associations match the actors in Use_Case_Flow.docx (BL-01). UC-14 added 9 Nov 2026. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="16in" height="12in" viewBox="-28.5 -21 1656 1242" font-family="Arial, Helvetica, sans-serif">
 <rect x="-28.5" y="-21" width="1656" height="1242" fill="#ffffff"/>
-<rect x="390" y="90" width="920" height="980" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+<rect x="390" y="90" width="920" height="1110" fill="#ffffff" stroke="#000000" stroke-width="1"/>
 <ellipse cx="610" cy="165" rx="170" ry="45" fill="#ffffff" stroke="#000000" stroke-width="1"/>
 <ellipse cx="610" cy="295" rx="170" ry="45" fill="#ffffff" stroke="#000000" stroke-width="1"/>
 <ellipse cx="610" cy="425" rx="170" ry="45" fill="#ffffff" stroke="#000000" stroke-width="1"/>
@@ -73,4 +73,9 @@
 <text x="1110" y="968" text-anchor="middle" font-size="13">UC-12</text>
 <text x="850" y="112" text-anchor="middle" font-size="16" font-weight="bold">Attendance Management System</text>
 <text x="751" y="47" text-anchor="middle" font-size="22" font-weight="bold">Student Attendance Management System — Use Case Diagram</text>
+<ellipse cx="850" cy="1120" rx="190" ry="45" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+<line x1="120" y1="293.5" x2="811.1" y2="1076.0" stroke="#999999" stroke-width="1"/><!-- Admin - UC-14 -->
+<line x1="120" y1="607.5" x2="789.3" y2="1077.4" stroke="#999999" stroke-width="1"/><!-- Faculty - UC-14 -->
+<text x="850" y="1117" text-anchor="middle" font-size="13">Manage Timetable &amp; Semester Classes</text>
+<text x="850" y="1133" text-anchor="middle" font-size="13">UC-14</text>
 </svg>
