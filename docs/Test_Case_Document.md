@@ -1,18 +1,18 @@
 # Updated Test Case Document
 
-Project: Student Attendance Management System. Activity: Part 3 testing of completed Sprint 1 and Sprint 2 work. Execution date: 6 November 2026. Branch: `feature/testing-feedback`. Base commit: `438845cb25f6`. No Sprint 3 or application feature changes were made.
+Project: Student Attendance Management System. Activity: Part 3 testing of completed Sprint 1 and Sprint 2 work. Execution dates: 6 November 2026 (Part 3 run) and 9 November 2026 (full regression after the timetable, semester classes, send-login and interface changes). Branch: `main`. No Sprint 3 was started.
 
 ## Scope and result conventions
 
 The detailed execution evidence referenced below is retained in a separate local supporting-files archive. This folder contains the required submission documents only.
 
-This catalogue contains 207 cases. It preserves the 157 use-case IDs from the current Test Plan, the four performance cases, and the 17 previously drafted completion cases, then adds 17 cases for current-branch feedback changes and 12 cases for the coverage follow-up tests. The earlier `origin/sprint2/final-documentation` catalogue supplied the definitions and candidate mappings; all result labels below are resolved against fresh execution on 6 November. Original case IDs are retained.
+This catalogue contains 224 cases. It preserves the 157 use-case IDs from the current Test Plan, the four performance cases, and the 17 previously drafted completion cases, then adds 17 cases for current-branch feedback changes, 12 cases for the coverage follow-up tests and 17 cases for the 9 November changes (FR-22 to FR-24). The earlier `origin/sprint2/final-documentation` catalogue supplied the definitions and candidate mappings; result labels were resolved against fresh execution on 6 November, and the full rerun on 9 November (556 tests: 552 passed, 4 skipped) passed every mapped method again. Original case IDs are retained.
 
 The legacy UT, IT and ST prefixes are plan identifiers, not proof of test isolation level. Some UT cases use the database or HTTP client. Automated equivalents use the exact linked methods and their own fixtures. No manual acceptance signature is implied.
 
 | Result | Cases |
 | --- | --- |
-| PASS automated equivalent | 202 |
+| PASS automated equivalent | 219 |
 | PASS browser execution | 1 |
 | PASS local performance profile | 4 |
 
@@ -26,6 +26,7 @@ The legacy UT, IT and ST prefixes are plan identifiers, not proof of test isolat
 - Added catalogue cases for Admin-assisted forgotten passwords, privacy/rate limits, profile visibility, section year/edit/deletion and faculty subject scope.
 - Measured code and branch coverage instead of inferring percentages from test pass counts.
 - Added 12 cases (UT_01_14, IT_01_8, UT_02_4, UT_02_5, ST_02_8, IT_05_7, UT_06_7, UT_07_6, ST_07_6, UT_13_4, UT_13_5, UT_12_5) for 30 coverage follow-up tests of error and repeat-request paths. A later full rerun on 6 November passed every method mapped by all 207 cases.
+- Added 17 cases on 9 November 2026 for the new requirements FR-22 to FR-24 and decisions D-27 and D-28: UT_01_15–17 and IT_01_9 (send login details), IT_11_4 (history after filtering), IT_12_5–6 (dashboard counts and sidebar), UT_14_1–7 and IT_14_1–3 (timetable, semester classes and attendance advice). The 9 November full rerun passed every method mapped by all 224 cases.
 
 Coverage totals and environment acceptance limits are in the four companion reports. SEC-07 was revised on 6 November 2026 to describe the implemented Admin-assisted reset (BL-01 D-23); the forgotten-password cases IT_01_6–7, UT_01_9–10 and UT_01_13 trace to the revised requirement.
 
@@ -5063,3 +5064,419 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 - `config.test_entrypoints.ServerEntryPointTests.test_wsgi_and_asgi_modules_expose_a_callable_application`
 
 **Qualification:** Added in the Part 3 coverage follow-up. Automated isolated fixture execution; no application code was changed.
+
+## UT_01_15  Verify Send emails the username and current temporary password and saves the address.
+
+**Module:** Account Provisioning / FR-24
+
+**Preconditions:** Admin has just reset F002, who has no email address.
+
+**Parameters:**  F002; f002@example.edu.
+
+**Steps:** 1: Reset F002's password. 2: Enter f002@example.edu under Send these details by email. 3: Select Send.
+
+**Expected result:** The email reaches the address with username, temporary password and login link; the page confirms sending and no longer shows the password; the address is saved on F002 and the change is logged (masked).
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.accounts.test_send_credentials.SendCredentialsTests.test_send_emails_the_details_and_saves_the_address`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_01_16  Verify only the current temporary password can be sent.
+
+**Module:** Account Provisioning / FR-24
+
+**Preconditions:** F002 has a temporary password.
+
+**Parameters:**  Password value Not#TheRealOne1.
+
+**Steps:** 1: Post the Send form with a different password value. 2: Check the outbox.
+
+**Expected result:** The request is refused and the Admin returns to Accounts; nothing is emailed and the address is not saved.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.accounts.test_send_credentials.SendCredentialsTests.test_only_the_current_temporary_password_can_be_sent`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_01_17  Verify an invalid address shows the form again and sends nothing.
+
+**Module:** Account Provisioning / FR-24
+
+**Preconditions:** F002 has a temporary password.
+
+**Parameters:**  not-an-email.
+
+**Steps:** 1: Enter not-an-email. 2: Select Send.
+
+**Expected result:** "Enter a valid email address." is shown with the password still visible; nothing is emailed.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.accounts.test_send_credentials.SendCredentialsTests.test_an_invalid_address_shows_the_form_again`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_01_9  Verify only the Admin can send login details.
+
+**Module:** Account Provisioning / FR-24, SEC-14
+
+**Preconditions:** A faculty member is logged in.
+
+**Parameters:**  F003 session.
+
+**Steps:** 1: Post the Send form for F002 as the faculty member.
+
+**Expected result:** The server returns 403 and nothing is emailed.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.accounts.test_send_credentials.SendCredentialsTests.test_only_the_admin_can_send_login_details`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_11_4  Verify records are listed only after the filters are applied.
+
+**Module:** Attendance History / FR-10, D-27
+
+**Preconditions:** Faculty member with recorded sessions.
+
+**Parameters:**  Faculty F001.
+
+**Steps:** 1: Open Attendance history. 2: Check the results area. 3: Select Apply filters with no filters chosen.
+
+**Expected result:** Before applying, the page asks the user to apply filters and lists no records; after applying, every record in the faculty member's scope is listed.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_history.AttendanceHistoryTests.test_records_appear_only_after_the_filters_are_applied`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_12_5  Verify dashboard shortage counts exclude deactivated students and match the list.
+
+**Module:** Dashboard / FR-17, D-28
+
+**Preconditions:** Only below-threshold student is deactivated.
+
+**Parameters:**  S001 at 1/3 (33.33%), threshold 75%.
+
+**Steps:** 1: Deactivate the student. 2: Open the Faculty dashboard. 3: Open Students below threshold.
+
+**Expected result:** The dashboard counts 0 and hides the shortage box; the list shows no students.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.TodayOverviewTests.test_dashboard_count_matches_the_list_when_the_student_is_deactivated`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_12_6  Verify the sidebar lists only the role's own pages and marks the current page.
+
+**Module:** Navigation / FR-02, FR-17, SEC-10
+
+**Preconditions:** One user of each role.
+
+**Parameters:**  ADMIN1, F001, S001.
+
+**Steps:** 1: Open each role's dashboard. 2: Open every sidebar link. 3: Open Create Admin account as Admin.
+
+**Expected result:** Every listed link opens for its role; students see no staff pages, faculty no Admin settings; exactly one link is marked current (the longest matching path).
+
+**Actual result:** Fresh execution on 9 November 2026: 5 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.accounts.test_layout.SidebarTests.test_every_sidebar_link_opens_for_its_role`
+- `apps.accounts.test_layout.SidebarTests.test_student_sidebar_has_no_staff_pages`
+- `apps.accounts.test_layout.SidebarTests.test_faculty_sidebar_has_no_admin_settings`
+- `apps.accounts.test_layout.SidebarTests.test_current_page_is_marked_and_longest_match_wins`
+- `apps.accounts.test_layout.SidebarTests.test_sign_in_pages_have_no_sidebar`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_1  Verify the Admin can add and remove a timetable class, and both are logged.
+
+**Module:** Timetable / FR-22
+
+**Preconditions:** Admin logged in; CS101 offered in section A.
+
+**Parameters:**  Monday, period 1.
+
+**Steps:** 1: Add CS101 – A on Monday period 1. 2: Remove it.
+
+**Expected result:** The class appears under Monday and is then removed; both actions are in the audit log.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.academics.test_planning.PlanningTests.test_admin_adds_and_removes_timetable_classes`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_2  Verify a clash for the section or the teacher is rejected.
+
+**Module:** Timetable / FR-22
+
+**Preconditions:** CS101 – A is on Monday period 1.
+
+**Parameters:**  Monday, period 1.
+
+**Steps:** 1: Add MA101 – A on Monday period 1. 2: Add CS101 – B (same teacher) on Monday period 1. 3: Add CS101 – A again.
+
+**Expected result:** Each entry is rejected (400) naming the clash; only the first class remains.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.academics.test_planning.PlanningTests.test_clashes_for_a_section_or_a_teacher_are_rejected`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_3  Verify today's classes show marked, now, upcoming and due states and the next class.
+
+**Module:** Timetable / FR-22
+
+**Preconditions:** Periods 1–3 timetabled on Monday; period 1 marked.
+
+**Parameters:**  Monday 9 Nov 2026, IST.
+
+**Steps:** 1: View the overview at 9:30 am. 2: View it at 12:30 pm.
+
+**Expected result:** At 9:30: marked, now, upcoming and next class = period 2. At 12:30: marked, due, due, no next class, 2 not marked.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.TodayOverviewTests.test_states_and_next_class_follow_the_clock_and_saved_sessions`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_14_1  Verify only the Admin opens the planning pages and faculty see today's classes.
+
+**Module:** Timetable / FR-22, SEC-14
+
+**Preconditions:** Faculty member logged in.
+
+**Parameters:**  F001.
+
+**Steps:** 1: Open Timetable and Semester classes as faculty. 2: Open the Faculty dashboard.
+
+**Expected result:** Both planning pages return 403; the dashboard shows Today's classes.
+
+**Actual result:** Fresh execution on 9 November 2026: 2 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.academics.test_planning.PlanningTests.test_only_the_admin_can_open_the_planning_pages`
+- `apps.attendance.test_outlook.TodayOverviewTests.test_faculty_dashboard_shows_todays_classes_and_hides_empty_shortage_box`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_4  Verify the classes-needed calculation reaches the threshold exactly.
+
+**Module:** Attendance Advice / FR-23
+
+**Preconditions:** None (calculation).
+
+**Parameters:**  76/102 at 85%; 3/4 at 80%; 8/10 at 80%; 0/0; 9/10 at 100%; 10/10 at 75%.
+
+**Steps:** 1: Calculate classes needed and classes that can be missed for the listed values.
+
+**Expected result:** 72; 1; 0; 0; none possible; can miss 3.
+
+**Actual result:** Fresh execution on 9 November 2026: 2 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.ClassesNeededTests.test_classes_needed_reaches_the_threshold_exactly`
+- `apps.attendance.test_outlook.ClassesNeededTests.test_classes_can_miss_keeps_the_student_at_or_above`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_5  Verify the advice wording without a semester total.
+
+**Module:** Attendance Advice / FR-23
+
+**Preconditions:** No semester total set.
+
+**Parameters:**  0/0, 3/5, 10/10, 9/10 (100%), 3/4 at 75%.
+
+**Steps:** 1: Build the advice for each value.
+
+**Expected result:** No classes held yet; Attend the next 3 classes to get back to 75%; You can miss 3 classes…; cannot be reached; Attend your next class to stay at 75% or above.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.ClassesNeededTests.test_messages_without_a_semester_plan`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_6  Verify the advice with a semester total, including when the target is out of reach.
+
+**Module:** Attendance Advice / FR-23
+
+**Preconditions:** Semester total of 40 classes.
+
+**Parameters:**  20/25, 30/32 and 5/25 at 75% with 40 planned.
+
+**Steps:** 1: Build the advice for each value.
+
+**Expected result:** Attend at least 10 of the 15 classes left…; already secured 75%; Even attending all 15 classes left gives 50.00%…
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.ClassesNeededTests.test_messages_with_a_semester_plan`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## UT_14_7  Verify semester totals are saved and logged, and invalid values save nothing.
+
+**Module:** Semester Classes / FR-23
+
+**Preconditions:** Admin logged in; three subject offerings.
+
+**Parameters:**  40, blank, 36; 40, abc.
+
+**Steps:** 1: Save 40, blank and 36. 2: Save 40 and abc.
+
+**Expected result:** First save stores the totals with 2 audit entries; second shows "Enter a whole number from 1 to 500" and saves nothing.
+
+**Actual result:** Fresh execution on 9 November 2026: 2 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.academics.test_planning.PlanningTests.test_admin_sets_semester_class_totals`
+- `apps.academics.test_planning.PlanningTests.test_invalid_semester_totals_save_nothing`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_14_2  Verify the student dashboard lists subjects and a subject opens its class-by-class list.
+
+**Module:** Attendance Advice / FR-09, FR-23
+
+**Preconditions:** S001 enrolled in CS101 (40 planned) with 1/3 attended.
+
+**Parameters:**  S001.
+
+**Steps:** 1: Open the Student dashboard. 2: Select the CS101 card. 3: Read the class list.
+
+**Expected result:** Dashboard shows My subjects with 1/3 (33.33%) and no threshold card; the subject page lists each class with date, time and status and says to attend at least 29 of the 37 classes left.
+
+**Actual result:** Fresh execution on 9 November 2026: 2 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.StudentPagesTests.test_dashboard_lists_each_subject_without_the_threshold_card`
+- `apps.attendance.test_outlook.StudentPagesTests.test_choosing_a_subject_lists_each_class_with_its_status`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).
+
+## IT_14_3  Verify the Notifications page shows where the student stands and the classes needed.
+
+**Module:** Notifications / FR-14, FR-23
+
+**Preconditions:** S001 below threshold with an alert.
+
+**Parameters:**  S001.
+
+**Steps:** 1: Open Notifications.
+
+**Expected result:** Where you stand now lists CS101 with the classes needed; there is no separate Back to dashboard link at the top.
+
+**Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Result:** PASS automated equivalent
+
+**Evidence:** `artifacts/part3/rerun-2026-11-09/regression.json` (local)
+
+**Exact test methods:**
+
+- `apps.attendance.test_outlook.StudentPagesTests.test_notifications_page_shows_where_the_student_stands`
+
+**Qualification:** Automated equivalent using isolated synthetic fixtures; added with the 9 November 2026 changes (BL-01 D-24 to D-28).

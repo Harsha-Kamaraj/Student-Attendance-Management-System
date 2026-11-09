@@ -1,5 +1,7 @@
 """The "Send these details by email" button under a temporary password."""
 
+import html
+
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -40,7 +42,7 @@ class SendCredentialsTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)  # no address yet, so nothing was sent on reset
         response = self.send(temporary_password)
         self.assertContains(response, "Login details sent to f***@example.edu")
-        self.assertNotContains(response, temporary_password)  # not shown again once sent
+        self.assertNotContains(response, html.escape(temporary_password))  # not shown again once sent
         self.assertEqual(mail.outbox[-1].to, ["f002@example.edu"])
         self.assertIn("Username: F002", mail.outbox[-1].body)
         self.assertIn(f"Temporary password: {temporary_password}", mail.outbox[-1].body)
@@ -62,7 +64,8 @@ class SendCredentialsTests(TestCase):
         response = self.send(temporary_password, email="not-an-email")
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, "Enter a valid email address.", status_code=400)
-        self.assertContains(response, temporary_password, status_code=400)
+        # The page HTML-escapes the password (it may contain & < > or quotes).
+        self.assertContains(response, html.escape(temporary_password), status_code=400)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_only_the_admin_can_send_login_details(self):
