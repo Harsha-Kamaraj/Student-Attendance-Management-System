@@ -7,14 +7,14 @@
 {% block content %}
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0">Attendance changes</h1>
-    <a href="{% url 'attendance_history' %}">Back to attendance history</a>
+    <a class="btn btn-outline-secondary" href="{% url 'attendance_history' %}">Back to attendance history</a>
   </div>
   <div class="card card-body mb-4">
     <h2 class="h5">{{ record.student.roll_number }} · {{ record.student.full_name }}{% if not record.student.user.is_active %} <span class="badge text-bg-secondary">Inactive</span>{% endif %}</h2>
     <p class="mb-1">{{ record.session.assignment.subject }} · {{ record.session.assignment.section }}</p>
     <p class="mb-1">{{ record.session.date|date:"d M Y" }} · {{ record.session.period|period_label }} · Current status: {% include "attendance/includes/status_badge.html" with label=record.get_status_display %}</p>
     <p class="mb-2">Originally recorded by {% if record.session.recorded_by_code %}{{ record.session.recorded_by_code }}{% elif record.session.recorded_by %}{{ record.session.recorded_by.username }}{% else %}Unavailable{% endif %}{% if record.session.recorded_by and not record.session.recorded_by.is_active %} <span class="badge text-bg-secondary">Inactive</span>{% endif %}.</p>
-    <a href="{% url 'attendance_correct' record.pk %}">Correct this record</a>
+    <div><a class="btn btn-primary" href="{% url 'attendance_correct' record.pk %}">Correct this record</a></div>
   </div>
   {% if page_obj %}
     <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">
@@ -40,9 +40,9 @@
   {% endif %}
   {% if page_obj.has_other_pages %}
     <nav aria-label="Attendance changes pages" class="d-flex gap-3 align-items-center">
-      {% if page_obj.has_previous %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+      {% if page_obj.has_previous %}<a class="btn btn-sm btn-outline-primary" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
       <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-      {% if page_obj.has_next %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+      {% if page_obj.has_next %}<a class="btn btn-sm btn-outline-primary" href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
     </nav>
   {% endif %}
 {% endblock %}

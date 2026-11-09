@@ -21,6 +21,7 @@
             {% endif %}
             <dt class="col-sm-5">Username</dt><dd class="col-sm-7"><code>{{ account.username }}</code></dd>
             <dt class="col-sm-5">Role</dt><dd class="col-sm-7">{{ account.get_role_display }}</dd>
+            <dt class="col-sm-5">College</dt><dd class="col-sm-7">PES University</dd>
             <dt class="col-sm-5">Email</dt><dd class="col-sm-7">{{ account.email|default:"Not set" }}</dd>
             <dt class="col-sm-5">Two-factor login</dt>
             <dd class="col-sm-7">{% if account.otp_confirmed %}<span class="badge text-bg-success">Set up</span>{% else %}<span class="badge text-bg-secondary">Not set up</span>{% endif %}</dd>
@@ -63,8 +64,8 @@
           <h2 class="card-header section-header h6 mb-0">Admin access</h2>
           <div class="card-body">
             <p class="mb-0">You can manage accounts, students, faculty, classes, subjects, attendance settings,
-              reports and backups. Other Admins are listed under
-              <a href="{% url 'account_list' %}">Accounts and password resets</a>.</p>
+              reports and backups. Other Admins are listed under Accounts.</p>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'account_list' %}">Accounts and password resets</a>
           </div>
         </div>
       </div>

@@ -12,8 +12,8 @@
       {% for member in members %}
       <tr>
         <td>{{ member.faculty_id }}</td><td>{{ member.full_name }}</td><td>{{ member.department }}</td>
-        <td>{% if member.user.is_active %}Active{% else %}Inactive{% endif %}</td>
-        <td><a href="{% url 'faculty_detail' member.pk %}">View</a></td>
+        <td>{% if member.user.is_active %}<span class="badge rounded-pill text-bg-success">Active</span>{% else %}<span class="badge rounded-pill text-bg-secondary">Inactive</span>{% endif %}</td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'faculty_detail' member.pk %}">View</a></td>
       </tr>
       {% empty %}<tr><td colspan="5">No faculty members yet.</td></tr>{% endfor %}
     </tbody>

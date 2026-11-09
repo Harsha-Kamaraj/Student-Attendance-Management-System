@@ -4,8 +4,10 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from apps.academics.models import Student
 from apps.accounts.models import Role
 from apps.accounts.permissions import requires
+from apps.attendance.calculations import student_attendance_summary, subject_outlooks
 from apps.attendance.models import AttendanceThreshold
 
 from .models import Notification
@@ -20,13 +22,23 @@ def notification_list(request):
     notifications = Notification.objects.filter(recipient=request.user)
     page = Paginator(notifications, 25).get_page(request.GET.get("page"))
     unread_ids = [n.pk for n in page if n.read_at is None]
+    threshold = AttendanceThreshold.current_value()
+    # Where the student stands right now: only subjects (and overall) below the threshold.
+    below_rows, overall_outlook = [], None
+    student = Student.objects.filter(user=request.user).first()
+    if student:
+        rows, overall_outlook = subject_outlooks(student, student_attendance_summary(student), threshold)
+        below_rows = [(row, outlook) for row, outlook in rows if outlook.below]
     response = render(
         request,
         "notifications/list.html",
         {
             "page_obj": page,
             "unread_ids": set(unread_ids),
-            "threshold": AttendanceThreshold.current_value(),
+            "threshold": threshold,
+            "below_rows": below_rows,
+            "overall_outlook": overall_outlook,
+            "has_student": student is not None,
         },
     )
     if unread_ids:

@@ -3,6 +3,7 @@ from django.contrib.auth import logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_not_required, login_required
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Count, F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -11,13 +12,18 @@ from django.views.decorators.debug import sensitive_variables
 from django.views.decorators.http import require_POST
 
 from apps.academics.models import Enrollment, Faculty, Section, Student, TeachingAssignment
-from apps.attendance.calculations import attendance_shortage_statistics, student_attendance_summary
+from apps.attendance.calculations import (
+    attendance_shortage_statistics,
+    student_attendance_summary,
+    subject_outlooks,
+)
 from apps.attendance.models import AttendanceSession, AttendanceThreshold
+from apps.attendance.schedule import today_overview
 from apps.audit import services as audit
 
-from .credentials import delivery_context
+from .credentials import delivery_context, masked_address
 from .decorators import role_required
-from .forms import AccountCreateForm, ChangePasswordForm, ForgotPasswordForm, LoginForm
+from .forms import AccountCreateForm, ChangePasswordForm, ForgotPasswordForm, LoginForm, SendCredentialsForm
 from .models import Role, User
 from .permissions import requires
 from .services import (
@@ -142,6 +148,7 @@ def dashboard_admin(request):
         "session_count": AttendanceSession.objects.count(),
         "reset_request_count": User.objects.filter(password_reset_requested_at__isnull=False).count(),
         **stats,
+        **today_overview(TeachingAssignment.objects.all()),
     }
     return render(request, "dashboard/admin.html", context)
 
@@ -159,6 +166,7 @@ def dashboard_faculty(request):
         ),
         "session_count": AttendanceSession.objects.filter(assignment__in=assignments).count(),
         **stats,
+        **today_overview(assignments),
     }
     return render(request, "dashboard/faculty.html", context)
 
@@ -169,9 +177,12 @@ def dashboard_student(request):
     student = Student.objects.filter(user=request.user).first()
     summary = student_attendance_summary(student) if student else None
     threshold = AttendanceThreshold.current_value()
+    subject_rows, overall_outlook = subject_outlooks(student, summary, threshold) if summary else ([], None)
     context = {
         "summary": summary,
         "threshold": threshold,
+        "subject_rows": subject_rows,
+        "overall_outlook": overall_outlook,
         "subject_shortages": sum(1 for row in summary.subjects if row.is_below_threshold(threshold))
         if summary
         else 0,
@@ -226,6 +237,62 @@ def account_reset_password(request, pk):
                 user=user, temporary_password=temporary_password, actor=request.user, purpose="reset"
             ),
         },
+    )
+
+
+@never_cache
+@require_POST
+@requires("accounts.manage")
+@sensitive_variables()
+def account_send_credentials(request, pk):
+    """Email the temporary password that was just shown, saving the address first if it changed.
+
+    Only the account's current temporary password can be sent: ``deliver_login_details`` checks
+    it against the stored hash, so an old or typed-in password is never emailed.
+    """
+    user = get_object_or_404(User, pk=pk)
+    form = SendCredentialsForm(request.POST)
+    if not form.is_valid():
+        temporary_password = request.POST.get("temporary_password", "")
+        if not (user.must_change_password and temporary_password and user.check_password(temporary_password)):
+            messages.error(request, "Those login details are no longer current. Reset the password again.")
+            return redirect("account_list")
+        return render(
+            request,
+            "accounts/temporary_password.html",
+            {
+                "account": user,
+                "temporary_password": temporary_password,
+                "purpose": request.POST.get("purpose", "reset"),
+                "send_form": form,
+            },
+            status=400,
+        )
+    data = form.cleaned_data
+    temporary_password = data["temporary_password"]
+    if not (user.must_change_password and user.check_password(temporary_password)):
+        messages.error(request, "Those login details are no longer current. Reset the password again.")
+        return redirect("account_list")
+    if data["email"] != user.email:
+        with transaction.atomic():
+            previous = user.email
+            user.email = data["email"]
+            user.save(update_fields=["email"])
+            audit.record(
+                "account.email.update",
+                actor=request.user,
+                target_type="User",
+                target_id=user.pk,
+                old_value={"email": masked_address(previous) if previous else ""},
+                new_value={"email": masked_address(user.email)},
+            )
+    context = delivery_context(
+        user=user, temporary_password=temporary_password, actor=request.user, purpose=data["purpose"]
+    )
+    return render(
+        request,
+        "accounts/temporary_password.html",
+        {"account": user, "purpose": data["purpose"], "sent_from_page": True, **context},
     )
 
 

@@ -1,51 +1,45 @@
-{% extends "base.html" %}
+{% extends "auth_base.html" %}
 
 {% block title %}Your backup codes · Student Attendance{% endblock %}
 
-{% block content %}
-  <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      <h1 class="h3 mb-3">Two-factor login is set up</h1>
-      <div class="alert alert-warning" role="alert">
-        Save these 10 backup codes somewhere safe. Each works once if you lose your phone.
-        They are shown only now.
-      </div>
-      <ul class="list-group mb-3" data-testid="backup-codes">
-        {% for code in codes %}<li class="list-group-item font-monospace">{{ code }}</li>{% endfor %}
-      </ul>
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        <button type="button" class="btn btn-outline-primary" id="download-codes">Download as text file</button>
-        <button type="button" class="btn btn-outline-primary" id="copy-codes">Copy codes</button>
-        <button type="button" class="btn btn-outline-primary" onclick="window.print()">Print</button>
-      </div>
-      <p class="small text-body-secondary" id="codes-status" role="status"></p>
-      <a class="btn btn-primary w-100" href="{% url 'dashboard' %}">I have saved my codes — continue</a>
-      <script>
-        // The file is created in the browser; the codes are not sent or stored anywhere else.
-        (function () {
-          var codes = Array.from(document.querySelectorAll('[data-testid="backup-codes"] li'))
-            .map(function (item) { return item.textContent.trim(); });
-          var text = "Student Attendance backup codes for {{ user.username|escapejs }}\n" +
-            "Each code works once. Keep this file private.\n\n" + codes.join("\n") + "\n";
-          var status = document.getElementById("codes-status");
-          document.getElementById("download-codes").addEventListener("click", function () {
-            var link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-            link.download = "student-attendance-backup-codes.txt";
-            link.click();
-            URL.revokeObjectURL(link.href);
-            status.textContent = "Saved to your Downloads folder.";
-          });
-          document.getElementById("copy-codes").addEventListener("click", function () {
-            navigator.clipboard.writeText(text).then(
-              function () { status.textContent = "Codes copied. Paste them somewhere safe."; },
-              function () { status.textContent = "Copy is not available here; use Download instead."; }
-            );
-          });
-        })();
-      </script>
-    </div>
+{% block auth_content %}
+  <h1 class="h3 mb-3">Two-factor login is set up</h1>
+  <div class="alert alert-warning" role="alert">
+    Save these 10 backup codes somewhere safe. Each works once if you lose your phone.
+    They are shown only now.
   </div>
+  <ul class="list-group mb-3" data-testid="backup-codes">
+    {% for code in codes %}<li class="list-group-item font-monospace">{{ code }}</li>{% endfor %}
+  </ul>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button type="button" class="btn btn-outline-primary" id="download-codes">Download as text file</button>
+    <button type="button" class="btn btn-outline-primary" id="copy-codes">Copy codes</button>
+    <button type="button" class="btn btn-outline-primary" onclick="window.print()">Print</button>
+  </div>
+  <p class="small text-body-secondary" id="codes-status" role="status"></p>
+  <a class="btn btn-primary w-100" href="{% url 'dashboard' %}">I have saved my codes — continue</a>
+  <script>
+    // The file is created in the browser; the codes are not sent or stored anywhere else.
+    (function () {
+      var codes = Array.from(document.querySelectorAll('[data-testid="backup-codes"] li'))
+        .map(function (item) { return item.textContent.trim(); });
+      var text = "Student Attendance backup codes for {{ user.username|escapejs }}\n" +
+        "Each code works once. Keep this file private.\n\n" + codes.join("\n") + "\n";
+      var status = document.getElementById("codes-status");
+      document.getElementById("download-codes").addEventListener("click", function () {
+        var link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+        link.download = "student-attendance-backup-codes.txt";
+        link.click();
+        URL.revokeObjectURL(link.href);
+        status.textContent = "Saved to your Downloads folder.";
+      });
+      document.getElementById("copy-codes").addEventListener("click", function () {
+        navigator.clipboard.writeText(text).then(
+          function () { status.textContent = "Codes copied. Paste them somewhere safe."; },
+          function () { status.textContent = "Copy is not available here; use Download instead."; }
+        );
+      });
+    })();
+  </script>
 {% endblock %}
-
-{% block back_link %}{% endblock %}

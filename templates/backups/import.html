@@ -5,6 +5,6 @@
 <p>Select an encrypted <code>.sambak</code> file previously downloaded from this application. The server must have the original backup encryption key and the same application schema.</p>
 <p>Importing adds the backup to the list. It does not replace your current data.</p>
 <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}{% include "includes/form_fields.html" %}
-<button class="btn btn-primary">Validate and import</button> <a class="btn btn-link" href="{% url 'backup_list' %}">Cancel</a>
+<button class="btn btn-primary">Validate and import</button> <a class="btn btn-outline-secondary" href="{% url 'backup_list' %}">Cancel</a>
 </form></div>
 {% endblock %}

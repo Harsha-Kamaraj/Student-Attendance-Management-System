@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}{{ student.roll_number }} · Student Attendance{% endblock %}
 {% block content %}
 <h1 class="h3">{{ student.full_name }} ({{ student.roll_number }})</h1>
 <dl class="row">
-  <dt class="col-sm-3">Home class / section</dt><dd class="col-sm-9">{{ student.home_section|default:"Not assigned" }}</dd>
-  <dt class="col-sm-3">Account</dt><dd class="col-sm-9">{% if student.user.is_active %}Active{% else %}Inactive{% endif %}</dd>
-  <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ student.user.email }}</dd>
+  <dt class="col-sm-3">Class</dt><dd class="col-sm-9">{{ student.home_section|default:"Not assigned" }}</dd>
+  <dt class="col-sm-3">Account</dt><dd class="col-sm-9">{% if student.user.is_active %}<span class="badge rounded-pill text-bg-success">Active</span>{% else %}<span class="badge rounded-pill text-bg-secondary">Inactive</span>{% endif %}</dd>
+  <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ student.user.email|default:"Not set" }}</dd>
 </dl>
 {% if user.role == "ADMIN" %}
   <div class="d-flex flex-wrap gap-2 mb-4">
@@ -23,10 +24,23 @@
   </div>
 {% endif %}
 <h2 class="h5">Subject enrollments</h2>
-<ul class="list-group mb-3">
-  {% for enrollment in enrollments %}
-  <li class="list-group-item">{{ enrollment.assignment.subject }} — {{ enrollment.assignment.section }}</li>
-  {% empty %}<li class="list-group-item">No subject enrollments yet.</li>{% endfor %}
-</ul>
-<a href="{% url 'student_list' %}">Back to students</a>
+<div class="table-responsive" role="region" aria-label="Subject enrollments" tabindex="0">
+  <table class="table align-middle">
+    <thead><tr><th scope="col">Code</th><th scope="col">Subject</th><th scope="col">Class / section</th><th scope="col">Teacher</th></tr></thead>
+    <tbody>
+      {% for enrollment in enrollments %}
+        <tr>
+          <td><span class="badge rounded-pill text-bg-light border">{{ enrollment.assignment.subject.code }}</span></td>
+          <td class="fw-semibold">{{ enrollment.assignment.subject.name }}</td>
+          <td>{{ enrollment.assignment.section }}</td>
+          <td>{{ enrollment.assignment.faculty.full_name|default:"No teacher yet" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No subject enrollments yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
+
+{% block back_extra %}<a class="btn btn-outline-secondary" href="{% url 'student_list' %}">{% icon "arrow-left" 18 %} Back to students</a>{% endblock %}

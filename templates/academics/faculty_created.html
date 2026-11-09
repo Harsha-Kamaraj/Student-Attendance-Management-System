@@ -11,6 +11,7 @@
   <dd class="col-sm-9"><code data-testid="temporary-password">{{ temporary_password }}</code></dd>
 </dl>
 <div class="alert alert-warning">This password is shown only once. The faculty member must change it at first login.</div>
+{% include "accounts/includes/send_credentials.html" with send_account=member.user send_purpose="created" %}
 {% endif %}
 <a class="btn btn-primary" href="{% url 'faculty_detail' member.pk %}">View faculty member</a>
 {% endblock %}

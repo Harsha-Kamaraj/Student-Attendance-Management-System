@@ -1,49 +1,72 @@
 {% extends "base.html" %}
+{% load ui %}
 
 {% block title %}Faculty dashboard · Student Attendance{% endblock %}
+{% block surface_class %}{% endblock %}
 
 {% block content %}
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h3 mb-0">Faculty dashboard</h1>
-    <a class="btn btn-primary" href="{% url 'attendance_mark' %}">Mark attendance</a>
-  </div>
-  <h2 class="h5">My teaching overview</h2>
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Classes</div><div class="stat-value">{{ class_count }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Subjects</div><div class="stat-value">{{ subject_count }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Students</div><div class="stat-value">{{ student_count }}</div></div></div></div>
-    <div class="col-6 col-lg-3"><div class="card stat-card h-100"><div class="card-body"><div class="stat-label">Attendance sessions</div><div class="stat-value">{{ session_count }}</div></div></div></div>
-  </div>
-  <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+  <div class="page-hero">
     <div>
-      <strong>Attendance threshold: {{ threshold }}%</strong><br>
-      Students below threshold in your assigned classes: {{ students_below_overall }}<br>
-      Subject-level shortage cases in your assigned classes: {{ subject_shortages }}
+      <p class="hero-eyebrow">{% now "l, j F Y" %}</p>
+      <h1 class="h3">Faculty dashboard</h1>
+      {% if next_class %}
+        <p class="hero-text hero-reminder">{% icon "bell" 18 %}
+          {% if next_class_now %}Happening now:{% else %}Your next class:{% endif %}
+          <strong>{{ next_class.assignment.subject }}</strong> in {{ next_class.assignment.section }} at {{ next_class.starts|time:"g:i a" }}
+        </p>
+      {% elif today_rows %}
+        <p class="hero-text">You have no more classes today.</p>
+      {% else %}
+        <p class="hero-text">Welcome, {{ user.username }}. No classes are timetabled for you today.</p>
+      {% endif %}
     </div>
-    <a class="btn btn-sm btn-outline-primary" href="{% url 'shortage_list' %}">Students below threshold in my subjects</a>
+    <a class="btn btn-light" href="{% url 'attendance_mark' %}">{% icon "clipboard" 18 %} Mark attendance</a>
   </div>
-  <div class="row g-3">
-    <div class="col-md-6">
-      <div class="card h-100">
-        <h2 class="card-header section-header h6 mb-0">Teaching</h2>
-        <div class="list-group list-group-flush">
-          <a class="list-group-item list-group-item-action" href="{% url 'my_classes' %}">My classes</a>
-          <a class="list-group-item list-group-item-action" href="{% url 'student_list' %}">View students in my classes</a>
-          <a class="list-group-item list-group-item-action" href="{% url 'subject_list' %}">My subjects</a>
-          <a class="list-group-item list-group-item-action" href="{% url 'my_profile' %}">My profile</a>
-        </div>
+
+  {% if unmarked_count %}
+    <div class="callout callout-danger" role="status">
+      <div class="callout-body">
+        <span class="callout-icon">{% icon "alert" 22 %}</span>
+        <span><strong>{{ unmarked_count }}</strong> of today's class{{ unmarked_count|pluralize:"es" }} {{ unmarked_count|pluralize:"has,have" }} finished without attendance marked.</span>
       </div>
     </div>
-    <div class="col-md-6">
-      <div class="card h-100">
-        <h2 class="card-header section-header h6 mb-0">Attendance</h2>
-        <div class="list-group list-group-flush">
-          <a class="list-group-item list-group-item-action" href="{% url 'attendance_history' %}">Attendance history and corrections</a>
-          <a class="list-group-item list-group-item-action" href="{% url 'attendance_report' %}">Attendance reports</a>
+  {% endif %}
+
+  <h2 class="section-title">My teaching overview</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body">
+      <span class="stat-icon">{% icon "board" 22 %}</span>
+      <div><div class="stat-label">Classes</div><div class="stat-value">{{ class_count }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body">
+      <span class="stat-icon">{% icon "book" 22 %}</span>
+      <div><div class="stat-label">Subjects</div><div class="stat-value">{{ subject_count }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body">
+      <span class="stat-icon">{% icon "cap" 22 %}</span>
+      <div><div class="stat-label">Students</div><div class="stat-value">{{ student_count }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body">
+      <span class="stat-icon">{% icon "calendar" 22 %}</span>
+      <div><div class="stat-label">Attendance sessions</div><div class="stat-value">{{ session_count }}</div></div>
+    </div></div></div>
+  </div>
+
+  {% if students_below_overall or subject_shortages %}
+    <div class="callout" role="status">
+      <div class="callout-body">
+        <span class="callout-icon">{% icon "alert" 22 %}</span>
+        <div>
+          <strong>Attendance threshold: {{ threshold }}%</strong><br>
+          Students below threshold in your assigned classes: {{ students_below_overall }}<br>
+          Subject-level shortage cases in your assigned classes: {{ subject_shortages }}
         </div>
       </div>
+      <a class="btn btn-sm btn-outline-primary" href="{% url 'shortage_list' %}">Students below threshold in my subjects</a>
     </div>
-  </div>
+  {% endif %}
+
+  {% include "dashboard/includes/today_classes.html" %}
 {% endblock %}
 
 {% block back_link %}{% endblock %}

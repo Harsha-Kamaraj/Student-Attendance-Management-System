@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Semester classes · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">Semester classes</h1>
+<p class="text-body-secondary">Enter how many classes each subject will hold this semester. Students then see how many of the remaining classes they must attend to finish at the attendance threshold. Leave a box blank if it is not known yet.</p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  <div class="table-responsive" role="region" aria-label="Semester classes per subject" tabindex="0">
+    <table class="table align-middle">
+      <thead><tr><th scope="col">Class / section</th><th scope="col">Subject</th><th scope="col">Teacher</th><th scope="col">Classes this semester</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{{ row.offering.section }}</td>
+            <td>{{ row.offering.subject }}</td>
+            <td>{{ row.offering.faculty.full_name|default:"No teacher yet" }}</td>
+            <td style="max-width: 10rem">
+              <input class="form-control{% if row.error %} is-invalid{% endif %}" type="number" min="1" max="500" inputmode="numeric"
+                     name="planned_{{ row.offering.pk }}" value="{{ row.value }}"
+                     aria-label="Classes this semester for {{ row.offering.subject.code }} in {{ row.offering.section }}">
+              {% if row.error %}<div class="text-danger small">{{ row.error }}</div>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No subjects are offered in any class yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if rows %}<button class="btn btn-primary mt-3" type="submit">Save semester classes</button>{% endif %}
+</form>
+{% endblock %}

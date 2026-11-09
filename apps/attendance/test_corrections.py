@@ -171,15 +171,15 @@ class AttendanceCorrectionTests(CorrectionFixtures, TestCase):
         self.assertEqual(student_attendance_summary(self.student).overall.display, "1/1 (100.00%)")
         self.client.force_login(self.student.user)
         self.assertContains(self.client.get(reverse("dashboard_student")), "1/1 (100.00%)")
+        # With nobody below the threshold, the dashboards report zero and hide the shortage box.
         self.client.force_login(self.teacher)
-        self.assertContains(
-            self.client.get(reverse("dashboard_faculty")),
-            "Students below threshold in your assigned classes: 0",
-        )
+        faculty_page = self.client.get(reverse("dashboard_faculty"))
+        self.assertEqual(faculty_page.context["students_below_overall"], 0)
+        self.assertNotContains(faculty_page, "Students below threshold in your assigned classes")
         self.client.force_login(self.admin)
-        self.assertContains(
-            self.client.get(reverse("dashboard_admin")), "Students below threshold overall: 0"
-        )
+        admin_page = self.client.get(reverse("dashboard_admin"))
+        self.assertEqual(admin_page.context["students_below_overall"], 0)
+        self.assertNotContains(admin_page, "Students below threshold overall")
 
 
 class CorrectionWindowTests(CorrectionFixtures, TestCase):

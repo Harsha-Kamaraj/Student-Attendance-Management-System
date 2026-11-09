@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}{{ member.faculty_id }} · Student Attendance{% endblock %}
 {% block content %}
 <h1 class="h3">{{ member.full_name }} ({{ member.faculty_id }})</h1>
@@ -29,5 +30,6 @@
 {% if classes %}
   <p class="text-body-secondary">A faculty member who teaches classes cannot be deactivated or deleted until the classes are reassigned.</p>
 {% endif %}
-<a href="{% url 'faculty_list' %}">Back to faculty</a>
 {% endblock %}
+
+{% block back_extra %}<a class="btn btn-outline-secondary" href="{% url 'faculty_list' %}">{% icon "arrow-left" 18 %} Back to faculty</a>{% endblock %}

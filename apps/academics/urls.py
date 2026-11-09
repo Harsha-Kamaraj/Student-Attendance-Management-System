@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import planning_views, views
 
 urlpatterns = [
     path("sections/", views.section_list, name="section_list"),
@@ -16,6 +16,9 @@ urlpatterns = [
         name="class_teacher",
     ),
     path("my-classes/", views.my_classes, name="my_classes"),
+    path("timetable/", planning_views.timetable, name="timetable"),
+    path("timetable/<int:pk>/remove/", planning_views.timetable_remove, name="timetable_remove"),
+    path("semester-classes/", planning_views.semester_plan, name="semester_plan"),
     path(
         "sections/<int:pk>/enrollments/<int:enrollment_pk>/remove/",
         views.enrollment_remove,

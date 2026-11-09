@@ -78,8 +78,32 @@ class AccountCreateForm(BootstrapMixin, forms.ModelForm):
         return username
 
 
+PASSWORD_RULES_HTML = (
+    "Your new password must:"
+    "<ul class='mb-0 mt-1'>"
+    "<li>be at least 8 characters long</li>"
+    "<li>include a capital letter, a small letter, a number and a symbol (such as ! @ #)</li>"
+    "<li>not be only numbers or a commonly used password</li>"
+    "<li>not look like your username, name or email</li>"
+    "</ul>"
+)
+
+
 class ChangePasswordForm(BootstrapMixin, PasswordChangeForm):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Same rules the validators enforce (SEC-04), in plain words instead of Django's defaults.
+        self.fields["new_password1"].help_text = PASSWORD_RULES_HTML
+
+
+class SendCredentialsForm(BootstrapMixin, forms.Form):
+    """Email the temporary password just shown to the Admin (BL-34 fallback)."""
+
+    email = forms.EmailField(label="Send to email address", max_length=254)
+    temporary_password = forms.CharField(widget=forms.HiddenInput, max_length=128)
+    purpose = forms.ChoiceField(
+        choices=[("created", "created"), ("reset", "reset"), ("resend", "resend")], widget=forms.HiddenInput
+    )
 
 
 class OTPCodeForm(BootstrapMixin, forms.Form):

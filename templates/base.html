@@ -1,4 +1,4 @@
-{% load static %}
+{% load static ui %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,42 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>{% block title %}Student Attendance Management System{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  {# The ?v= value makes browsers fetch the new file after a design change; bump it when theme.css changes. #}
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=2026-11-09g">
   <style>
     /* Stop mobile browsers from enlarging text on rotation. */
     html {
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
-    }
-
-    /* Keep the navbar usable on narrow screens. */
-    .navbar-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .navbar-actions {
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .navbar-user {
-      min-width: 0;
-      max-width: 100%;
-      overflow-wrap: anywhere;
-    }
-
-    .navbar-brand {
-      max-width: 100%;
-      white-space: normal;
     }
 
     main {
@@ -63,56 +36,54 @@
       outline: 2px solid var(--bs-primary);
       outline-offset: 2px;
     }
-
-    @media (max-width: 576px) {
-      .navbar-content {
-        align-items: flex-start;
-      }
-
-      .navbar-actions {
-        justify-content: flex-start;
-        width: 100%;
-      }
-
-      .navbar-user {
-        font-size: 0.875rem;
-      }
-
-      main.container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-    }
   </style>
   <script src="{% static 'js/tables.js' %}" defer></script>
+  <script src="{% static 'js/nav.js' %}?v=2026-11-09g" defer></script>
 </head>
-<body>
-  <nav class="navbar navbar-dark app-navbar">
-    <div class="container navbar-content">
-      <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}">
-        Student Attendance
-      </a>
+<body class="{% block body_class %}app-page{% endblock %}">
+  <a class="visually-hidden-focusable skip-link" href="#main-content">Skip to main content</a>
+
+  <nav class="navbar navbar-dark app-navbar" aria-label="Top bar">
+    <div class="navbar-inner">
+      <div class="navbar-start">
+        {% block nav_toggle %}
+          {% if user.is_authenticated %}
+            <button type="button" class="btn nav-icon-btn sidebar-toggle" data-sidebar-toggle
+                    aria-controls="app-sidebar" aria-expanded="false">
+              {% icon "menu" 22 %}<span class="visually-hidden">Menu</span>
+            </button>
+          {% endif %}
+        {% endblock %}
+        <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}">
+          <img src="{% static 'img/logo.svg' %}" width="36" height="36" alt="" class="brand-logo">
+          <span class="brand-text">Student Attendance</span>
+        </a>
+      </div>
 
       {% if user.is_authenticated %}
         <div class="navbar-actions">
           {% if unread_notification_count is not None %}
-            <a class="btn btn-outline-light btn-sm" href="{% url 'notification_list' %}">
-              Notifications
+            <a class="btn nav-pill" href="{% url 'notification_list' %}">
+              {% icon "bell" 18 %}
+              <span class="collapse-label">Notifications</span>
               {% if unread_notification_count %}
-                <span class="badge text-bg-danger">{{ unread_notification_count }}</span>
+                <span class="badge rounded-pill text-bg-danger">{{ unread_notification_count }}</span>
               {% endif %}
             </a>
           {% endif %}
 
-          <a class="navbar-text navbar-user text-white text-decoration-none" href="{% url 'my_profile' %}"
-             title="My profile">
-            {{ user.username }} · {{ user.get_role_display }}
+          <a class="user-chip" href="{% url 'my_profile' %}" title="My profile">
+            <span class="user-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+            <span class="user-meta collapse-label">
+              <span class="user-name">{{ user.username }}</span>
+              <span class="user-role">{{ user.get_role_display }}</span>
+            </span>
           </a>
 
           <form action="{% url 'logout' %}" method="post" class="m-0">
             {% csrf_token %}
-            <button type="submit" class="btn btn-outline-light btn-sm">
-              Log out
+            <button type="submit" class="btn nav-pill nav-logout">
+              {% icon "logout" 18 %}<span class="collapse-label">Log out</span>
             </button>
           </form>
         </div>
@@ -120,26 +91,37 @@
     </div>
   </nav>
 
-  <main class="container py-4">
-    {% for message in messages %}
-      <div
-        class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}"
-        role="alert"
-      >
-        {{ message }}
-      </div>
-    {% endfor %}
-
-    {% block content %}{% endblock %}
-
-    {% block back_link %}
-      {% if user.is_authenticated %}
-        <div class="back-link mt-4 pt-3">
-          <a class="btn btn-outline-primary" href="{% url 'dashboard' %}">&larr; Back to dashboard</a>
-        </div>
-      {% endif %}
+  <div class="app-shell">
+    {% block sidebar %}
+      {% if user.is_authenticated %}{% sidebar %}{% endif %}
     {% endblock %}
-  </main>
+
+    <main class="app-main" id="main-content">
+      <div class="app-main-inner">
+        {% for message in messages %}
+          <div
+            class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}"
+            role="alert"
+          >
+            {{ message }}
+          </div>
+        {% endfor %}
+
+        <div class="{% block surface_class %}content-surface{% endblock %}">
+          {% block content %}{% endblock %}
+        </div>
+
+        {% block back_link %}
+          {% if user.is_authenticated %}
+            <div class="back-link mt-4 pt-3 d-flex flex-wrap gap-2">
+              {% block back_extra %}{% endblock %}
+              <a class="btn btn-outline-primary" href="{% url 'dashboard' %}">{% icon "arrow-left" 18 %} Back to dashboard</a>
+            </div>
+          {% endif %}
+        {% endblock %}
+      </div>
+    </main>
+  </div>
   {% if request.method == "POST" %}
     <script>
       // This page answers a form submission. Rewriting the history entry as a plain visit means

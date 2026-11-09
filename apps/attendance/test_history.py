@@ -57,7 +57,8 @@ class AttendanceHistoryTests(TestCase):
         return AttendanceRecord.objects.create(session=session, student=student, status=status)
 
     def history(self, params=None):
-        return self.client.get(reverse("attendance_history"), params or {})
+        # Records are listed once the filter form is submitted; an empty search lists everything.
+        return self.client.get(reverse("attendance_history"), params or {"search": ""})
 
     def changes(self, record=None, params=None):
         return self.client.get(reverse("attendance_changes", args=[(record or self.record).pk]), params or {})
@@ -100,6 +101,13 @@ class AttendanceHistoryTests(TestCase):
         self.assertContains(response, reverse("attendance_correct", args=[self.record.pk]))
         self.assertContains(response, reverse("attendance_changes", args=[self.record.pk]))
         self.assertIn("no-store", response["Cache-Control"])
+
+    def test_records_appear_only_after_the_filters_are_applied(self):
+        self.client.force_login(self.faculty.user)
+        response = self.client.get(reverse("attendance_history"))
+        self.assertContains(response, "Choose filters above")
+        self.assertNotContains(response, reverse("attendance_correct", args=[self.record.pk]))
+        self.assertContains(self.history(), reverse("attendance_correct", args=[self.record.pk]))
 
     def test_admin_sees_all_records(self):
         self.client.force_login(self.admin)

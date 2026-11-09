@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db import DatabaseError, IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -17,12 +18,19 @@ from apps.accounts.permissions import requires, visible_assignments
 from apps.audit import services as audit
 from apps.notifications.services import evaluate_students
 
-from .calculations import student_attendance_summary
+from .calculations import AttendanceOutlook, student_attendance_summary, subject_outlooks
 from .forms import AttendanceSelectionForm, AttendanceSummaryFilterForm, AttendanceThresholdForm
-from .models import AttendanceSession, AttendanceThreshold, Status
+from .models import AttendanceRecord, AttendanceSession, AttendanceThreshold, Status
 from .services import submit_attendance
 
 logger = logging.getLogger(__name__)
+
+
+def _query_without_page(request):
+    """Keep the chosen subject and dates when moving between pages of classes."""
+    query = request.GET.copy()
+    query.pop("page", None)
+    return query.urlencode()
 
 
 def _deny_other_teachers(user, raw_pk):
@@ -168,10 +176,29 @@ def attendance_summary(request):
         )
     threshold = AttendanceThreshold.current_value()
     subject_rows = []
+    overall_outlook = None
     overall_below = False
+    selected_subject = None
+    class_records = []
     if summary:
-        subject_rows = [(row, row.is_below_threshold(threshold)) for row in summary.subjects]
+        subject_rows, overall_outlook = subject_outlooks(student, summary, threshold)
         overall_below = summary.overall.is_below_threshold(threshold)
+        data = form.cleaned_data if request.GET else {}
+        selected_subject = data.get("subject")
+        if selected_subject:
+            # Class-by-class marks for the chosen subject: only this student's own records.
+            class_records = (
+                AttendanceRecord.objects.filter(
+                    student=student, session__assignment__subject=selected_subject
+                )
+                .select_related("session__assignment__section")
+                .order_by("-session__date", "-session__period")
+            )
+            if data.get("start_date"):
+                class_records = class_records.filter(session__date__gte=data["start_date"])
+            if data.get("end_date"):
+                class_records = class_records.filter(session__date__lte=data["end_date"])
+            class_records = Paginator(class_records, 20).get_page(request.GET.get("page"))
     return render(
         request,
         "attendance/summary.html",
@@ -180,9 +207,13 @@ def attendance_summary(request):
             "form": form,
             "summary": summary,
             "subject_rows": subject_rows,
+            "overall_outlook": overall_outlook or AttendanceOutlook(0, 0, threshold),
             "overall_below": overall_below,
             "threshold": threshold,
             "filters_applied": bool(request.GET),
+            "selected_subject": selected_subject,
+            "class_records": class_records,
+            "page_query": _query_without_page(request),
         },
     )
 

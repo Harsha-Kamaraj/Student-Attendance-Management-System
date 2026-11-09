@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static ui %}
+
+{# Sign-in pages (login, forgot password, two-factor, password change): picture on the left half, form on the right half. #}
+
+{% block body_class %}auth-page{% endblock %}
+{% block nav_toggle %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block surface_class %}{% endblock %}
+{% block back_link %}{% endblock %}
+
+{% block content %}
+  <div class="auth-split">
+    <div class="auth-art">
+      <div class="auth-art-inner">
+        <p class="auth-tagline">Attendance, simple and accurate.</p>
+        <p class="auth-sub">One place for Admins, Faculty and Students to record, track and report class attendance.</p>
+        <img class="auth-illustration" src="{% static 'img/login-illustration.svg' %}?v=2026-11-09g" width="440" height="340" alt="">
+        <ul class="auth-features">
+          <li>{% icon "clipboard" 18 %} Mark a whole class in one go</li>
+          <li>{% icon "pie" 18 %} Live attendance percentages</li>
+          <li>{% icon "bell" 18 %} Alerts before attendance falls short</li>
+        </ul>
+      </div>
+    </div>
+    <div class="auth-form">
+      <div class="auth-form-inner">
+        {% block auth_content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

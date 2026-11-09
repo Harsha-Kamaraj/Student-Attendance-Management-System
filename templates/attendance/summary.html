@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% load ui attendance_extras %}
 {% block title %}My attendance · Student Attendance{% endblock %}
 {% block content %}
 <h1 class="h3">My attendance</h1>
-<p>{{ student.roll_number }} — {{ student.full_name }}</p>
+<p class="text-body-secondary">{{ student.roll_number }} — {{ student.full_name }}</p>
 <form method="get" class="card mb-4">
   <div class="card-body">
     <h2 class="h5">Filter attendance</h2>
@@ -33,29 +34,64 @@
 {% if summary %}
   {% if filters_applied and not summary.overall.held %}
     <div class="alert alert-info" role="status">No attendance records match these filters.</div>
-  {% endif %}
-  <div class="card stat-card{% if overall_below %} stat-warn{% endif %} mb-4"><div class="card-body">
-    <h2 class="h5">Overall attendance</h2>
-    <p class="stat-value mb-0">{{ summary.overall.display }}</p>
-    {% if overall_below %}<p class="text-shortage mb-0">Below the {{ threshold }}% threshold</p>{% endif %}
-  </div></div>
-  <h2 class="h5">Attendance by subject</h2>
-  <div class="table-responsive" role="region" aria-label="Scrollable data table" tabindex="0">
-    <table class="table table-striped">
-      <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th></tr></thead>
-      <tbody>
-        {% if filters_applied and not summary.overall.held %}
-          <tr><td colspan="2">No attendance records match these filters.</td></tr>
-        {% else %}
-          {% for row, below in subject_rows %}
-            <tr><th scope="row">{{ row.subject }}</th><td>{% if below %}<span class="text-shortage">{{ row.display }} ▲ Below {{ threshold }}%</span>{% else %}{{ row.display }}{% endif %}</td></tr>
+  {% else %}
+    <div class="overall-strip{% if overall_below %} is-below{% endif %} mb-4">
+      <div class="overall-figure">
+        <span class="overall-label">Overall attendance</span>
+        <span class="overall-value">{{ summary.overall.display }}</span>
+      </div>
+      <div class="overall-note">
+        {% if overall_below %}<span class="text-shortage">Below the {{ threshold }}% threshold</span>{% else %}<span class="text-success fw-semibold">At or above {{ threshold }}%</span>{% endif %}
+        {% if not filters_applied %}<span class="text-body-secondary">{{ overall_outlook.message }}</span>{% endif %}
+      </div>
+    </div>
+
+    <h2 class="h5">Attendance by subject</h2>
+    <div class="table-responsive mb-4" role="region" aria-label="Attendance by subject" tabindex="0">
+      <table class="table align-middle">
+        <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th><th scope="col">What you need</th></tr></thead>
+        <tbody>
+          {% for row, outlook in subject_rows %}
+            <tr{% if selected_subject and selected_subject.pk == row.subject.pk %} class="table-active"{% endif %}>
+              <td class="fw-semibold text-nowrap">{{ row.subject }}<br><a class="btn btn-sm btn-outline-primary mt-1" href="?subject={{ row.subject.pk }}{% if form.cleaned_data.start_date %}&amp;start_date={{ form.cleaned_data.start_date|date:'Y-m-d' }}{% endif %}{% if form.cleaned_data.end_date %}&amp;end_date={{ form.cleaned_data.end_date|date:'Y-m-d' }}{% endif %}">View classes</a></td>
+              <td>{% if outlook.below %}<span class="text-shortage">{{ row.display }} ▲ Below {{ threshold }}%</span>{% else %}{{ row.display }}{% endif %}</td>
+              <td class="small text-body-secondary advice-cell">{{ outlook.message }}</td>
+            </tr>
           {% empty %}
-            <tr><td colspan="2">N/A — no classes yet</td></tr>
+            <tr><td colspan="3">N/A — no classes yet</td></tr>
           {% endfor %}
-        {% endif %}
-      </tbody>
-    </table>
-  </div>
-  <p class="text-body-secondary">Overall attendance pools all recorded classes in the selected scope. Percentages are rounded half up to two decimals.</p>
+        </tbody>
+      </table>
+    </div>
+
+    {% if selected_subject %}
+      <h2 class="h5">Class-by-class: {{ selected_subject }}</h2>
+      <div class="table-responsive" role="region" aria-label="Class-by-class attendance" tabindex="0">
+        <table class="table align-middle">
+          <thead><tr><th scope="col">Date</th><th scope="col">Class time</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+            {% for record in class_records %}
+              <tr>
+                <td>{{ record.session.date|date:"D, d M Y" }}</td>
+                <td>{{ record.session.period|period_label }}</td>
+                <td>{% include "attendance/includes/status_badge.html" with label=record.get_status_display %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3">No classes recorded for this subject yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if class_records.has_other_pages %}
+        <nav aria-label="Pages of classes" class="d-flex flex-wrap gap-2 align-items-center mt-3">
+          {% if class_records.has_previous %}<a class="btn btn-sm btn-outline-primary" href="?{{ page_query }}&amp;page={{ class_records.previous_page_number }}">Newer classes</a>{% endif %}
+          <span class="small">Page {{ class_records.number }} of {{ class_records.paginator.num_pages }} · {{ class_records.paginator.count }} classes</span>
+          {% if class_records.has_next %}<a class="btn btn-sm btn-outline-primary" href="?{{ page_query }}&amp;page={{ class_records.next_page_number }}">Older classes</a>{% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <p class="text-body-secondary small">Select a subject to see each class you were marked Present or Absent in.</p>
+    {% endif %}
+  {% endif %}
 {% endif %}
 {% endblock %}

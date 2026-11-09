@@ -1,5 +1,7 @@
 """Attendance sessions and per-student records."""
 
+from datetime import time
+
 from django.conf import settings
 from django.db import models
 
@@ -17,6 +19,16 @@ PERIOD_TIMES = {
     6: "2:15–3:15 pm",
 }
 BREAKS_NOTE = "Short break 10:00–10:30 am · Lunch 12:30–1:15 pm"
+
+# Start and end of each period, for "next class" reminders on the faculty dashboard.
+PERIOD_SPANS = {
+    1: (time(8, 0), time(9, 0)),
+    2: (time(9, 0), time(10, 0)),
+    3: (time(10, 30), time(11, 30)),
+    4: (time(11, 30), time(12, 30)),
+    5: (time(13, 15), time(14, 15)),
+    6: (time(14, 15), time(15, 15)),
+}
 
 
 def period_label(period):

@@ -8,7 +8,7 @@
     {% csrf_token %}
     {% include "includes/form_fields.html" %}
     <button type="submit" class="btn btn-primary">Offer subject</button>
-    <a class="btn btn-link" href="{% url 'subject_detail' subject.pk %}">Cancel</a>
+    <a class="btn btn-outline-secondary" href="{% url 'subject_detail' subject.pk %}">Cancel</a>
   </form>
 </div></div>
 {% endblock %}

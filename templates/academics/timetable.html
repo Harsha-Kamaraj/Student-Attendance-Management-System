@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load attendance_extras %}
+{% block title %}Timetable · Student Attendance{% endblock %}
+{% block content %}
+<h1 class="h3">Timetable</h1>
+<p class="text-body-secondary">Faculty see today's classes from this timetable on their dashboard, with a reminder for any class whose attendance is not marked yet.</p>
+
+<form method="post" class="filter-panel mb-4" novalidate>
+  {% csrf_token %}
+  {% for error in form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endfor %}
+  <div class="row g-3 align-items-end">
+    <div class="col-lg-6">
+      <label class="form-label" for="{{ form.assignment.id_for_label }}">{{ form.assignment.label }}</label>
+      {{ form.assignment }}
+      {% for error in form.assignment.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="col-sm-6 col-lg-2">
+      <label class="form-label" for="{{ form.weekday.id_for_label }}">{{ form.weekday.label }}</label>
+      {{ form.weekday }}
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label class="form-label" for="{{ form.period.id_for_label }}">{{ form.period.label }}</label>
+      {{ form.period }}
+    </div>
+    <div class="col-lg-1 d-grid">
+      <button class="btn btn-primary" type="submit">Add</button>
+    </div>
+  </div>
+</form>
+
+{% if slot_count %}
+  <div class="row g-3">
+    {% for day, slots in days %}
+      <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+          <h2 class="card-header section-header h6 mb-0">{{ day }}</h2>
+          <ul class="list-group list-group-flush">
+            {% for slot in slots %}
+              <li class="list-group-item d-flex justify-content-between align-items-start gap-2">
+                <div>
+                  <div class="fw-semibold">{{ slot.assignment.subject }}</div>
+                  <div class="small text-body-secondary">{{ slot.period|period_label }} · {{ slot.assignment.section }}</div>
+                  <div class="small text-body-secondary">{{ slot.assignment.faculty.full_name|default:"No teacher yet" }}</div>
+                </div>
+                <form method="post" action="{% url 'timetable_remove' slot.pk %}" class="m-0">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Remove {{ slot.assignment.subject.code }} on {{ day }} period {{ slot.period }}">Remove</button>
+                </form>
+              </li>
+            {% empty %}
+              <li class="list-group-item text-body-secondary small">No classes.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">No classes in the timetable yet. Add the first one above.</div>
+{% endif %}
+{% endblock %}

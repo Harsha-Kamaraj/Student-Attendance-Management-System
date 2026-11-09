@@ -13,8 +13,8 @@
       <tr>
         <td>{{ subject.code }}</td><td>{{ subject.name }}</td>
         <td class="text-end text-nowrap">
-          <a href="{% url 'subject_detail' subject.pk %}">View</a>
-          {% if subject.pk in editable %} · <a href="{% url 'subject_edit' subject.pk %}">Edit</a>{% endif %}
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'subject_detail' subject.pk %}">View</a>
+          {% if subject.pk in editable %}<a class="btn btn-sm btn-outline-secondary ms-1" href="{% url 'subject_edit' subject.pk %}">Edit</a>{% endif %}
         </td>
       </tr>
       {% empty %}<tr><td colspan="3">{% if user.role == "FACULTY" %}No subjects are assigned to you yet. Contact the Admin.{% else %}No subjects yet.{% endif %}</td></tr>{% endfor %}

@@ -11,9 +11,9 @@
     {% for section in sections %}
       <tr><td>{{ section.class_name }}</td><td>{{ section.name }}</td><td>{{ section.year|default:"—" }}</td>
       <td class="text-nowrap">
-        <a href="{% url 'section_detail' section.pk %}">Open roster</a> ·
-        <a href="{% url 'section_edit' section.pk %}">Edit</a> ·
-        <a class="text-danger" href="{% url 'section_delete' section.pk %}">Delete</a>
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'section_detail' section.pk %}">Open roster</a>
+        <a class="btn btn-sm btn-outline-secondary ms-1" href="{% url 'section_edit' section.pk %}">Edit</a>
+        <a class="btn btn-sm btn-outline-danger ms-1" href="{% url 'section_delete' section.pk %}">Delete</a>
       </td></tr>
     {% empty %}<tr><td colspan="4">No sections. Create one to begin.</td></tr>{% endfor %}
   </tbody>

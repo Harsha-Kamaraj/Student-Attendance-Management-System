@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Student Attendance">
+  <defs>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b1e2d"/>
+      <stop offset="1" stop-color="#3b0d11"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#logo-bg)"/>
+  <!-- Clipboard -->
+  <rect x="17" y="14" width="30" height="38" rx="5" fill="#faf7f2"/>
+  <rect x="25" y="10" width="14" height="8" rx="3" fill="#a16207"/>
+  <!-- Ticked rows -->
+  <path d="M22.5 27.5l2.5 2.5 4.5-5" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="32" y="26" width="10" height="3" rx="1.5" fill="#e3b7bd"/>
+  <path d="M22.5 38.5l2.5 2.5 4.5-5" fill="none" stroke="#15803d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="32" y="37" width="10" height="3" rx="1.5" fill="#e3b7bd"/>
+</svg>

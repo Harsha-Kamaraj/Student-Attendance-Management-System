@@ -76,10 +76,20 @@ class TeachingAssignment(models.Model):
     faculty = models.ForeignKey(
         Faculty, on_delete=models.PROTECT, null=True, blank=True, related_name="assignments"
     )
+    # Set by the Admin on the Semester classes page; lets students see how many of the
+    # remaining classes they must attend to finish the semester at the threshold.
+    planned_sessions = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name="Classes planned this semester"
+    )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["section", "subject"], name="assignment_unique_section_subject"),
+            models.CheckConstraint(
+                condition=models.Q(planned_sessions__isnull=True)
+                | models.Q(planned_sessions__range=(1, 500)),
+                name="assignment_planned_sessions_range",
+            ),
         ]
 
     def __str__(self):
@@ -108,3 +118,37 @@ class Enrollment(models.Model):
     def save(self, *args, **kwargs):
         self.subject_id = self.assignment.subject_id
         super().save(*args, **kwargs)
+
+
+class Weekday(models.IntegerChoices):
+    MONDAY = 0, "Monday"
+    TUESDAY = 1, "Tuesday"
+    WEDNESDAY = 2, "Wednesday"
+    THURSDAY = 3, "Thursday"
+    FRIDAY = 4, "Friday"
+    SATURDAY = 5, "Saturday"
+
+
+class TimetableSlot(models.Model):
+    """A weekly class: this subject offering meets on this weekday in this period.
+
+    The Admin keeps the timetable. Faculty dashboards use it to remind teachers of
+    today's classes and which of them still need attendance marked.
+    """
+
+    assignment = models.ForeignKey(
+        TeachingAssignment, on_delete=models.CASCADE, related_name="timetable_slots"
+    )
+    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices)
+    period = models.PositiveSmallIntegerField()
+
+    class Meta:
+        ordering = ["weekday", "period"]
+        constraints = [
+            models.UniqueConstraint(fields=["assignment", "weekday", "period"], name="timetable_slot_unique"),
+            models.CheckConstraint(condition=models.Q(period__range=(1, 6)), name="timetable_period_range"),
+            models.CheckConstraint(condition=models.Q(weekday__range=(0, 5)), name="timetable_weekday_range"),
+        ]
+
+    def __str__(self):
+        return f"{self.assignment} on {self.get_weekday_display()} period {self.period}"

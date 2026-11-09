@@ -14,7 +14,15 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.academics.models import Enrollment, Faculty, Section, Student, Subject, TeachingAssignment
+from apps.academics.models import (
+    Enrollment,
+    Faculty,
+    Section,
+    Student,
+    Subject,
+    TeachingAssignment,
+    TimetableSlot,
+)
 from apps.accounts.models import Role, User
 from apps.attendance.models import MAX_PERIODS_PER_DAY, AttendanceRecord, AttendanceSession, Status
 
@@ -88,11 +96,21 @@ class Command(BaseCommand):
         cs101 = Subject.objects.create(code="CS101", name="Programming")
         ma101 = Subject.objects.create(code="MA101", name="Mathematics")
         cs101_a = TeachingAssignment.objects.create(
-            section=sections["A"], subject=cs101, faculty=faculty["F001"]
+            section=sections["A"], subject=cs101, faculty=faculty["F001"], planned_sessions=120
         )
         ma101_b = TeachingAssignment.objects.create(
-            section=sections["B"], subject=ma101, faculty=faculty["F002"]
+            section=sections["B"], subject=ma101, faculty=faculty["F002"], planned_sessions=40
         )
+        # Weekly timetable (Monday = 0) for the faculty "today's classes" reminders.
+        for assignment, weekday, period in (
+            (cs101_a, 0, 2),
+            (cs101_a, 2, 1),
+            (cs101_a, 4, 3),
+            (ma101_b, 0, 4),
+            (ma101_b, 1, 2),
+            (ma101_b, 3, 5),
+        ):
+            TimetableSlot.objects.create(assignment=assignment, weekday=weekday, period=period)
 
         students = {}
         for roll, name, home in STUDENTS:

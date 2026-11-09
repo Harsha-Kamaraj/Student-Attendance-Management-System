@@ -1,35 +1,66 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}Student dashboard · Student Attendance{% endblock %}
+{% block surface_class %}{% endblock %}
 {% block content %}
-  <h1 class="h3">Student dashboard</h1>
+  <div class="page-hero">
+    <div>
+      <p class="hero-eyebrow">{% now "l, j F Y" %}</p>
+      <h1 class="h3">Student dashboard</h1>
+      <p class="hero-text">Welcome, {{ user.username }}. Here is how your attendance looks.</p>
+    </div>
+    <a class="btn btn-light" href="{% url 'attendance_summary' %}">{% icon "pie" 18 %} My attendance</a>
+  </div>
   {% if summary %}
-    <div class="row g-3 my-2">
-      <div class="col-md-4"><div class="card stat-card{% if overall_below_threshold %} stat-warn{% endif %} h-100"><div class="card-body">
-        <h2 class="stat-label h6">Overall attendance</h2>
-        <p class="stat-value mb-0">{{ summary.overall.display }}</p>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6"><div class="card stat-card{% if overall_below_threshold %} stat-warn{% endif %} h-100"><div class="card-body">
+        <span class="stat-icon">{% icon "pie" 22 %}</span>
+        <div>
+          <h2 class="stat-label h6 mb-1">Overall attendance</h2>
+          <p class="stat-value mb-1">{{ summary.overall.display }}</p>
+          {% if overall_below_threshold %}<p class="text-shortage small mb-0">Your overall attendance is below the threshold. {{ overall_outlook.message }}</p>
+          {% elif summary.overall.held %}<p class="text-body-secondary small mb-0">At or above the {{ threshold }}% threshold.</p>{% endif %}
+        </div>
       </div></div></div>
-      <div class="col-md-4"><div class="card stat-card h-100"><div class="card-body">
-        <h2 class="stat-label h6">Attendance threshold</h2>
-        <p class="stat-value mb-1">{{ threshold }}%</p>
-        {% if overall_below_threshold %}<p class="text-shortage mb-0">Your overall attendance is below the threshold.</p>
-        {% else %}<p class="text-body-secondary mb-0">Your overall attendance is not below the threshold.</p>{% endif %}
+      <div class="col-md-6"><div class="card stat-card{% if subject_shortages %} stat-warn{% endif %} h-100"><div class="card-body">
+        <span class="stat-icon">{% icon "trend-down" 22 %}</span>
+        <div>
+          <h2 class="stat-label h6 mb-1">Subjects below threshold</h2>
+          <p class="stat-value mb-1">{{ subject_shortages }}</p>
+          <p class="text-body-secondary small mb-0">Attendance threshold: {{ threshold }}%</p>
+        </div>
       </div></div></div>
-      <div class="col-md-4"><div class="card stat-card{% if subject_shortages %} stat-warn{% endif %} h-100"><div class="card-body">
-        <h2 class="stat-label h6">Subjects below threshold</h2>
-        <p class="stat-value mb-0">{{ subject_shortages }}</p>
-      </div></div></div>
+    </div>
+
+    <h2 class="section-title">My subjects</h2>
+    <div class="row g-3">
+      {% for row, outlook in subject_rows %}
+        <div class="col-md-6">
+          <a class="subject-card{% if outlook.below %} is-below{% endif %}" href="{% url 'attendance_summary' %}?subject={{ row.subject.pk }}">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="subject-code">{{ row.subject.code }}</div>
+                <div class="subject-name">{{ row.subject.name }}</div>
+              </div>
+              <div class="subject-percent">{% if row.percentage is not None %}{{ row.percentage }}%{% else %}N/A{% endif %}</div>
+            </div>
+            <div class="attendance-bar" aria-hidden="true">
+              <span style="width: {% if row.percentage is not None %}{{ row.percentage|floatformat:'0u' }}{% else %}0{% endif %}%"></span>
+              <i style="left: {{ threshold }}%"></i>
+            </div>
+            <div class="d-flex justify-content-between flex-wrap gap-1 small">
+              <span>{{ row.display }}</span>
+              {% if outlook.below %}<span class="text-shortage">Below {{ threshold }}%</span>{% endif %}
+            </div>
+          </a>
+        </div>
+      {% empty %}
+        <div class="col-12"><div class="empty-state">You are not enrolled in any subjects yet.</div></div>
+      {% endfor %}
     </div>
   {% else %}
-    <p>N/A — no student profile is available.</p>
+    <div class="callout"><div class="callout-body"><span class="callout-icon">{% icon "alert" 22 %}</span><p class="mb-0">N/A — no student profile is available.</p></div></div>
   {% endif %}
-  <div class="card mt-3" style="max-width: 28rem">
-    <h2 class="card-header section-header h6 mb-0">My pages</h2>
-    <div class="list-group list-group-flush">
-      <a class="list-group-item list-group-item-action" href="{% url 'attendance_summary' %}">View and filter my attendance</a>
-      <a class="list-group-item list-group-item-action" href="{% url 'notification_list' %}">Notifications</a>
-      <a class="list-group-item list-group-item-action" href="{% url 'my_profile' %}">My profile</a>
-    </div>
-  </div>
 {% endblock %}
 
 {% block back_link %}{% endblock %}

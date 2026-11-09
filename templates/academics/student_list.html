@@ -16,8 +16,8 @@
         <td>{{ student.roll_number }}</td><td>{{ student.full_name }}</td>
         <td>{{ student.home_section|default:"Not assigned" }}</td>
         <td>{% for enrollment in student.visible_enrollments %}{{ enrollment.subject.code }} – {{ enrollment.subject.name }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-body-secondary">None</span>{% endfor %}</td>
-        <td>{% if student.user.is_active %}Active{% else %}Inactive{% endif %}</td>
-        <td><a href="{% url 'student_detail' student.pk %}">View</a></td>
+        <td>{% if student.user.is_active %}<span class="badge rounded-pill text-bg-success">Active</span>{% else %}<span class="badge rounded-pill text-bg-secondary">Inactive</span>{% endif %}</td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'student_detail' student.pk %}">View</a></td>
       </tr>
       {% empty %}<tr><td colspan="6">No visible student records.</td></tr>{% endfor %}
     </tbody>

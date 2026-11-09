@@ -24,5 +24,5 @@
   {% for error in form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endfor %}
   <p class="alert alert-warning">The faculty correction window is closed. Contact the Admin for a correction.</p>
 {% endif %}
-<p class="mt-3"><a href="{% url 'attendance_changes' record.pk %}">View modification history</a> · <a href="{% url 'attendance_history' %}">Back to attendance history</a></p>
+<div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-outline-primary" href="{% url 'attendance_changes' record.pk %}">View modification history</a><a class="btn btn-outline-secondary" href="{% url 'attendance_history' %}">Back to attendance history</a></div>
 {% endblock %}

@@ -16,6 +16,7 @@ urlpatterns = [
     path("users/create/", views.account_create, name="account_create"),
     path("users/<int:pk>/reset-password/", views.account_reset_password, name="account_reset_password"),
     path("users/<int:pk>/resend-login/", views.account_resend_credentials, name="account_resend_credentials"),
+    path("users/<int:pk>/send-login/", views.account_send_credentials, name="account_send_credentials"),
     path("users/<int:pk>/reset-otp/", otp_views.account_reset_otp, name="account_reset_otp"),
     path("otp/setup/", otp_views.otp_setup, name="otp_setup"),
     path("otp/verify/", otp_views.otp_verify, name="otp_verify"),

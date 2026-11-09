@@ -7,7 +7,7 @@
     {% csrf_token %}
     {% include "includes/form_fields.html" %}
     <button type="submit" class="btn btn-primary">{% if creating %}Add subject{% else %}Save changes{% endif %}</button>
-    <a class="btn btn-link" href="{% if creating %}{% url 'subject_list' %}{% else %}{% url 'subject_detail' subject.pk %}{% endif %}">Cancel</a>
+    <a class="btn btn-outline-secondary" href="{% if creating %}{% url 'subject_list' %}{% else %}{% url 'subject_detail' subject.pk %}{% endif %}">Cancel</a>
   </form>
 </div></div>
 {% endblock %}

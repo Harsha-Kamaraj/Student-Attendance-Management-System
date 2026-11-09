@@ -1,0 +1,35 @@
+{% load ui %}
+<div class="card today-card">
+  <div class="card-header section-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h2 class="h6 mb-0">{% icon "clock" 18 %} Today's classes · {{ now|date:"l, j F" }}</h2>
+    {% if unmarked_count %}<span class="badge rounded-pill text-bg-danger">{{ unmarked_count }} not marked yet</span>{% endif %}
+  </div>
+  {% if today_rows %}
+    <ul class="list-group list-group-flush">
+      {% for row, state in today_rows %}
+        <li class="list-group-item today-row today-{{ state }}">
+          <div class="today-time">{{ row.time_label }}</div>
+          <div class="today-what">
+            <div class="fw-semibold">{{ row.assignment.subject }}</div>
+            <div class="small text-body-secondary">{{ row.assignment.section }}{% if show_teacher %} · {{ row.assignment.faculty.full_name|default:"No teacher yet" }}{% endif %}</div>
+          </div>
+          <div class="today-action">
+            {% if state == "marked" %}
+              <span class="badge rounded-pill text-bg-success">{% icon "check-circle" 14 %} Marked</span>
+            {% elif state == "now" %}
+              <a class="btn btn-sm btn-primary" href="{% url 'attendance_mark' %}?assignment={{ row.assignment.pk }}&amp;date={{ row.day|date:'Y-m-d' }}&amp;period={{ row.period }}">Mark now</a>
+            {% elif state == "due" %}
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'attendance_mark' %}?assignment={{ row.assignment.pk }}&amp;date={{ row.day|date:'Y-m-d' }}&amp;period={{ row.period }}">Mark attendance</a>
+            {% else %}
+              <span class="badge rounded-pill text-bg-light border">Upcoming</span>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="card-body text-body-secondary">
+      No classes in the timetable today.{% if user.role == "ADMIN" %} <a class="btn btn-sm btn-outline-primary ms-2" href="{% url 'timetable' %}">Set up the timetable</a>{% endif %}
+    </div>
+  {% endif %}
+</div>

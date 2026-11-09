@@ -30,7 +30,7 @@ from django.utils import timezone
 from apps.academics.models import Enrollment, Faculty, Student, Subject, TeachingAssignment
 from apps.accounts.models import Role
 from apps.accounts.permissions import visible_assignments
-from apps.attendance.calculations import AttendanceTotals
+from apps.attendance.calculations import AttendanceTotals, classes_needed
 from apps.attendance.models import AttendanceRecord, AttendanceThreshold, Status
 from apps.audit import services as audit
 
@@ -81,12 +81,14 @@ def _student_message(items, threshold):
     lines = [f"Your attendance is below the required {threshold}% in:"]
     for subject, totals in items:
         label = str(subject) if subject else "Overall attendance"
-        lines.append(f"- {label}: {totals.display}")
-    lines += [
-        "",
-        f"Attend upcoming classes to bring it back to {threshold}% or above. "
-        "If a mark looks wrong, contact your faculty member or the Admin.",
-    ]
+        needed = classes_needed(totals.attended, totals.held, threshold)
+        advice = (
+            f"attend the next {needed} class{'' if needed == 1 else 'es'} to get back to {threshold}%."
+            if needed
+            else f"{threshold}% cannot be reached again after a missed class."
+        )
+        lines.append(f"- {label}: {totals.display} — {advice}")
+    lines += ["", "If a mark looks wrong, contact your faculty member or the Admin."]
     return "\n".join(lines)
 
 

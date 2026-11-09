@@ -1,0 +1,24 @@
+{% load ui %}
+<aside class="app-sidebar" id="app-sidebar">
+  <nav class="sidebar-nav" aria-label="Main menu">
+    {% for section in sections %}
+      <div class="sidebar-section">
+        <p class="sidebar-section-title">{{ section.title }}</p>
+        <ul class="list-unstyled mb-0">
+          {% for link in section.links %}
+            <li>
+              <a class="sidebar-link{% if link.active %} active{% endif %}" href="{{ link.href }}"{% if link.active %} aria-current="page"{% endif %}>
+                {% icon link.icon 19 %}
+                <span class="sidebar-label">{{ link.label }}</span>
+                {% if link.badge and unread_notification_count %}
+                  <span class="badge rounded-pill text-bg-danger ms-auto">{{ unread_notification_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </nav>
+</aside>
+<div class="sidebar-backdrop" data-sidebar-close hidden></div>
