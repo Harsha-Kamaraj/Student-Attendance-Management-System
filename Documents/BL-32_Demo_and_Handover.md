@@ -160,7 +160,7 @@ All backlog items are Done on the project board. BL-32 is this handover; BL-35 t
 
 | Requirement | Status | Basis |
 |---|---|---|
-| NFR-01 Performance | Met locally (6 Nov) | PT_01–PT_03 passed with 50 users on one machine; repeat after the 9 November changes and on the real server (VAL-07) |
+| NFR-01 Performance | Met locally | PT_01–PT_03 passed with 50 users on one machine on 9 Nov; repeat on the real server |
 | NFR-02 to NFR-04 Security, authentication, authorization | Met | BL-05, BL-31; UC-01 and integration tests |
 | NFR-05 Reliability, NFR-10 Data integrity | Met | BL-13 duplicate/partial-save protection; atomic corrections and restore |
 | NFR-06 Availability | Not measured | Needs a month of monitoring on a deployed server (VAL-02) |

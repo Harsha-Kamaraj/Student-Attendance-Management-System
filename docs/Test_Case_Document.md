@@ -14,7 +14,7 @@ The legacy UT, IT and ST prefixes are plan identifiers, not proof of test isolat
 | --- | --- |
 | PASS automated equivalent | 219 |
 | PASS browser execution | 1 |
-| PASS local performance profile | 4 |
+| PASS local performance profile (9 November 2026) | 4 |
 
 ## Changes since the earlier plan
 
@@ -29,6 +29,18 @@ The legacy UT, IT and ST prefixes are plan identifiers, not proof of test isolat
 - Added 17 cases on 9 November 2026 for the new requirements FR-22 to FR-24 and decisions D-27 and D-28: UT_01_15–17 and IT_01_9 (send login details), IT_11_4 (history after filtering), IT_12_5–6 (dashboard counts and sidebar), UT_14_1–7 and IT_14_1–3 (timetable, semester classes and attendance advice). The 9 November full rerun passed every method mapped by all 224 cases.
 
 Coverage totals and environment acceptance limits are in the four companion reports. SEC-07 was revised on 6 November 2026 to describe the implemented Admin-assisted reset (BL-01 D-23); the forgotten-password cases IT_01_6–7, UT_01_9–10 and UT_01_13 trace to the revised requirement.
+
+### Defects found and fixed during testing
+
+Five cases failed on their first execution. Each was fixed and run again, and now passes. The full fix log, with causes and re-tests, is Section 7 of the [Test Plan](../Documents/Test_Plan_Document.docx).
+
+| Fix | Case | What failed | Fix | Final result |
+| --- | --- | --- | --- | --- |
+| F-01 | UT_12_2 | Faculty dashboard counted a deactivated student and disagreed with the below-threshold list | Count only active students (b62c8ba); regression test IT_12_5 | PASS |
+| F-02 | UT_01_17 | Test failed when a random password contained "&" | Test compares escaped text (3999bbd) | PASS |
+| F-03 | ST_12_1 | Admin dashboard scrolled sideways with a very long user name at 1440 px | Shorten long names in the top bar (b62c8ba) | PASS |
+| F-04 | ST_08_1 | My attendance table headers squeezed at 768 and 320 px | Normal cells and a minimum width for the advice column (b62c8ba) | PASS |
+| F-05 | IT_01_6 | SEC-07 required a self-service reset link the system does not provide | Requirement corrected to the Admin-assisted reset (BL-01 D-23) | PASS |
 
 ## Shared prerequisites
 
@@ -1689,7 +1701,7 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 
 **Expected result:** Blank marks become Present; explicitly chosen Present and Absent marks remain unchanged, and the saved second record remains Absent.
 
-**Actual result:** All eight final browser/viewport cases preserved explicitly selected Present and Absent marks and persisted the expected absence.
+**Actual result:** All 12 browser/viewport cases on 9 November 2026 (Chromium, Firefox and WebKit at 1440, 768, 360 and 320 px) preserved explicitly selected Present and Absent marks and persisted the expected absence.
 
 **Result:** PASS browser execution
 
@@ -2461,6 +2473,8 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 **Expected result:** Subject A shows 10/12 (83.33%); Subject B shows 8/10 (80.00%); Overall shows 18/22 (81.82%).
 
 **Actual result:** Fresh execution: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Execution history:** F-04. Failed in the 9 November 2026 browser journeys at 768 and 320 px (My attendance table headers squeezed); fixed in commit b62c8ba; re-tested: PASS.
 
 **Result:** PASS automated equivalent
 
@@ -3482,6 +3496,8 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 
 **Actual result:** Fresh execution: 2 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
 
+**Execution history:** F-01. Failed in manual testing on 9 November 2026 (faculty dashboard counted a deactivated student, so it disagreed with the below-threshold list); fixed in commit b62c8ba; re-tested: PASS.
+
 **Result:** PASS automated equivalent
 
 **Evidence:** `evidence/part3-2026-11-06/regression.json` (archived)
@@ -3604,6 +3620,8 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 **Expected result:** Admin: 4 students, 3 faculty, 2 sections, 103 sessions; F001: 1 class, 3 students, 100 sessions; S001: overall 76/103 (73.79%). Log out returns to the login page.
 
 **Actual result:** Fresh execution: 2 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Execution history:** F-03. Failed in the 9 November 2026 browser journey at 1440 px (Admin dashboard scrolled sideways with a very long user name); fixed in commit b62c8ba; re-tested: PASS.
 
 **Result:** PASS automated equivalent
 
@@ -3872,7 +3890,7 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 
 **Expected result:** At least 95% of measured requests complete within 2 seconds; report percentiles and environment.
 
-**Actual result:** 1500/1500 successful; maximum 0.260 s; p95 0.196 s.
+**Actual result:** 1500/1500 successful; maximum 0.294 s; p95 0.242 s (9 November 2026, current revision 3999bbd).
 
 **Result:** PASS local performance profile
 
@@ -3892,7 +3910,7 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 
 **Expected result:** Successful save completes within 3 seconds; exactly 60 records are persisted.
 
-**Actual result:** 3/3 successful; maximum 0.308 s; p95 0.308 s.
+**Actual result:** 3/3 successful; maximum 0.303 s; p95 0.303 s (9 November 2026).
 
 **Result:** PASS local performance profile
 
@@ -3912,7 +3930,7 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 
 **Expected result:** Report generation completes within 10 seconds.
 
-**Actual result:** 3/3 successful; maximum 0.221 s; p95 0.221 s.
+**Actual result:** 3/3 successful; maximum 0.161 s; p95 0.161 s (9 November 2026).
 
 **Result:** PASS local performance profile
 
@@ -3932,7 +3950,7 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 
 **Expected result:** No data leakage, unhandled server errors, or integrity violations; record latency and resource use.
 
-**Actual result:** 1800 measured requests succeeded; 50 peak in flight; baseline 1,000 students and 750,000 marks.
+**Actual result:** 1800 measured requests succeeded; 50 peak in flight; baseline 1,000 students and 750,000 marks (9 November 2026).
 
 **Result:** PASS local performance profile
 
@@ -4364,6 +4382,8 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 **Expected result:** The request flags the student, emails only Admins, records an audit event and appears in the Admin views.
 
 **Actual result:** Fresh execution: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Execution history:** F-05. Failed against the original SEC-07 on 6 November 2026 (VAL-01); requirement corrected to the agreed Admin-assisted reset (BL-01 D-23); re-tested: PASS.
 
 **Result:** PASS automated equivalent
 
@@ -5126,6 +5146,8 @@ Use disposable local PostgreSQL databases, fictional accounts, captured email an
 **Expected result:** "Enter a valid email address." is shown with the password still visible; nothing is emailed.
 
 **Actual result:** Fresh execution on 9 November 2026: 1 mapped test method(s) passed. Assertions cover the automated equivalent described by the named methods; this is not a claim of a separate literal manual execution.
+
+**Execution history:** F-02. Failed in the 9 November 2026 regression when the random password contained "&" (test compared unescaped text); test fixed in commit 3999bbd; re-tested: PASS.
 
 **Result:** PASS automated equivalent
 
