@@ -32,7 +32,7 @@ Coverage totals and environment acceptance limits are in the four companion repo
 
 ### Defects found and fixed during testing
 
-Five cases failed on their first execution. Each was fixed and run again, and now passes. The full fix log, with causes and re-tests, is Section 7 of the [Test Plan](../Documents/Test_Plan_Document.docx).
+Five cases failed on their first execution. Each was fixed and run again, and now passes. The full fix log, with causes and re-tests, is section 14.3 of the [Test Plan](../Documents/Test_Plan_Document.docx).
 
 | Fix | Case | What failed | Fix | Final result |
 | --- | --- | --- | --- | --- |

@@ -2,7 +2,7 @@
 
 Student Attendance Management System · PES University · prepared for the Sprint 2 demonstration · 9 November 2026
 
-This page lists every way the finished system differs from the original Part 1 documents (SRS v1.0, the Security Requirements Specification, the use case diagram and the component design), why each change was made, and where it is now documented. Every change was agreed by the team and recorded in the [BL-01 decision log](BL-01_Decision_Log.md). The Part 1 documents have been updated to match, so they describe the system as built: [SRS v2.0](Software_Requirements_Specification(SRS).docx), [Test Plan v2.0](Test_Plan_Document.docx), [SAD](Software_Architecture_Design(SAD).docx) and [Use Case Flow](Use_Case_Flow.docx).
+This page lists every way the finished system differs from the original Part 1 documents (SRS v1.0, the Security Requirements Specification, the use case diagram and the component design), why each change was made, and where it is now documented. Every change was agreed by the team and recorded in the [BL-01 decision log](BL-01_Decision_Log.md). The Part 1 documents have been updated to match, so they describe the system as built: [SRS v2.1](Software_Requirements_Specification(SRS).docx), [Test Plan v2.1](Test_Plan_Document.docx), [SAD v1.1](Software_Architecture_Design(SAD).docx) and [Use Case Flow](Use_Case_Flow.docx).
 
 ## What did not change
 
@@ -63,4 +63,4 @@ See section 7 of the [demonstration and handover guide](BL-32_Demo_and_Handover.
    - a student's subject cards, "classes needed" and class-by-class list (UC-08)
    - the Send button on a password reset (FR-24)
 3. For each one, say why it was added, using the "Why" column above, and name its requirement ID.
-4. If asked about the gateway: the logical gateway is Django's middleware stack (SAD section 5.1).
+4. If asked about the gateway: the logical gateway is Django's middleware stack (SAD section 3.4).
