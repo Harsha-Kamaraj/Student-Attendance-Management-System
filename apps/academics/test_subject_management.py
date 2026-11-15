@@ -40,7 +40,7 @@ class CreateAndViewTests(SubjectTestBase):
         self.login("ADMIN1")
         response = self.client.post(reverse("subject_create"), {"code": " ma201 ", "name": " Mathematics "})
         subject = Subject.objects.get(code="MA201")
-        self.assertRedirects(response, reverse("subject_detail", args=[subject.pk]))
+        self.assertRedirects(response, reverse("subject_list"))
         self.assertEqual(subject.name, "Mathematics")
         entry = AuditEntry.objects.get(action="subject.create")
         self.assertEqual(entry.new_value, {"code": "MA201", "name": "Mathematics"})

@@ -35,7 +35,7 @@ class FacultyTestBase(TestCase):
             "department": "CSE",
             "email": "m@x.edu",
         }
-        return self.client.post(reverse("faculty_create"), values | data)
+        return self.client.post(reverse("faculty_create"), values | data, follow=True)
 
 
 @override_settings(SITE_URL="https://attendance.example.edu")
@@ -43,6 +43,7 @@ class CreateAndViewTests(FacultyTestBase):
     def test_admin_adds_faculty_with_login_and_temporary_password(self):
         # UT_03_1, AC 1, BL-01 D-02
         response = self.create()
+        self.assertRedirects(response, reverse("faculty_list"))
         member = Faculty.objects.get(faculty_id="F010")
         self.assertEqual((member.full_name, member.department), ("Dr. Meera Iyer", "CSE"))
         self.assertEqual(member.user.username, "F010")

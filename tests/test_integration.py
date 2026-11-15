@@ -65,7 +65,10 @@ class ProvisionedAttendanceJourneyTests(IntegrationSupport, TestCase):
                 "email": "teacher@example.test",
             },
         )
-        self.assertEqual(faculty_page.context["delivery"].status, "sent")
+        self.assertRedirects(faculty_page, reverse("faculty_list"), fetch_redirect_response=False)
+        self.assertTrue(
+            AuditEntry.objects.filter(action="credentials.email_sent", new_value__outcome="sent").exists()
+        )
         self.assertEqual(mail.outbox[-1].to, ["teacher@example.test"])
         faculty_password = mail.outbox[-1].body.split("Temporary password: ")[1].splitlines()[0]
         faculty = Faculty.objects.get(faculty_id="JF001")
@@ -79,11 +82,11 @@ class ProvisionedAttendanceJourneyTests(IntegrationSupport, TestCase):
                 "email": "student@example.test",
             },
         )
-        self.assertEqual(student_page.context["delivery"].status, "sent")
+        self.assertRedirects(student_page, reverse("student_list"), fetch_redirect_response=False)
         self.assertEqual(mail.outbox[-1].to, ["student@example.test"])
         student_password = mail.outbox[-1].body.split("Temporary password: ")[1].splitlines()[0]
         student = Student.objects.get(roll_number="JS001")
-        self.assertNotContains(student_page, student_password)
+        self.assertNotContains(admin_client.get(reverse("student_list")), student_password)
         self.assertTrue(student.user.check_password(student_password))
         self.assertNotEqual(student.user.password, student_password)
 

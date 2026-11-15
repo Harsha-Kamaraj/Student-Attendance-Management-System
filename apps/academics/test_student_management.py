@@ -50,8 +50,8 @@ class StudentManagementTests(TestCase):
     @override_settings(SITE_URL="https://attendance.example.edu")
     def test_admin_creates_student_and_login_atomically(self):
         self.client.force_login(self.admin)
-        response = self.client.post(reverse("student_create"), self.form_data())
-        self.assertEqual(response.status_code, 200)
+        response = self.client.post(reverse("student_create"), self.form_data(), follow=True)
+        self.assertRedirects(response, reverse("student_list"))
         self.assertNotContains(response, 'data-testid="temporary-password"')
         self.assertContains(response, "Login details sent to s***@example.edu")
         student = Student.objects.get(roll_number="21CS002")

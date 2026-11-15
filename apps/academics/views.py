@@ -40,6 +40,27 @@ from .forms import (
 from .models import Enrollment, Faculty, Section, Student, Subject, TeachingAssignment
 
 
+def _finish_account_create(request, *, label, list_url, template, context):
+    """After creating a student or faculty account, return to the list when the login details
+    went out; stay on the confirmation page only when the one-time password must be shown."""
+    delivery = context["delivery"]
+    if delivery.status == "sent":
+        messages.success(
+            request,
+            f"{label} added. Login details sent to {delivery.address}. "
+            "They must change the temporary password at first login.",
+        )
+        return redirect(list_url)
+    if delivery.status == "preview":
+        messages.info(
+            request,
+            f"{label} added. Development mode: login details for {delivery.address} were printed "
+            "to the server console. No email was delivered.",
+        )
+        return redirect(list_url)
+    return render(request, template, context)
+
+
 @never_cache
 @requires("students.view")
 def student_list(request):
@@ -99,10 +120,12 @@ def student_create(request):
         except IntegrityError:
             form.add_error("roll_number", "This roll number already exists.")
         else:
-            return render(
+            return _finish_account_create(
                 request,
-                "academics/student_created.html",
-                {
+                label=f"Student {student.roll_number}",
+                list_url="student_list",
+                template="academics/student_created.html",
+                context={
                     "student": student,
                     **delivery_context(
                         user=account, temporary_password=password, actor=request.user, purpose="created"
@@ -232,8 +255,8 @@ def section_create(request):
         except IntegrityError:
             form.add_error(None, "That section already exists for this dept, sem and year.")
         else:
-            messages.success(request, "Class section created.")
-            return redirect("section_detail", pk=section.pk)
+            messages.success(request, f"Section {section} created.")
+            return redirect("section_list")
     return render(request, "academics/section_form.html", {"form": form})
 
 
@@ -413,7 +436,7 @@ def subject_create(request):
             form.add_error("code", "A subject with this code already exists.")
         else:
             messages.success(request, f"Subject {subject.code} created.")
-            return redirect("subject_detail", pk=subject.pk)
+            return redirect("subject_list")
     return render(request, "academics/subject_form.html", {"form": form, "creating": True})
 
 
@@ -596,10 +619,12 @@ def faculty_create(request):
         except IntegrityError:
             form.add_error("faculty_id", "This faculty ID already exists.")
         else:
-            return render(
+            return _finish_account_create(
                 request,
-                "academics/faculty_created.html",
-                {
+                label=f"Faculty {member.faculty_id}",
+                list_url="faculty_list",
+                template="academics/faculty_created.html",
+                context={
                     "member": member,
                     **delivery_context(
                         user=account, temporary_password=password, actor=request.user, purpose="created"

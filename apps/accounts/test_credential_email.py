@@ -46,6 +46,7 @@ class CredentialEmailTests(TestCase):
                 "email": "student@example.edu",
                 **overrides,
             },
+            follow=True,
         )
 
     def faculty(self):
@@ -57,6 +58,7 @@ class CredentialEmailTests(TestCase):
                 "department": "SECRETDEPT",
                 "email": "faculty@example.edu",
             },
+            follow=True,
         )
 
     def email_password(self):
@@ -233,7 +235,7 @@ class CredentialEmailTests(TestCase):
                 {"faculty_id": "F042", "full_name": "Faculty", "department": "CSE", "email": "f@example.edu"},
                 HTTP_HOST="untrusted.example",
             )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         self.assertNotIn("untrusted.example", mail.outbox[0].body)
         self.assertIn("https://attendance.example.edu/login/", mail.outbox[0].body)
 

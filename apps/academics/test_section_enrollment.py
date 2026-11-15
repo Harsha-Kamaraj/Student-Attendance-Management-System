@@ -34,8 +34,8 @@ class SectionEnrollmentTests(TestCase):
         response = self.client.post(
             reverse("section_create"), {"class_name": " B.Tech CSE Year 3 ", "name": " c "}
         )
-        section = Section.objects.get(class_name="B.Tech CSE Year 3", name="C")
-        self.assertRedirects(response, reverse("section_detail", args=[section.pk]))
+        self.assertTrue(Section.objects.filter(class_name="B.Tech CSE Year 3", name="C").exists())
+        self.assertRedirects(response, reverse("section_list"))
         self.assertContains(self.client.get(reverse("section_list")), "B.Tech CSE Year 3")
         self.assertTrue(AuditEntry.objects.filter(action="section.create").exists())
 
