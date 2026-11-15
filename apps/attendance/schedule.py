@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date, datetime, time
+from urllib.parse import urlencode
 
 from django.utils import timezone
 
@@ -29,6 +30,13 @@ class ScheduledClass:
     @property
     def time_label(self) -> str:
         return period_label(self.slot.period)
+
+    @property
+    def mark_query(self) -> str:
+        """Query string that opens Mark attendance with this class, date and period filled in."""
+        return urlencode(
+            {"assignment": self.slot.assignment_id, "date": self.day.isoformat(), "period": self.slot.period}
+        )
 
     def state(self, now: time) -> str:
         """'marked', 'now', 'due' (finished but not marked) or 'upcoming'."""
@@ -73,7 +81,13 @@ def today_overview(assignments, now: datetime | None = None):
     states = [(row, row.state(clock)) for row in rows]
     upcoming = next(((row, state) for row, state in states if state in ("now", "upcoming")), (None, None))
     unmarked = sum(1 for _, state in states if state == "due")
+    # The class the dashboard's Mark attendance button opens: one happening now, else the earliest
+    # finished class still unmarked, else the next class today.
+    mark_target = next(
+        (row for wanted in ("now", "due", "upcoming") for row, state in states if state == wanted), None
+    )
     return {
+        "mark_target": mark_target,
         "today_rows": states,
         "next_class": upcoming[0],
         "next_class_now": upcoming[1] == "now",

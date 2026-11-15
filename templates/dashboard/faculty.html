@@ -20,7 +20,7 @@
         <p class="hero-text">Welcome, {{ user.username }}. No classes are timetabled for you today.</p>
       {% endif %}
     </div>
-    <a class="btn btn-light" href="{% url 'attendance_mark' %}">{% icon "clipboard" 18 %} Mark attendance</a>
+    <a class="btn btn-light" href="{% url 'attendance_mark' %}{% if mark_target %}?{{ mark_target.mark_query }}{% endif %}">{% icon "clipboard" 18 %} Mark attendance</a>
   </div>
 
   {% if unmarked_count %}

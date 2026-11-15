@@ -17,9 +17,9 @@
             {% if state == "marked" %}
               <span class="badge rounded-pill text-bg-success">{% icon "check-circle" 14 %} Marked</span>
             {% elif state == "now" %}
-              <a class="btn btn-sm btn-primary" href="{% url 'attendance_mark' %}?assignment={{ row.assignment.pk }}&amp;date={{ row.day|date:'Y-m-d' }}&amp;period={{ row.period }}">Mark now</a>
+              <a class="btn btn-sm btn-primary" href="{% url 'attendance_mark' %}?{{ row.mark_query }}">Mark now</a>
             {% elif state == "due" %}
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'attendance_mark' %}?assignment={{ row.assignment.pk }}&amp;date={{ row.day|date:'Y-m-d' }}&amp;period={{ row.period }}">Mark attendance</a>
+              <a class="btn btn-sm btn-outline-danger" href="{% url 'attendance_mark' %}?{{ row.mark_query }}">Mark attendance</a>
             {% else %}
               <span class="badge rounded-pill text-bg-light border">Upcoming</span>
             {% endif %}
