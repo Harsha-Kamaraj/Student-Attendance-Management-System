@@ -194,7 +194,7 @@ None of these blocks the demonstration.
 3. **Windows backup code is not in the coverage figures.** The three Windows-only file-permission tests passed on Windows on 15 Nov 2026, but that run did not measure coverage, so the Windows-only lines still count as uncovered in the 95.10% line figure (VAL-06).
 4. **Performance was measured on one machine.** Repeat PT_01–PT_04 on the real server; network, HTTPS and email delays were not included.
 5. **Email needs local setup.** Each machine needs its own Gmail app password in `.env`. The demo accounts have no email addresses, so alert emails, login-detail emails and emailed login codes only reach someone after a real address is added.
-6. **Scheduled jobs need the server's scheduler.** Daily backups (`run_scheduled_backups`, every minute) and the Monday faculty email (`send_weekly_shortage_emails`) only run if cron or Task Scheduler calls them. Setting the time in the app does not install a scheduler.
+6. **Scheduled jobs need the server's scheduler.** Daily backups (`run_scheduled_backups`, every minute), the Monday faculty email (`send_weekly_shortage_emails`) and the daily removal of expired sessions (`clearsessions`, see README "Accounts and login") only run if cron or Task Scheduler calls them. Setting the time in the app does not install a scheduler.
 7. **Password reset goes through the Admin.** There are no self-service reset links (BL-01 D-23), and a temporary password stays valid until it is used or replaced.
 8. **Only Present and Absent exist.** "Late" and partial credit were deferred (D-06).
 9. **Faculty corrections have a deadline.** After the window (default 2 days), only the Admin can correct or add a session, with a reason.

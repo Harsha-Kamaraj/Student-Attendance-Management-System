@@ -75,6 +75,7 @@ Open http://127.0.0.1:8000/login/ and log in with the Admin account you just cre
 - Passwords need at least 8 characters with an upper-case letter, a lower-case letter, a digit and a special character.
 - After 5 wrong passwords in a row, login is blocked for 15 minutes. The Admin can reset a password (`/users/`), which also removes the block.
 - Logins, account creation, password changes and resets are recorded in the audit log.
+- Sessions are stored in the database (`django_session`). Logging out deletes the session, and deactivating or deleting an account deletes all of that user's sessions on every device. A session that ends through the 15-minute idle timeout stays as an expired, unusable row until `python manage.py clearsessions` removes it, so schedule that once a day. Example crontab: `0 2 * * * cd /srv/attendance && /srv/attendance/.venv/bin/python manage.py clearsessions` (Windows: a daily Task Scheduler task running the same command).
 
 ## Two-factor login (BL-33)
 
