@@ -1,0 +1,99 @@
+1
+00:00:00,000 --> 00:00:10,000
+A fresh walkthrough of the current app, using a separate copy of your existing students, faculty and attendance data.
+
+2
+00:00:10,000 --> 00:00:17,000
+The Admin signs in with a username and password. Password characters stay hidden.
+
+3
+00:00:17,000 --> 00:00:24,000
+A six-digit authenticator code completes the second login step.
+
+4
+00:00:24,000 --> 00:00:34,000
+The current overview shows 4 students, 3 faculty, 4 sections and 10 attendance sessions.
+
+5
+00:00:34,000 --> 00:00:43,000
+The original students are retained: Anjanaa, Pradhyut, Suhas and Harsha K, with their sections and enrolled subjects.
+
+6
+00:00:43,000 --> 00:00:51,000
+The existing faculty are Shravya, Bhargavi and Praffulata. The Admin manages their profiles and account status.
+
+7
+00:00:51,000 --> 00:01:00,000
+The timetable connects a subject, section, faculty member, day and period. Dashboards use it to show upcoming classes.
+
+8
+00:01:00,000 --> 00:01:10,000
+The current plan contains 10 classes per subject. This lets the system calculate how many remaining classes a student must attend.
+
+9
+00:01:10,000 --> 00:01:22,000
+At the 75% threshold, Anjanaa has 2/5 (40%) and Harsha has 3/5 (60%). Both appear on the shortage list.
+
+10
+00:01:22,000 --> 00:01:30,000
+The Admin can create an encrypted backup. A saved backup can later be used for recovery.
+
+11
+00:01:30,000 --> 00:01:38,000
+A new backup is created successfully in the demo copy. It is listed as Complete with a download option.
+
+12
+00:01:38,000 --> 00:01:48,000
+Shravya signs in as F001. Her dashboard shows her assigned class, 2 students, upcoming periods and one attendance shortage.
+
+13
+00:01:48,000 --> 00:01:56,000
+Select Software Engineering, 15 November and Period 1. Load the roster for the assigned class.
+
+14
+00:01:56,000 --> 00:02:05,000
+In the recording copy, mark Pradhyut Present and Harsha Absent. Every student needs a status before saving.
+
+15
+00:02:05,000 --> 00:02:13,000
+The saved session displays the recorded marks. Any later change goes through the separate correction workflow.
+
+16
+00:02:13,000 --> 00:02:22,000
+Change Harsha from Absent to Present and enter a reason. The page also shows the permitted correction deadline.
+
+17
+00:02:22,000 --> 00:02:33,000
+The history records F001, the time, the old and new status, and the reason. The correction is now traceable.
+
+18
+00:02:33,000 --> 00:02:41,000
+Choose the date range and report scope. Here the report includes the faculty member’s visible classes on 15 November.
+
+19
+00:02:41,000 --> 00:02:50,000
+After the correction, the report shows 2 Present and 0 Absent. CSV and PDF export options are available.
+
+20
+00:02:50,000 --> 00:02:58,000
+Both students have 1/1 attendance for the selected day. This filtered percentage is different from their overall attendance.
+
+21
+00:02:58,000 --> 00:03:09,000
+Harsha sees the updated demo total: 4/6 (66.67%). He must attend all 4 remaining planned classes to finish above 75%.
+
+22
+00:03:09,000 --> 00:03:18,000
+Students can review their own attendance, filter by subject or date, and see the remaining classes they need to attend.
+
+23
+00:03:18,000 --> 00:03:27,000
+The selected subject lists each date, period and attendance mark. The demonstration date now shows Present.
+
+24
+00:03:27,000 --> 00:03:39,000
+Live totals appear above the alerts. The earlier alert retains its original 60% figure; the current demo total is 66.67%.
+
+25
+00:03:39,000 --> 00:03:47,000
+Logging out returns the student to the login page. This walkthrough used the current code; your working database was left unchanged.
