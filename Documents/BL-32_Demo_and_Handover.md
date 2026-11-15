@@ -169,7 +169,7 @@ All backlog items are Done on the project board. BL-32 is this handover; BL-35 t
 | NFR-09 Maintainability | Met | Ruff lint/format, 556 automated tests (9 Nov), 95.10% line and 90.78% branch coverage |
 | NFR-11 Privacy, NFR-14 Auditability | Met | Role-scoped data, owner-only credential email, audit log |
 | NFR-12 Compatibility | Partly verified | Chromium, Firefox and WebKit at 1440, 768 and 320 px (9 Nov); Edge, branded Safari and real phones not tested (VAL-03) |
-| NFR-13 Backup and recovery | Met on macOS | Windows-only file-permission checks not run (VAL-04) |
+| NFR-13 Backup and recovery | Met on macOS and Windows | The three Windows-only file-permission checks passed on K M Pradhyut's Windows laptop on 15 Nov 2026 (`apps.backups.test_storage`: 4 of 4 passed, none skipped), closing VAL-04 |
 | NFR-15 Accuracy | Met | All calculation tests pass |
 
 ## 6. Where the evidence is
@@ -191,7 +191,7 @@ None of these blocks the demonstration.
 
 1. **Availability (NFR-06) is not measured.** It needs a month of monitoring on a real server during 08:00–18:00, Monday–Saturday.
 2. **Browser and device coverage is partial.** Edge, branded Safari, the full "latest two versions" matrix and real Android/iOS phones were not tested; phone widths (320 and 360 px) were emulated.
-3. **Windows backup checks were not run.** Three file-permission tests only run on Windows. They account for most of the code not yet covered by tests.
+3. **Windows backup code is not in the coverage figures.** The three Windows-only file-permission tests passed on Windows on 15 Nov 2026, but that run did not measure coverage, so the Windows-only lines still count as uncovered in the 95.10% line figure (VAL-06).
 4. **Performance was measured on one machine.** Repeat PT_01–PT_04 on the real server; network, HTTPS and email delays were not included.
 5. **Email needs local setup.** Each machine needs its own Gmail app password in `.env`. The demo accounts have no email addresses, so alert emails, login-detail emails and emailed login codes only reach someone after a real address is added.
 6. **Scheduled jobs need the server's scheduler.** Daily backups (`run_scheduled_backups`, every minute) and the Monday faculty email (`send_weekly_shortage_emails`) only run if cron or Task Scheduler calls them. Setting the time in the app does not install a scheduler.
