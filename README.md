@@ -5,6 +5,8 @@ A web application for recording, correcting and reporting student attendance, wi
 
 **Evaluating or demonstrating the system?** Start with the [demonstration and handover guide](Documents/BL-32_Demo_and_Handover.md): clean setup, demo accounts, a tested 15-minute demo script, a user guide for each role, requirement completion and known limitations.
 
+**Demo video:** [watch the current project walkthrough](demo/current-project/current-project-demo.mp4) (3 min 47 s, captions on screen, no audio). The [demo notes](demo/current-project/README.md) list every scene with its start time, and the subtitles are also in a separate [.srt file](demo/current-project/current-project-demo.srt).
+
 ## Session security (BL-06)
 
 - Signed-in users log out with the CSRF-protected **Log out** button in the navigation bar (`POST /logout/`). Logout invalidates the current Django session and redirects to `/login/`.
