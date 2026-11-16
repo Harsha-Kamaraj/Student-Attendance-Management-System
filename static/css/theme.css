@@ -1342,11 +1342,6 @@ h1, .h1, h2, .h2, h3, .h3 {
   background: #fffaf0;
 }
 
-/* "What you need" advice stays readable instead of squeezing into a narrow column. */
-.advice-cell {
-  min-width: 18rem;
-}
-
 /* "Send these details by email" panel under a temporary password */
 .send-panel {
   max-width: 42rem;

@@ -18,7 +18,7 @@ from apps.accounts.permissions import requires, visible_assignments
 from apps.audit import services as audit
 from apps.notifications.services import evaluate_students
 
-from .calculations import AttendanceOutlook, student_attendance_summary, subject_outlooks
+from .calculations import student_attendance_summary, subject_outlooks
 from .forms import AttendanceSelectionForm, AttendanceSummaryFilterForm, AttendanceThresholdForm
 from .models import AttendanceRecord, AttendanceSession, AttendanceThreshold, Status
 from .services import submit_attendance
@@ -176,12 +176,11 @@ def attendance_summary(request):
         )
     threshold = AttendanceThreshold.current_value()
     subject_rows = []
-    overall_outlook = None
     overall_below = False
     selected_subject = None
     class_records = []
     if summary:
-        subject_rows, overall_outlook = subject_outlooks(student, summary, threshold)
+        subject_rows, _overall = subject_outlooks(summary, threshold)
         overall_below = summary.overall.is_below_threshold(threshold)
         data = form.cleaned_data if request.GET else {}
         selected_subject = data.get("subject")
@@ -207,7 +206,6 @@ def attendance_summary(request):
             "form": form,
             "summary": summary,
             "subject_rows": subject_rows,
-            "overall_outlook": overall_outlook or AttendanceOutlook(0, 0, threshold),
             "overall_below": overall_below,
             "threshold": threshold,
             "filters_applied": bool(request.GET),

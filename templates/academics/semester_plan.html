@@ -2,7 +2,7 @@
 {% block title %}Semester classes · Student Attendance{% endblock %}
 {% block content %}
 <h1 class="h3">Semester classes</h1>
-<p class="text-body-secondary">Enter how many classes each subject will hold this semester. Students then see how many of the remaining classes they must attend to finish at the attendance threshold. Leave a box blank if it is not known yet.</p>
+<p class="text-body-secondary">Enter how many classes each subject will hold this semester. Leave a box blank if it is not known yet.</p>
 <form method="post" novalidate>
   {% csrf_token %}
   <div class="table-responsive" role="region" aria-label="Semester classes per subject" tabindex="0">

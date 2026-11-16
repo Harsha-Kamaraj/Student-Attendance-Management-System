@@ -76,8 +76,7 @@ class TeachingAssignment(models.Model):
     faculty = models.ForeignKey(
         Faculty, on_delete=models.PROTECT, null=True, blank=True, related_name="assignments"
     )
-    # Set by the Admin on the Semester classes page; lets students see how many of the
-    # remaining classes they must attend to finish the semester at the threshold.
+    # Set by the Admin on the Semester classes page.
     planned_sessions = models.PositiveSmallIntegerField(
         null=True, blank=True, verbose_name="Classes planned this semester"
     )

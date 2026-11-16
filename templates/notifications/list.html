@@ -4,37 +4,27 @@
 {% block content %}
 <h1 class="h3">Notifications</h1>
 
-{% if has_student %}
-  <h2 class="h5 mt-3">Where you stand now</h2>
-  {% if below_rows or overall_outlook.below %}
-    <div class="table-responsive mb-4" role="region" aria-label="Attendance below the threshold" tabindex="0">
-      <table class="table align-middle">
-        <thead><tr><th scope="col">Below {{ threshold }}%</th><th scope="col">Attendance</th><th scope="col">Classes to attend</th></tr></thead>
-        <tbody>
-          {% for row, outlook in below_rows %}
-            <tr>
-              <td class="fw-semibold text-nowrap">{{ row.subject }}</td>
-              <td class="text-shortage">{{ row.display }}</td>
-              <td class="advice-cell">{{ outlook.message }}</td>
-            </tr>
-          {% endfor %}
-          {% if overall_outlook.below %}
-            <tr>
-              <td class="fw-semibold text-nowrap">Overall attendance</td>
-              <td class="text-shortage">{{ overall_outlook.display }}</td>
-              <td class="advice-cell">{{ overall_outlook.message }}</td>
-            </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}
-    <div class="callout callout-ok mb-4">
-      <div class="callout-body"><span class="callout-icon">{% icon "check-circle" 22 %}</span>
-        <span>You are at or above the {{ threshold }}% threshold in every subject and overall.</span>
-      </div>
-    </div>
-  {% endif %}
+{% if below_rows or overall_outlook.below %}
+  <h2 class="h5 mt-3">Below the {{ threshold }}% threshold</h2>
+  <div class="table-responsive mb-4" role="region" aria-label="Attendance below the threshold" tabindex="0">
+    <table class="table align-middle">
+      <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th></tr></thead>
+      <tbody>
+        {% for row, outlook in below_rows %}
+          <tr>
+            <td class="fw-semibold text-nowrap">{{ row.subject }}</td>
+            <td class="text-shortage">{{ row.display }}</td>
+          </tr>
+        {% endfor %}
+        {% if overall_outlook.below %}
+          <tr>
+            <td class="fw-semibold text-nowrap">Overall attendance</td>
+            <td class="text-shortage">{{ overall_outlook.display }}</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
 {% endif %}
 
 <h2 class="h5">Alerts</h2>

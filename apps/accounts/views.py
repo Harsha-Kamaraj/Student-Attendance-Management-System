@@ -177,12 +177,11 @@ def dashboard_student(request):
     student = Student.objects.filter(user=request.user).first()
     summary = student_attendance_summary(student) if student else None
     threshold = AttendanceThreshold.current_value()
-    subject_rows, overall_outlook = subject_outlooks(student, summary, threshold) if summary else ([], None)
+    subject_rows, _overall = subject_outlooks(summary, threshold) if summary else ([], None)
     context = {
         "summary": summary,
         "threshold": threshold,
         "subject_rows": subject_rows,
-        "overall_outlook": overall_outlook,
         "subject_shortages": sum(1 for row in summary.subjects if row.is_below_threshold(threshold))
         if summary
         else 0,

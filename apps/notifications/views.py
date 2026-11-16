@@ -27,7 +27,7 @@ def notification_list(request):
     below_rows, overall_outlook = [], None
     student = Student.objects.filter(user=request.user).first()
     if student:
-        rows, overall_outlook = subject_outlooks(student, student_attendance_summary(student), threshold)
+        rows, overall_outlook = subject_outlooks(student_attendance_summary(student), threshold)
         below_rows = [(row, outlook) for row, outlook in rows if outlook.below]
     response = render(
         request,
@@ -38,7 +38,6 @@ def notification_list(request):
             "threshold": threshold,
             "below_rows": below_rows,
             "overall_outlook": overall_outlook,
-            "has_student": student is not None,
         },
     )
     if unread_ids:

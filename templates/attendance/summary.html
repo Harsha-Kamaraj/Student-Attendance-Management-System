@@ -40,25 +40,21 @@
         <span class="overall-label">Overall attendance</span>
         <span class="overall-value">{{ summary.overall.display }}</span>
       </div>
-      <div class="overall-note">
-        {% if overall_below %}<span class="text-shortage">Below the {{ threshold }}% threshold</span>{% else %}<span class="text-success fw-semibold">At or above {{ threshold }}%</span>{% endif %}
-        {% if not filters_applied %}<span class="text-body-secondary">{{ overall_outlook.message }}</span>{% endif %}
-      </div>
+      {% if overall_below %}<div class="overall-note"><span class="text-shortage">Below the {{ threshold }}% threshold</span></div>{% endif %}
     </div>
 
     <h2 class="h5">Attendance by subject</h2>
     <div class="table-responsive mb-4" role="region" aria-label="Attendance by subject" tabindex="0">
       <table class="table align-middle">
-        <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th><th scope="col">What you need</th></tr></thead>
+        <thead><tr><th scope="col">Subject</th><th scope="col">Attended / held (percentage)</th></tr></thead>
         <tbody>
           {% for row, outlook in subject_rows %}
             <tr{% if selected_subject and selected_subject.pk == row.subject.pk %} class="table-active"{% endif %}>
               <td class="fw-semibold text-nowrap">{{ row.subject }}<br><a class="btn btn-sm btn-outline-primary mt-1" href="?subject={{ row.subject.pk }}{% if form.cleaned_data.start_date %}&amp;start_date={{ form.cleaned_data.start_date|date:'Y-m-d' }}{% endif %}{% if form.cleaned_data.end_date %}&amp;end_date={{ form.cleaned_data.end_date|date:'Y-m-d' }}{% endif %}">View classes</a></td>
               <td>{% if outlook.below %}<span class="text-shortage">{{ row.display }} ▲ Below {{ threshold }}%</span>{% else %}{{ row.display }}{% endif %}</td>
-              <td class="small text-body-secondary advice-cell">{{ outlook.message }}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="3">N/A — no classes yet</td></tr>
+            <tr><td colspan="2">N/A — no classes yet</td></tr>
           {% endfor %}
         </tbody>
       </table>

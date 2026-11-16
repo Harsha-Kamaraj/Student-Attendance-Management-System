@@ -1,4 +1,4 @@
-"""How many classes a student needs, the semester plan, today's classes, and the student pages."""
+"""Below-threshold status, today's classes, and the student pages (no attendance advice)."""
 
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -9,50 +9,49 @@ from django.urls import reverse
 from apps.academics.models import Enrollment, Section, Subject, TeachingAssignment, TimetableSlot
 from apps.academics.tests import make_faculty, make_student
 from apps.notifications.models import Notification
+from apps.notifications.services import _student_message
 
-from .calculations import AttendanceOutlook, classes_can_miss, classes_needed
+from .calculations import AttendanceOutlook, AttendanceTotals
 from .models import AttendanceRecord, AttendanceSession, AttendanceThreshold, Status
 from .schedule import today_overview
 
 IST = ZoneInfo("Asia/Kolkata")
 
 
-class ClassesNeededTests(SimpleTestCase):
-    def test_classes_needed_reaches_the_threshold_exactly(self):
-        # 76/102 at 85%: (76 + 72) / (102 + 72) = 148/174 = 85.06%, while 71 more gives 84.97%.
-        self.assertEqual(classes_needed(76, 102, 85), 72)
-        self.assertEqual(classes_needed(3, 4, 80), 1)  # 4/5 = 80%
-        self.assertEqual(classes_needed(8, 10, 80), 0)  # exactly at the threshold
-        self.assertEqual(classes_needed(0, 0, 75), 0)  # no classes yet
-        self.assertIsNone(classes_needed(9, 10, 100))
+# Students see attended/held and, only when it applies, "Below the threshold". No advice on how many
+# classes to attend or miss appears anywhere on their pages or in their alerts.
+ADVICE = (
+    "What you need",
+    "Classes to attend",
+    "classes left",
+    "Attend ",
+    "You can miss",
+    "get back to",
+    "already secured",
+    "At or above",
+    "at or above",
+)
 
-    def test_classes_can_miss_keeps_the_student_at_or_above(self):
-        self.assertEqual(classes_can_miss(10, 10, 75), 3)  # 10/13 = 76.9%; 10/14 = 71.4%
-        self.assertEqual(classes_can_miss(3, 4, 75), 0)
-        self.assertEqual(classes_can_miss(1, 4, 75), 0)
 
-    def test_messages_without_a_semester_plan(self):
-        self.assertEqual(AttendanceOutlook(0, 0, 75).message, "No classes held yet.")
-        self.assertEqual(AttendanceOutlook(3, 5, 75).message, "Attend the next 3 classes to get back to 75%.")
-        self.assertIn("You can miss 3 classes", AttendanceOutlook(10, 10, 75).message)
-        self.assertIn("cannot be reached", AttendanceOutlook(9, 10, 100).message)
+class OutlookTests(SimpleTestCase):
+    def test_below_is_strictly_under_the_threshold(self):
+        self.assertTrue(AttendanceOutlook(2, 3, 75).below)  # 66.67%
+        self.assertFalse(AttendanceOutlook(3, 4, 75).below)  # exactly 75%
+        self.assertFalse(AttendanceOutlook(4, 5, 75).below)  # 80%
+        self.assertFalse(AttendanceOutlook(0, 0, 75).below)  # no classes yet
+        self.assertEqual(AttendanceOutlook(4, 5, 75).display, "4/5 (80.00%)")
+
+    def test_low_attendance_alert_lists_totals_without_advice(self):
+        subject = Subject(code="CS101", name="Programming")
+        message = _student_message([(subject, AttendanceTotals(1, 3)), (None, AttendanceTotals(5, 9))], 75)
         self.assertEqual(
-            AttendanceOutlook(3, 4, 75).message, "Attend your next class to stay at 75% or above."
+            message,
+            "Your attendance is below the required 75% in:\n"
+            "- CS101 – Programming: 1/3 (33.33%)\n"
+            "- Overall attendance: 5/9 (55.56%)\n"
+            "\n"
+            "If a mark looks wrong, contact your faculty member or the Admin.",
         )
-
-    def test_messages_with_a_semester_plan(self):
-        # 40 planned at 75% needs 30 attended; 20 attended of 25 held leaves 15 classes, 10 needed.
-        outlook = AttendanceOutlook(20, 25, 75, planned=40)
-        self.assertEqual((outlook.remaining, outlook.must_attend), (15, 10))
-        self.assertEqual(
-            outlook.message,
-            "Attend at least 10 of the 15 classes left this semester to finish at 75% or above.",
-        )
-        self.assertIn("already secured", AttendanceOutlook(30, 32, 75, planned=40).message)
-        impossible = AttendanceOutlook(5, 25, 75, planned=40)
-        self.assertIn("Even attending all 15 classes left", impossible.message)
-        self.assertIn("50.00%", impossible.message)
-        self.assertEqual(AttendanceOutlook(1, 2, 75).display, "1/2 (50.00%)")
 
 
 class Fixture(TestCase):
@@ -112,24 +111,45 @@ class StudentPagesTests(Fixture):
     def setUp(self):
         self.client.force_login(self.student.user)
 
+    def assert_no_advice(self, page):
+        for words in ADVICE:
+            self.assertNotContains(page, words)
+
+    def bring_above_threshold(self):
+        # S001 goes from 1/3 to 3/3.
+        AttendanceRecord.objects.filter(student=self.student).update(status=Status.PRESENT)
+
     def test_dashboard_lists_each_subject_without_the_threshold_card(self):
         page = self.client.get(reverse("dashboard_student"))
         self.assertContains(page, "My subjects")
         self.assertContains(page, f"?subject={self.subject.pk}")
         self.assertContains(page, "1/3 (33.33%)")
+        self.assertContains(page, "Your overall attendance is below the threshold.")
         self.assertNotContains(page, "My pages")
+        self.assert_no_advice(page)
 
     def test_choosing_a_subject_lists_each_class_with_its_status(self):
         page = self.client.get(reverse("attendance_summary"), {"subject": self.subject.pk})
         self.assertContains(page, "Class-by-class: CS101 – Programming")
         self.assertContains(page, "Thu, 01 Oct 2026")
         self.assertContains(page, "Period 1 (8:00–9:00 am)")
-        # Semester plan: 40 classes at 75% needs 30, so 29 of the 37 remaining.
-        self.assertContains(page, "Attend at least 29 of the 37 classes left this semester")
+        self.assertContains(page, "1/3 (33.33%) ▲ Below 75%")
+        self.assertContains(page, "Below the 75% threshold")
+        self.assert_no_advice(page)
 
-    def test_notifications_page_shows_where_the_student_stands(self):
+    def test_notifications_page_lists_only_what_is_below_the_threshold(self):
         Notification.objects.create(recipient=self.student.user, title="Low attendance: below 75%", body="x")
         page = self.client.get(reverse("notification_list"))
-        self.assertContains(page, "Where you stand now")
-        self.assertContains(page, "Attend at least 29 of the 37 classes left this semester")
+        self.assertContains(page, "Below the 75% threshold")
+        self.assertContains(page, "1/3 (33.33%)")
+        self.assert_no_advice(page)
         self.assertNotContains(page, ">Back to dashboard</a>\n</div>")
+
+    def test_a_student_at_or_above_the_threshold_sees_only_the_totals(self):
+        self.bring_above_threshold()
+        for url in ("dashboard_student", "attendance_summary", "notification_list"):
+            page = self.client.get(reverse(url))
+            self.assertNotContains(page, "Below the")
+            self.assertNotContains(page, "is below the threshold")
+            self.assert_no_advice(page)
+        self.assertContains(self.client.get(reverse("attendance_summary")), "3/3 (100.00%)")
